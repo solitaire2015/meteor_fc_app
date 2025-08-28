@@ -1,0 +1,281 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model (combines players and admins)
+model User {
+  id            String        @id @default(cuid())
+  name          String
+  email         String?       @unique
+  phone         String?       @unique
+  passwordHash  String?
+  userType      UserType      @default(PLAYER)
+  accountStatus AccountStatus @default(GHOST)
+  jerseyNumber  Int?
+  position      Position?
+  dominantFoot  DominantFoot?
+  avatarUrl     String?
+  introduction  String?
+  joinDate      DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdBy     String?
+
+  // Relations
+  createdByUser     User?               @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdUsers      User[]              @relation("UserCreatedBy")
+  participations    MatchParticipation[]
+  events            MatchEvent[]
+  comments          Comment[]
+  auditLogs         AuditLog[]
+  systemConfigUpdates SystemConfig[]
+  createdMatches    Match[]             @relation("MatchCreatedBy")
+  createdVideos     Video[]             @relation("VideoCreatedBy")
+  createdEvents     MatchEvent[]        @relation("EventCreatedBy")
+
+  @@map("users")
+}
+
+// Match model
+model Match {
+  id             String    @id @default(cuid())
+  matchDate      DateTime
+  matchTime      DateTime?
+  opponentTeam   String
+  ourScore       Int?
+  opponentScore  Int?
+  matchResult    MatchResult?
+  fieldFeeTotal  Decimal   @default(0)
+  waterFeeTotal  Decimal   @default(0)
+  feeCoefficient Decimal   @default(0)
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  createdBy      String
+
+  // Relations
+  createdByUser   User                 @relation("MatchCreatedBy", fields: [createdBy], references: [id])
+  participations  MatchParticipation[]
+  events          MatchEvent[]
+  videos          Video[]
+  comments        Comment[]
+
+  @@map("matches")
+}
+
+// Match participation (attendance and financial tracking)
+model MatchParticipation {
+  id       String @id @default(cuid())
+  userId   String
+  matchId  String
+
+  // Attendance tracking (3 sections × 3 parts)
+  section1Part1 Decimal @default(0)
+  section1Part2 Decimal @default(0)
+  section1Part3 Decimal @default(0)
+  section2Part1 Decimal @default(0)
+  section2Part2 Decimal @default(0)
+  section2Part3 Decimal @default(0)
+  section3Part1 Decimal @default(0)
+  section3Part2 Decimal @default(0)
+  section3Part3 Decimal @default(0)
+
+  // Special roles
+  isGoalkeeper Boolean @default(false)
+
+  // Calculated fields (for reference)
+  totalTime           Decimal @default(0)
+  fieldFeeCalculated  Decimal @default(0)
+  isLate              Boolean @default(false)
+  lateFee             Decimal @default(0)
+  videoFee            Decimal @default(0)
+  totalFeeCalculated  Decimal @default(0)
+
+  // Payment proxy
+  paymentProxy String?
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@map("match_participations")
+}
+
+// Match events (goals, cards, etc.)
+model MatchEvent {
+  id          String    @id @default(cuid())
+  matchId     String
+  playerId    String
+  eventType   EventType
+  minute      Int?
+  description String?
+  createdAt   DateTime  @default(now())
+  createdBy   String
+
+  // Relations
+  match       Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player      User  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  createdByUser User @relation("EventCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("match_events")
+}
+
+// Video storage
+model Video {
+  id            String      @id @default(cuid())
+  matchId       String
+  title         String
+  description   String?
+  storageType   StorageType @default(LOCAL)
+  filePath      String
+  s3Bucket      String?
+  s3Region      String?
+  cdnUrl        String?
+  fileSize      BigInt?
+  durationSeconds Int?
+  thumbnailUrl  String?
+  createdAt     DateTime    @default(now())
+  createdBy     String
+
+  // Relations
+  match         Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  createdByUser User  @relation("VideoCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("videos")
+}
+
+// Comment system
+model Comment {
+  id              String    @id @default(cuid())
+  matchId         String
+  userId          String
+  parentCommentId String?
+  content         String
+  images          Json?     // Array of image URLs/paths
+  isEdited        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  match         Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentComment Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies       Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+// Audit logging
+model AuditLog {
+  id         String     @id @default(cuid())
+  userId     String
+  tableName  String
+  recordId   String
+  actionType ActionType
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime   @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// System configuration
+model SystemConfig {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String
+
+  // Relations
+  updatedByUser User @relation(fields: [updatedBy], references: [id])
+
+  @@map("system_config")
+}
+
+// Enums
+enum UserType {
+  ADMIN
+  PLAYER
+
+  @@map("user_type")
+}
+
+enum AccountStatus {
+  GHOST
+  CLAIMED
+
+  @@map("account_status")
+}
+
+enum Position {
+  GK
+  DF
+  MF
+  FW
+
+  @@map("position")
+}
+
+enum DominantFoot {
+  LEFT
+  RIGHT
+  BOTH
+
+  @@map("dominant_foot")
+}
+
+enum MatchResult {
+  WIN
+  LOSE
+  DRAW
+
+  @@map("match_result")
+}
+
+enum EventType {
+  GOAL
+  ASSIST
+  YELLOW_CARD
+  RED_CARD
+  PENALTY_GOAL
+  OWN_GOAL
+  SAVE
+
+  @@map("event_type")
+}
+
+enum StorageType {
+  LOCAL
+  S3
+
+  @@map("storage_type")
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+
+  @@map("action_type")
+}
