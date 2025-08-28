@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color Palette based on Team Colors */
+            --brand-blue: #7B8EE3;
+            --light-purple: #B8AFFF;
+            
+            --primary-text-dark: #2C2C3E;
+            --secondary-text-dark: #8A8A9E;
+            
+            --header-text-light: #FFFFFF;
+            --subheader-text-light: rgba(255, 255, 255, 0.75);
+
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #d8dbe0;
+            font-family: 'Mulish', sans-serif;
+            padding: 20px;
+        }
+
+        .mobile-view {
+            width: 375px;
+            background-image: linear-gradient(to bottom right, var(--brand-blue), var(--light-purple));
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-view::before {
+            content: 'METEOR CLUB';
+            position: absolute;
+            top: 150px;
+            left: -20px;
+            right: -20px;
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.1);
+            text-align: center;
+            z-index: 1;
+            transform: rotate(-5deg);
+        }
+
+        .mobile-view > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--subheader-text-light);
+            font-size: 16px;
+        }
+
+        .header h1 {
+            margin: 5px 0 20px 0;
+            font-size: 28px;
+            color: var(--header-text-light);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: #f1f3f5;
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            margin-left: 10px;
+            font-size: 14px;
+            width: 100%;
+            color: #6c757d;
+        }
+        
+        .search-bar .icon {
+            font-size: 20px;
+            color: #6c757d;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .transfers-card {
+             background: var(--glass-bg);
+             backdrop-filter: blur(10px);
+             -webkit-backdrop-filter: blur(10px);
+             border: 1px solid var(--glass-border);
+             padding: 15px;
+        }
+
+        .match-header {
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .match-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+        }
+
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            background-color: #dee2e6;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .team-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .score-info .score {
+            font-size: 36px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .score-info .status {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .divider {
+            border-top: 1px solid #e9ecef;
+            margin: 20px 0;
+        }
+
+        .player-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .player-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #adb5bd;
+            margin-right: 12px;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .player-details .name {
+            font-weight: 600;
+            color: #343a40;
+            font-size: 15px;
+        }
+
+        .player-details .desc {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .rating {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .rating.green { background-color: #28a745; }
+        .rating.yellow { background-color: #ffc107; }
+
+        .see-full-stats {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .see-full-stats a {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .transfer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .transfer-player {
+            display: flex;
+            align-items: center;
+        }
+        
+        .transfer-details {
+            text-align: center;
+        }
+        
+        .transfer-details .name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #343a40;
+        }
+        
+        .transfer-details .position {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .transfer-fee {
+            background-color: #7c4dff;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        
+        .transfer-club {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        .transfer-club .club-logo {
+            width: 32px;
+            height: 32px;
+            background-color: #e9ecef;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="mobile-view">
+        <header class="header">
+            <p>Hello Varun</p>
+            <h1>Welcome Back!</h1>
+            <div class="search-bar">
+                <span class="icon">🔍</span>
+                <input type="text" placeholder="Search for a league, team, players, etc.">
+            </div>
+        </header>
+
+        <main>
+            <section class="recent-matches">
+                <h2 class="section-title">Recent Matches</h2>
+                <div class="card">
+                    <div class="match-header">Champions League - Group Stage: Matchday 3</div>
+                    <div class="match-details">
+                        <div class="team">
+                            <div class="team-logo">ACM</div>
+                            <div class="team-name">AC Milan</div>
+                        </div>
+                        <div class="score-info">
+                            <div class="score">2-1</div>
+                            <div class="status">Full-Time</div>
+                        </div>
+                        <div class="team">
+                            <div class="team-logo">JUV</div>
+                            <div class="team-name">Juventus</div>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="player-stats">
+                        <div class="player-info">
+                            <div class="player-img">ZI</div>
+                            <div class="player-details">
+                                <div class="name">Zlatan Ibrahimovic</div>
+                                <div class="desc">Player of the Match</div>
+                            </div>
+                        </div>
+                        <div class="rating green">8.7</div>
+                    </div>
+                    <div class="player-stats">
+                        <div class="player-info">
+                            <div class="player-img">PD</div>
+                            <div class="player-details">
+                                <div class="name">Paulo Dybala</div>
+                                <div class="desc">Best Player for Juventus</div>
+                            </div>
+                        </div>
+                        <div class="rating yellow">7.9</div>
+                    </div>
+                    <div class="see-full-stats">
+                        <a href="#">See full stats</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="top-transfers">
+                <h2 class="section-title">Top Transfers</h2>
+                <div class="card transfers-card">
+                    <div class="transfer-item">
+                        <div class="transfer-club">
+                            <div class="club-logo">AV</div>
+                            Aston Villa
+                        </div>
+                        <div class="transfer-details">
+                            <div class="name">Jack Grealish</div>
+                            <div class="position">Midfielder</div>
+                            <div class="transfer-fee">11,80,00,000 €</div>
+                        </div>
+                        <div class="transfer-club">
+                            <div class="club-logo">MC</div>
+                            Man City
+                        </div>
+                    </div>
+                </div>
+                <div class="card transfers-card">
+                     <div class="transfer-item">
+                        <div class="transfer-club">
+                            <div class="club-logo">AV</div>
+                            Aston Villa
+                        </div>
+                        <div class="transfer-details">
+                            <div class="name">Romelu Lukaku</div>
+                            <div class="position">Forward</div>
+                            <div class="transfer-fee">11,50,00,000 €</div>
+                        </div>
+                        <div class="transfer-club">
+                            <div class="club-logo">CFC</div>
+                            Chelsea
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</body>
+</html>

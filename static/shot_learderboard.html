@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朋克风格 - 足球射手榜</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=League+Gothic&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mulish': ['Mulish', 'sans-serif'],
+                        'league-gothic': ['League Gothic', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="w-[1600px] h-[1200px] relative bg-white/40 backdrop-blur-[2px] overflow-hidden">
+        <div class="w-[684px] h-[684px] left-[-152px] top-[-130px] absolute bg-purple-400 rounded-full"></div>
+        <div class="w-[684px] h-[684px] left-[714px] top-[419px] absolute bg-blue-700 rounded-full"></div>
+        <div class="w-96 h-96 left-[1301px] top-[-130px] absolute bg-blue-700 rounded-full"></div>
+        <div class="w-96 h-96 left-[325px] top-[974px] absolute bg-purple-400 rounded-full"></div>
+        <div class="w-96 h-96 left-[-120px] top-[670px] absolute bg-purple-400 rounded-full"></div>
+        <div class="w-[1600px] h-[1200px] left-0 top-0 absolute bg-white/60 backdrop-blur-[275px]"></div>
+        <div class="left-[686px] top-[1121px] absolute justify-start text-neutral-500 text-2xl font-semibold font-mulish">www.nickelfox.com</div>
+        <div class="w-96 h-[896px] left-[582px] top-[125px] absolute bg-white rounded-[54px] overflow-hidden">
+          <img class="w-96 h-[904px] left-[-4px] top-[-4px] absolute" src="https://placehold.co/418x904">
+          <div class="w-80 h-32 left-[-8.24px] top-[622.65px] absolute rounded-full outline outline-4 outline-offset-[-2px] outline-white"></div>
+          <div class="w-[675.68px] h-0 left-[-123.17px] top-[544px] absolute origin-top-left rotate-[27.78deg] outline outline-4 outline-offset-[-2px] outline-white"></div>
+          <div class="left-[157px] top-[55px] absolute justify-start text-white text-2xl font-black font-mulish">ZLATAN</div>
+          <div class="left-[58px] top-[94px] absolute text-center justify-start text-yellow-200 text-5xl font-black font-mulish">IBRAHIMOVIC</div>
+          <div class="w-72 h-16 left-[57px] top-[778px] absolute bg-white rounded-xl shadow-[0px_4px_21px_0px_rgba(64,2,136,0.27)]"></div>
+          <div class="left-[132px] top-[800px] absolute justify-start text-purple-700 text-lg font-extrabold font-mulish">VIEW CAREER STATS</div>
+          <div class="w-9 h-9 left-[88px] top-[792px] absolute"></div>
+          <div class="w-5 h-5 left-[95.50px] top-[799.50px] absolute bg-violet-800"></div>
+        </div>
+        <div class="w-96 h-28 left-[585.11px] top-[570.99px] absolute origin-top-left rotate-[30deg] bg-gradient-to-l from-black/50 to-black/0"></div>
+        <div class="w-14 h-16 left-[803.08px] top-[378.68px] absolute bg-fuchsia-400"></div>
+        <div class="w-20 h-28 left-[716.53px] top-[422.18px] absolute bg-fuchsia-400"></div>
+        <div class="w-16 h-20 left-[866.44px] top-[681.79px] absolute bg-fuchsia-400"></div>
+        <div class="w-16 h-12 left-[771.41px] top-[646.65px] absolute bg-fuchsia-400"></div>
+        <div class="w-32 h-40 left-[802.55px] top-[520.62px] absolute bg-yellow-200"></div>
+        <div class="w-36 h-32 left-[914.55px] top-[539.03px] absolute bg-fuchsia-400"></div>
+        <div class="w-7 h-7 left-[808.43px] top-[438px] absolute origin-top-left rotate-[-27.92deg] bg-black outline outline-[0.60px] outline-offset-[-0.30px] outline-black"></div>
+        <div class="w-16 h-28 left-[805.31px] top-[615.45px] absolute bg-purple-600"></div>
+        <div class="w-12 h-14 left-[832.81px] top-[622.36px] absolute bg-purple-600"></div>
+        <div class="w-28 h-20 left-[722.81px] top-[620.06px] absolute bg-yellow-200"></div>
+        <div class="w-20 h-20 left-[932.10px] top-[761.69px] absolute bg-yellow-200"></div>
+        <div class="w-7 h-20 left-[954.31px] top-[780.74px] absolute bg-black"></div>
+        <div class="w-20 h-8 left-[638.04px] top-[555.52px] absolute bg-black"></div>
+        <div class="w-5 h-7 left-[952.82px] top-[780.75px] absolute bg-yellow-200"></div>
+        <div class="w-9 h-4 left-[636.72px] top-[542.35px] absolute bg-yellow-200"></div>
+        <div class="w-12 h-11 left-[797.78px] top-[344.24px] absolute bg-black"></div>
+        <div class="w-2.5 h-2 left-[802.52px] top-[337.15px] absolute bg-black"></div>
+        <div class="w-1.5 h-[3.31px] left-[565.06px] top-[539.66px] absolute bg-black"></div>
+        <div class="w-6 h-20 left-[758.68px] top-[379.33px] absolute bg-black"></div>
+        <div class="w-3 h-16 left-[806.63px] top-[381.68px] absolute bg-black"></div>
+        <div class="w-12 h-12 left-[799.83px] top-[348.10px] absolute bg-black"></div>
+        <div class="w-[1.52px] h-6 left-[777.26px] top-[376.08px] absolute bg-black"></div>
+        <div class="w-10 h-4 left-[781.08px] top-[376.75px] absolute bg-black"></div>
+        <div class="w-16 h-6 left-[738.72px] top-[391.63px] absolute bg-black"></div>
+        <div class="w-16 h-1.5 left-[702.19px] top-[423.04px] absolute bg-black"></div>
+        <div class="w-3 h-2.5 left-[698.41px] top-[313.63px] absolute origin-top-left rotate-[8.05deg] bg-black outline outline-1 outline-offset-[-0.50px] outline-black"></div>
+        <div class="w-2.5 h-2 left-[712.52px] top-[303.90px] absolute origin-top-left rotate-[-70.50deg] bg-black outline outline-1 outline-offset-[-0.50px] outline-black"></div>
+        <div class="w-4 h-6 left-[691.70px] top-[416.17px] absolute bg-black"></div>
+        <div class="w-1.5 h-6 left-[700.15px] top-[416.89px] absolute bg-black"></div>
+        <div class="w-3 h-4 left-[698.82px] top-[417.86px] absolute bg-black"></div>
+        <div class="w-12 h-44 left-[749.71px] top-[568.37px] absolute bg-black"></div>
+        <div class="w-2.5 h-14 left-[810.73px] top-[451.06px] absolute bg-black"></div>
+        <div class="w-24 h-16 left-[884.76px] top-[517.49px] absolute bg-black"></div>
+        <div class="w-28 h-36 left-[887.81px] top-[530.08px] absolute bg-black"></div>
+        <div class="w-2.5 h-9 left-[771.91px] top-[425.77px] absolute bg-black"></div>
+        <div class="w-1 h-11 left-[811.23px] top-[527.04px] absolute bg-black"></div>
+        <div class="w-16 h-5 left-[815.74px] top-[527.24px] absolute bg-black"></div>
+        <div class="w-6 h-[4.82px] left-[760.87px] top-[509.18px] absolute bg-black"></div>
+        <div class="w-2.5 h-12 left-[741.03px] top-[425.78px] absolute bg-black"></div>
+        <div class="w-5 h-9 left-[772.75px] top-[432.13px] absolute bg-black"></div>
+        <div class="w-3 h-5 left-[795.06px] top-[381.80px] absolute bg-black"></div>
+        <div class="w-12 h-4 left-[810.54px] top-[391.49px] absolute bg-black"></div>
+        <div class="w-9 h-2.5 left-[806.53px] top-[420.97px] absolute bg-black"></div>
+        <div class="w-8 h-2.5 left-[802.29px] top-[412.46px] absolute bg-black"></div>
+        <div class="w-6 h-2.5 left-[796.42px] top-[403.54px] absolute bg-black"></div>
+        <div class="w-3 h-4 left-[785.54px] top-[401.08px] absolute bg-black"></div>
+        <div class="w-4 h-10 left-[756.91px] top-[510.25px] absolute bg-white"></div>
+        <div class="w-5 h-11 left-[757.36px] top-[510.37px] absolute bg-black"></div>
+        <div class="w-1 h-8 left-[744.11px] top-[509.60px] absolute bg-black"></div>
+        <div class="w-5 h-2 left-[770.73px] top-[346.33px] absolute bg-black"></div>
+        <div class="w-3 h-2.5 left-[802.99px] top-[338.41px] absolute bg-black"></div>
+        <div class="w-[4.95px] h-[2.49px] left-[800.36px] top-[341.29px] absolute bg-black"></div>
+        <div class="w-[3.41px] h-[2.98px] left-[798.87px] top-[343.81px] absolute bg-black"></div>
+        <div class="w-[2.76px] h-2.5 left-[801.61px] top-[355.16px] absolute bg-black"></div>
+        <div class="w-1 h-3.5 left-[793.44px] top-[333.92px] absolute bg-black"></div>
+        <div class="w-1 h-2 left-[794.92px] top-[342.31px] absolute bg-black"></div>
+        <div class="w-1 h-7 left-[794.46px] top-[368.49px] absolute bg-black"></div>
+        <div class="w-1 h-3 left-[794.46px] top-[380.34px] absolute bg-black"></div>
+        <div class="w-1.5 h-2.5 left-[778.43px] top-[342.49px] absolute bg-black"></div>
+        <div class="w-7 h-2 left-[911.04px] top-[517.31px] absolute bg-black"></div>
+        <div class="w-2 h-[2.93px] left-[917.41px] top-[509.82px] absolute bg-black"></div>
+        <div class="w-0.5 h-5 left-[918.44px] top-[530.98px] absolute bg-black"></div>
+        <div class="w-1.5 h-[2.92px] left-[917.99px] top-[533.42px] absolute bg-black"></div>
+        <div class="w-0.5 h-5 left-[912.98px] top-[533.96px] absolute bg-black"></div>
+        <div class="w-1.5 h-1 left-[913.05px] top-[537.31px] absolute bg-black"></div>
+        <div class="w-[2.49px] h-5 left-[906.58px] top-[542.35px] absolute bg-black"></div>
+        <div class="w-2 h-0.5 left-[906.04px] top-[541.62px] absolute bg-black"></div>
+        <div class="w-[3.45px] h-4 left-[900.06px] top-[542.85px] absolute bg-black"></div>
+        <div class="w-3 h-1.5 left-[901.04px] top-[542.58px] absolute bg-black"></div>
+        <div class="w-1 h-3 left-[890.85px] top-[537.44px] absolute bg-black"></div>
+        <div class="w-2.5 h-1 left-[889.52px] top-[530.45px] absolute bg-black"></div>
+        <div class="w-16 h-40 left-[812.94px] top-[664.72px] absolute bg-black"></div>
+        <div class="w-40 h-32 left-[751.07px] top-[666.34px] absolute bg-black"></div>
+        <div class="w-11 h-4 left-[606.02px] top-[555.52px] absolute bg-black"></div>
+        <div class="w-1.5 h-6 left-[640.76px] top-[549.62px] absolute bg-black"></div>
+        <div class="w-28 h-20 left-[746.12px] top-[628.63px] absolute bg-black"></div>
+        <div class="w-5 h-14 left-[759.29px] top-[595px] absolute bg-black"></div>
+        <div class="w-1.5 h-4 left-[754.94px] top-[556.18px] absolute bg-black"></div>
+        <div class="w-2.5 h-3 left-[753.52px] top-[556.12px] absolute bg-black"></div>
+        <div class="w-9 h-8 left-[775.78px] top-[620.77px] absolute bg-black"></div>
+        <div class="w-4 h-8 left-[723.15px] top-[620.63px] absolute bg-black"></div>
+        <div class="w-2.5 h-6 left-[709.55px] top-[610.78px] absolute bg-black"></div>
+        <div class="w-12 h-20 left-[856.68px] top-[629.34px] absolute bg-black"></div>
+        <div class="w-20 h-32 left-[931.10px] top-[757.11px] absolute bg-black"></div>
+        <div class="w-3 h-3.5 left-[933.82px] top-[750.50px] absolute bg-black"></div>
+        <div class="w-2 h-4 left-[934.70px] top-[762.97px] absolute bg-black"></div>
+        <div class="w-11 h-12 left-[930.01px] top-[764.88px] absolute bg-black"></div>
+        <div class="w-16 h-24 left-[892.69px] top-[722.16px] absolute bg-black"></div>
+        <div class="w-9 h-7 left-[828.60px] top-[639.78px] absolute bg-black"></div>
+        <div class="w-14 h-6 left-[839.66px] top-[622.61px] absolute bg-black"></div>
+        <div class="w-10 h-9 left-[852.82px] top-[659.62px] absolute bg-black"></div>
+        <div class="w-5 h-8 left-[870.79px] top-[683.91px] absolute bg-black"></div>
+        <div class="w-5 h-5 left-[883.88px] top-[698.39px] absolute bg-black"></div>
+        <div class="w-4 h-9 left-[945.73px] top-[739.22px] absolute bg-black"></div>
+        <div class="w-2 h-12 left-[953.61px] top-[753.09px] absolute bg-black"></div>
+        <div class="w-3.5 h-4 left-[953.60px] top-[766.22px] absolute bg-black"></div>
+        <div class="w-4 h-5 left-[944.13px] top-[782.76px] absolute bg-black"></div>
+        <div class="w-1 h-3.5 left-[930.13px] top-[773.51px] absolute bg-black"></div>
+        <div class="w-1.5 h-[4.95px] left-[953.57px] top-[715.96px] absolute bg-black"></div>
+        <div class="w-1 h-1.5 left-[955.76px] top-[728.64px] absolute bg-black"></div>
+        <div class="w-1.5 h-1.5 left-[958.60px] top-[743.15px] absolute bg-black"></div>
+        <div class="w-1.5 h-2 left-[956.28px] top-[754.87px] absolute bg-black"></div>
+        <div class="w-1.5 h-[3.46px] left-[946.96px] top-[767.36px] absolute bg-black"></div>
+        <div class="w-[2.73px] h-1.5 left-[948.41px] top-[778.16px] absolute bg-black"></div>
+        <div class="w-2 h-7 left-[941.50px] top-[758.93px] absolute bg-black"></div>
+        <div class="w-2 h-[2.96px] left-[939.24px] top-[730px] absolute bg-black"></div>
+        <div class="w-0.5 h-3 left-[636.93px] top-[534.43px] absolute bg-black"></div>
+        <div class="w-8 h-1 left-[638.91px] top-[525.81px] absolute bg-black"></div>
+        <div class="w-8 h-[3.29px] left-[611.20px] top-[526.30px] absolute bg-black"></div>
+        <div class="w-7 h-3 left-[588.15px] top-[535.69px] absolute bg-black"></div>
+        <div class="w-7 h-3.5 left-[642.21px] top-[555.50px] absolute bg-black"></div>
+        <div class="w-7 h-1.5 left-[620.02px] top-[544.35px] absolute bg-black"></div>
+        <div class="w-2 h-2 left-[597.43px] top-[546.30px] absolute bg-black"></div>
+        <div class="w-2 h-[5.20px] left-[633.07px] top-[522.55px] absolute bg-black"></div>
+        <div class="w-1.5 h-1 left-[623.13px] top-[521.92px] absolute bg-black"></div>
+        <div class="w-2 h-1.5 left-[601.29px] top-[526.56px] absolute bg-black"></div>
+        <div class="w-2 h-1 left-[591.57px] top-[523.90px] absolute bg-black"></div>
+        <div class="w-1.5 h-1 left-[582.28px] top-[525.85px] absolute bg-black"></div>
+        <div class="w-[4.75px] h-1.5 left-[571.11px] top-[532.47px] absolute bg-black"></div>
+        <div class="w-6 h-5 left-[779.81px] top-[542.96px] absolute bg-black"></div>
+        <div class="w-3 h-7 left-[763.92px] top-[550.23px] absolute bg-black"></div>
+        <div class="w-5 h-14 left-[758.72px] top-[600.30px] absolute bg-black"></div>
+        <div class="w-5 h-14 left-[758.64px] top-[600.27px] absolute bg-black"></div>
+        <div class="w-1.5 h-5 left-[742.91px] top-[609.52px] absolute bg-black"></div>
+        <div class="w-1.5 h-5 left-[742.83px] top-[609.49px] absolute bg-black"></div>
+        <div class="w-6 h-4 left-[740.91px] top-[630.01px] absolute bg-black"></div>
+        <div class="w-4 h-6 left-[884.34px] top-[703.04px] absolute bg-black"></div>
+        <div class="w-1 h-2.5 left-[749.67px] top-[574.92px] absolute bg-black"></div>
+        <div class="w-1 h-[5.19px] left-[750.86px] top-[574.64px] absolute bg-black"></div>
+        <div class="w-[3.05px] h-1.5 left-[749.04px] top-[573.96px] absolute bg-black"></div>
+        <div class="w-1 h-[5.15px] left-[751.02px] top-[571.98px] absolute bg-black"></div>
+        <div class="w-1.5 h-1.5 left-[600.58px] top-[576.93px] absolute bg-black"></div>
+        <div class="w-1 h-1 left-[629.67px] top-[575.96px] absolute bg-black"></div>
+        <div class="w-[2.91px] h-[2.91px] left-[609.31px] top-[602.15px] absolute bg-black"></div>
+        <div class="w-16 h-16 left-[1050.67px] top-[651.61px] absolute bg-yellow-200"></div>
+        <div class="w-7 h-8 left-[1019.51px] top-[627.02px] absolute bg-black"></div>
+        <div class="w-20 h-20 left-[1058.91px] top-[656.74px] absolute bg-black"></div>
+        <div class="w-10 h-8 left-[1053.30px] top-[651.01px] absolute bg-black"></div>
+        <div class="w-8 h-24 left-[800.37px] top-[611.69px] absolute bg-black"></div>
+        <div class="w-8 h-20 left-[794.42px] top-[607.98px] absolute bg-black"></div>
+        <div class="w-16 h-3.5 left-[702.76px] top-[394.98px] absolute origin-top-left rotate-180 bg-black"></div>
+        <div class="w-4 h-9 left-[755.01px] top-[307.66px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-3 h-9 left-[758.27px] top-[308.24px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-5 h-9 left-[751.69px] top-[308.24px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-3 h-6 left-[758.40px] top-[307.37px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-4 h-5 left-[758.11px] top-[307.08px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-5 h-6 left-[758.11px] top-[306.30px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-6 h-5 left-[758.40px] top-[305.10px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-7 h-2.5 left-[758.11px] top-[302.88px] absolute outline outline-2 outline-offset-[-1px] outline-black"></div>
+        <div class="w-7 h-12 left-[729.98px] top-[424.53px] absolute origin-top-left rotate-[-3.27deg] bg-purple-700"></div>
+        <div class="w-14 h-28 left-[631.41px] top-[313.82px] absolute bg-neutral-700"></div>
+        <div class="w-14 h-28 left-[631.41px] top-[313.82px] absolute bg-black outline outline-1 outline-offset-[-0.50px] outline-black"></div>
+        <div class="w-11 h-20 left-[670.49px] top-[312.51px] absolute bg-neutral-700"></div>
+        <div class="w-96 h-[896px] left-[105px] top-[178px] absolute bg-white rounded-[54px] overflow-hidden">
+          <div class="left-[39px] top-[54px] absolute justify-start text-neutral-700 text-sm font-semibold font-mulish">Hello Varun</div>
+          <div class="left-[39px] top-[80px] absolute justify-start text-neutral-700 text-2xl font-extrabold font-mulish">Welcome Back!</div>
+          <div class="w-80 h-12 left-[39px] top-[134px] absolute bg-neutral-100 rounded-xl"></div>
+          <div class="w-6 h-6 left-[55px] top-[146px] absolute bg-neutral-700"></div>
+          <div class="left-[95px] top-[149px] absolute justify-start text-zinc-400 text-sm font-semibold font-mulish">Search for a league, team, players, etc. </div>
+          <div class="left-[39px] top-[206px] absolute justify-start text-neutral-700 text-base font-bold font-mulish">Recent Matches</div>
+          <div class="left-[39px] top-[633px] absolute justify-start text-neutral-700 text-base font-bold font-mulish">Top Transfers</div>
+          <div class="w-80 h-96 left-[39px] top-[242px] absolute bg-neutral-100 rounded-xl"></div>
+          <div class="w-9 h-9 left-[322px] top-[491px] absolute bg-amber-400 rounded-full"></div>
+          <div class="left-[331px] top-[495px] absolute justify-start text-purple-50 text-2xl font-normal font-league-gothic">7.9</div>
+          <div class="left-[104px] top-[489.08px] absolute justify-start text-neutral-700 text-sm font-bold font-mulish">Paulo Dybala</div>
+          <div class="left-[104px] top-[511.08px] absolute justify-start text-neutral-700 text-xs font-normal font-mulish">Best Player for Juventus</div>
+          <div class="w-9 h-9 left-[55px] top-[489px] absolute bg-stone-300 rounded-full"></div>
+          <img class="w-10 h-9 left-[54.56px] top-[489px] absolute" src="https://placehold.co/38x38">
+          <div class="w-2.5 h-2.5 left-[68.75px] top-[519.18px] absolute bg-purple-100 rounded-full"></div>
+          <div class="w-1 h-1.5 left-[71.98px] top-[521.21px] absolute bg-black"></div>
+          <div class="w-9 h-9 left-[322px] top-[426px] absolute bg-green-600 rounded-full"></div>
+          <div class="left-[331px] top-[430px] absolute justify-start text-purple-50 text-2xl font-normal font-league-gothic">8.7</div>
+          <div class="left-[104px] top-[424px] absolute justify-start text-neutral-700 text-sm font-bold font-mulish">Zlatan Ibrahimovic</div>
+          <div class="left-[104px] top-[446px] absolute justify-start text-neutral-700 text-xs font-normal font-mulish">Player of the Match</div>
+          <div class="w-9 h-9 left-[55px] top-[424px] absolute bg-stone-300 rounded-full"></div>
+          <img class="w-11 h-11 left-[50.30px] top-[424px] absolute" src="https://placehold.co/43x42">
+          <div class="w-2.5 h-2.5 left-[68.75px] top-[454.18px] absolute bg-purple-100 rounded-full"></div>
+          <div class="w-2 h-2 left-[69.76px] top-[455.53px] absolute overflow-hidden">
+            <div class="w-1 h-2 left-[1.88px] top-[0.33px] absolute bg-white"></div>
+            <div class="w-[5.03px] h-2 left-[1.68px] top-[0.12px] absolute bg-black"></div>
+            <div class="w-[4.76px] h-2 left-[1.81px] top-[0.26px] absolute bg-red-600"></div>
+            <div class="w-[0.39px] h-1 left-[3.42px] top-[2.13px] absolute bg-black"></div>
+            <div class="w-[0.39px] h-1 left-[3.03px] top-[2.13px] absolute bg-red-600"></div>
+            <div class="w-[0.39px] h-1 left-[2.64px] top-[2.37px] absolute bg-black"></div>
+            <div class="w-[0.39px] h-[3.06px] left-[2.25px] top-[2.66px] absolute bg-red-600"></div>
+            <div class="w-[0.18px] h-0.5 left-[2.07px] top-[3.17px] absolute bg-black"></div>
+            <div class="w-[0.69px] h-1 left-[4.86px] top-[2.14px] absolute bg-black"></div>
+            <div class="w-0.5 h-[0.69px] left-[4.19px] top-[3.85px] absolute bg-black"></div>
+            <div class="w-[2.57px] h-1 left-[3.80px] top-[2.01px] absolute bg-red-600"></div>
+            <div class="w-[0.15px] h-1 left-[4.19px] top-[1.99px] absolute bg-black"></div>
+            <div class="w-1 h-1 left-[1.97px] top-[1.96px] absolute bg-black"></div>
+            <div class="w-[2.80px] h-1.5 left-[2.76px] top-[0.83px] absolute bg-black"></div>
+          </div>
+          <div class="w-72 h-0 left-[56px] top-[400px] absolute outline outline-1 outline-offset-[-0.50px] outline-neutral-200"></div>
+          <div class="w-72 h-0 left-[56px] top-[554px] absolute outline outline-1 outline-offset-[-0.50px] outline-neutral-200"></div>
+          <div class="left-[73px] top-[266px] absolute text-center justify-start text-neutral-700 text-xs font-bold font-mulish">Champions League - Group Stage: Matchday 3</div>
+          <div class="left-[170px] top-[570px] absolute text-center justify-start text-neutral-700 text-xs font-bold font-mulish">See full stats</div>
+          <div class="left-[176px] top-[356px] absolute justify-start text-neutral-700 text-sm font-extrabold font-mulish">Full-Time</div>
+          <div class="left-[178px] top-[307px] absolute justify-start text-neutral-700 text-4xl font-black font-mulish">2-1</div>
+          <div class="w-12 h-12 left-[66px] top-[305px] absolute overflow-hidden">
+            <div class="w-7 h-11 left-[10.79px] top-[1.90px] absolute bg-white"></div>
+            <div class="w-7 h-12 left-[9.59px] top-[0.71px] absolute bg-black"></div>
+            <div class="w-7 h-11 left-[10.36px] top-[1.47px] absolute bg-red-600"></div>
+            <div class="w-0.5 h-6 left-[19.56px] top-[12.19px] absolute bg-black"></div>
+            <div class="w-0.5 h-6 left-[17.34px] top-[12.19px] absolute bg-red-600"></div>
+            <div class="w-0.5 h-5 left-[15.12px] top-[13.55px] absolute bg-black"></div>
+            <div class="w-0.5 h-4 left-[12.90px] top-[15.26px] absolute bg-red-600"></div>
+            <div class="w-px h-3 left-[11.88px] top-[18.17px] absolute bg-black"></div>
+            <div class="w-1 h-6 left-[27.84px] top-[12.26px] absolute bg-black"></div>
+            <div class="w-3 h-1 left-[24px] top-[22.04px] absolute bg-black"></div>
+            <div class="w-3.5 h-6 left-[21.78px] top-[11.50px] absolute bg-red-600"></div>
+            <div class="w-[0.85px] h-6 left-[24px] top-[11.41px] absolute bg-black"></div>
+            <div class="w-6 h-6 left-[11.26px] top-[11.26px] absolute bg-black"></div>
+            <div class="w-4 h-9 left-[15.80px] top-[4.73px] absolute bg-black"></div>
+          </div>
+          <div class="left-[65px] top-[361px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">AC Milan</div>
+          <div class="w-5 h-11 left-[313px] top-[306px] absolute overflow-hidden">
+            <div class="w-5 h-11 left-0 top-0 absolute bg-black"></div>
+          </div>
+          <div class="left-[300px] top-[359.53px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Juventus</div>
+          <div class="w-80 h-20 left-[39px] top-[677px] absolute bg-white rounded-xl border-2 border-purple-100"></div>
+          <img class="w-9 h-9 left-[318px] top-[689px] absolute" src="https://placehold.co/37x37">
+          <div class="left-[312px] top-[730px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Man City</div>
+          <div class="left-[51px] top-[730px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Aston Villa</div>
+          <div class="w-9 h-9 left-[61px] top-[690px] absolute bg-stone-300 rounded-full"></div>
+          <img class="w-10 h-10 left-[58.78px] top-[686.60px] absolute" src="https://placehold.co/40x40">
+          <div class="left-[161px] top-[689px] absolute text-center justify-start text-neutral-700 text-sm font-bold font-mulish">Jack Grealish</div>
+          <div class="left-[178px] top-[711px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Midfielder</div>
+          <div class="w-24 h-4 left-[159px] top-[730px] absolute bg-violet-800 rounded"></div>
+          <div class="left-[164px] top-[730px] absolute text-center justify-start text-white text-xs font-bold font-mulish">11,80,00,000 €</div>
+          <div class="w-80 h-20 left-[39px] top-[773px] absolute bg-white rounded-xl border-2 border-purple-100"></div>
+          <img class="w-9 h-9 left-[320px] top-[785px] absolute" src="https://placehold.co/36x36">
+          <div class="left-[317px] top-[825px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Chelsea</div>
+          <div class="left-[51px] top-[825px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Aston Villa</div>
+          <div class="w-9 h-9 left-[61px] top-[785px] absolute bg-stone-300 rounded-full"></div>
+          <img class="w-10 h-10 left-[59.41px] top-[782.23px] absolute" src="https://placehold.co/39x39">
+          <div class="left-[154px] top-[784px] absolute text-center justify-start text-neutral-700 text-sm font-bold font-mulish">Romelu Lukaku</div>
+          <div class="left-[181px] top-[806px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Forward</div>
+          <div class="w-24 h-4 left-[159px] top-[825px] absolute bg-violet-800 rounded"></div>
+          <div class="left-[164px] top-[825px] absolute text-center justify-start text-white text-xs font-bold font-mulish">11,50,00,000 €</div>
+        </div>
+        <div class="w-96 h-[896px] left-[1072px] top-[178px] absolute bg-white rounded-[54px] shadow-[19px_11px_59px_0px_rgba(0,0,0,0.09)] overflow-hidden">
+          <img class="w-96 h-64 left-[-1px] top-0 absolute rounded-tl-xl" src="https://placehold.co/415x254">
+          <div class="w-12 h-11 left-[255.08px] top-[138.28px] absolute origin-top-left rotate-[-2.53deg] bg-gradient-to-b from-pink-400 to-fuchsia-400"></div>
+          <div class="w-16 h-24 left-[244.90px] top-[75.95px] absolute origin-top-left rotate-[-2.53deg] bg-gradient-to-b from-fuchsia-400 to-fuchsia-400"></div>
+          <div class="w-9 h-4 left-[260.42px] top-[149.65px] absolute origin-top-left rotate-[-2.53deg] bg-black"></div>
+          <div class="w-[4.91px] h-2.5 left-[275.68px] top-[137.58px] absolute origin-top-left rotate-[-2.53deg] bg-black"></div>
+          <div class="w-3.5 h-1.5 left-[263.03px] top-[126.42px] absolute origin-top-left rotate-[-2.53deg] bg-black"></div>
+          <div class="w-3.5 h-1.5 left-[294.75px] top-[131.77px] absolute origin-top-left rotate-[-178.98deg] bg-black"></div>
+          <div class="w-6 h-7 left-[265.12px] top-[99.71px] absolute origin-top-left rotate-[-5.90deg] bg-fuchsia-500"></div>
+          <div class="w-1.5 h-[3.28px] left-[269.71px] top-[99.65px] absolute origin-top-left rotate-[-4.50deg] bg-black"></div>
+          <div class="w-2 h-4 left-[306.65px] top-[100.91px] absolute origin-top-left rotate-[-2.53deg] bg-gradient-to-b from-fuchsia-400 to-fuchsia-400"></div>
+          <div class="w-1.5 h-2.5 left-[306.50px] top-[102.55px] absolute origin-top-left rotate-[-2.53deg] bg-fuchsia-500"></div>
+          <div class="w-2 h-3.5 left-[244.38px] top-[98.89px] absolute origin-top-left rotate-[-2.53deg] bg-gradient-to-b from-fuchsia-400 to-fuchsia-400"></div>
+          <div class="w-[4.82px] h-2 left-[251.66px] top-[108.92px] absolute origin-top-left rotate-[-167.53deg] bg-fuchsia-500"></div>
+          <div class="w-1.5 h-[3.28px] left-[291.05px] top-[102.34px] absolute origin-top-left rotate-[175.50deg] bg-black"></div>
+          <div class="w-6 h-3 left-[255.05px] top-[90.19px] absolute origin-top-left rotate-[-4.50deg] bg-black"></div>
+          <div class="w-5 h-3 left-[304.35px] top-[100.89px] absolute origin-top-left rotate-[-179.44deg] bg-black"></div>
+          <div class="w-[1.63px] h-[1.63px] left-[273.38px] top-[100.44px] absolute origin-top-left rotate-[-4.50deg] bg-white rounded-full"></div>
+          <div class="w-[1.63px] h-[1.63px] left-[287.42px] top-[102.06px] absolute origin-top-left rotate-[175.50deg] bg-white rounded-full"></div>
+          <div class="w-4 h-px left-[271.44px] top-[132.30px] absolute origin-top-left rotate-[1.81deg] bg-black rounded-full"></div>
+          <div class="w-14 h-9 left-[252.22px] top-[67.50px] absolute origin-top-left rotate-[-2.53deg] bg-neutral-600"></div>
+          <div class="w-14 h-11 left-[176px] top-[214.11px] absolute origin-top-left rotate-[-2.53deg] bg-stone-300"></div>
+          <div class="w-40 h-24 left-[195.69px] top-[176.67px] absolute origin-top-left rotate-[-2.53deg] bg-gradient-to-b from-yellow-200 to-yellow-300"></div>
+          <div class="w-12 h-11 left-[176.12px] top-[216.90px] absolute origin-top-left rotate-[-2.53deg] bg-gradient-to-b from-fuchsia-400 to-fuchsia-400"></div>
+          <div class="w-12 h-11 left-[365.72px] top-[268.79px] absolute origin-top-left rotate-[-168.15deg] bg-gradient-to-b from-fuchsia-400 to-fuchsia-400"></div>
+          <div class="w-7 h-6 left-[228.22px] top-[218.41px] absolute origin-top-left rotate-[-27.68deg] bg-amber-300 outline outline-1 outline-offset-[-0.50px] outline-amber-300"></div>
+          <div class="w-7 h-6 left-[315.46px] top-[239.85px] absolute origin-top-left rotate-[-152.32deg] bg-amber-300 outline outline-1 outline-offset-[-0.50px] outline-amber-300"></div>
+          <div class="w-4 h-7 left-[267.69px] top-[204.62px] absolute bg-purple-700"></div>
+          <div class="left-[39px] top-[78px] absolute justify-start text-white text-3xl font-extrabold font-mulish">Zlatan <br/>Ibrahimovic</div>
+          <div class="left-[39px] top-[166px] absolute justify-start text-yellow-300 text-4xl font-extrabold font-mulish">#10</div>
+          <div class="left-[36px] top-[592px] absolute justify-start text-neutral-700 text-base font-bold font-mulish">Latest Match</div>
+          <div class="w-80 h-52 left-[40px] top-[628px] absolute bg-neutral-100 rounded-xl"></div>
+          <div class="left-[177px] top-[742px] absolute justify-start text-neutral-700 text-sm font-extrabold font-mulish">Full-Time</div>
+          <div class="left-[179px] top-[693px] absolute justify-start text-neutral-700 text-4xl font-black font-mulish">2-1</div>
+          <div class="w-12 h-12 left-[67px] top-[691px] absolute overflow-hidden">
+            <div class="w-7 h-11 left-[10.79px] top-[1.90px] absolute bg-white"></div>
+            <div class="w-7 h-12 left-[9.59px] top-[0.71px] absolute bg-black"></div>
+            <div class="w-7 h-11 left-[10.36px] top-[1.47px] absolute bg-red-600"></div>
+            <div class="w-0.5 h-6 left-[19.56px] top-[12.19px] absolute bg-black"></div>
+            <div class="w-0.5 h-6 left-[17.34px] top-[12.19px] absolute bg-red-600"></div>
+            <div class="w-0.5 h-5 left-[15.12px] top-[13.55px] absolute bg-black"></div>
+            <div class="w-0.5 h-4 left-[12.90px] top-[15.26px] absolute bg-red-600"></div>
+            <div class="w-px h-3 left-[11.88px] top-[18.17px] absolute bg-black"></div>
+            <div class="w-1 h-6 left-[27.84px] top-[12.26px] absolute bg-black"></div>
+            <div class="w-3 h-1 left-[24px] top-[22.04px] absolute bg-black"></div>
+            <div class="w-3.5 h-6 left-[21.78px] top-[11.50px] absolute bg-red-600"></div>
+            <div class="w-[0.85px] h-6 left-[24px] top-[11.41px] absolute bg-black"></div>
+            <div class="w-6 h-6 left-[11.26px] top-[11.26px] absolute bg-black"></div>
+            <div class="w-4 h-9 left-[15.80px] top-[4.73px] absolute bg-black"></div>
+          </div>
+          <div class="left-[66px] top-[747px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">AC Milan</div>
+          <div class="w-5 h-11 left-[314px] top-[692px] absolute overflow-hidden">
+            <div class="w-5 h-11 left-0 top-0 absolute bg-black"></div>
+          </div>
+          <div class="left-[301px] top-[745.53px] absolute text-center justify-start text-neutral-700 text-xs font-normal font-mulish">Juventus</div>
+          <div class="left-[74px] top-[652px] absolute text-center justify-start text-neutral-700 text-xs font-bold font-mulish">Champions League - Group Stage: Matchday 3</div>
+          <div class="w-72 h-0 left-[56px] top-[786px] absolute outline outline-1 outline-offset-[-0.50px] outline-neutral-200"></div>
+          <div class="left-[170px] top-[802px] absolute text-center justify-start text-neutral-700 text-xs font-bold font-mulish">See full stats</div>
+          <div class="w-24 h-32 left-[36px] top-[290px] absolute bg-neutral-100 rounded-xl"></div>
+          <div class="w-16 h-0 left-[46px] top-[379px] absolute outline outline-1 outline-offset-[-0.50px] outline-neutral-200"></div>
+          <div class="w-24 h-32 left-[161px] top-[290px] absolute bg-neutral-100 rounded-xl"></div>
+          <div class="w-24 h-32 left-[286px] top-[290px] absolute bg-neutral-100 rounded-xl"></div>
+          <div class="left-[58px] top-[313px] absolute justify-start text-neutral-700 text-5xl font-normal font-league-gothic">570</div>
+          <div class="w-16 h-0 left-[171px] top-[379px] absolute outline outline-1 outline-offset-[-0.50px] outline-neutral-200"></div>
+          <div class="w-16 h-0 left-[300px] top-[379px] absolute outline outline-1 outline-offset-[-0.50px] outline-neutral-200"></div>
+          <div class="left-[191px] top-[313px] absolute text-center justify-start text-neutral-700 text-5xl font-normal font-league-gothic">39</div>
+          <div class="left-[320px] top-[313px] absolute text-center justify-start text-neutral-700 text-5xl font-normal font-league-gothic">ST</div>
+          <div class="left-[36px] top-[448px] absolute justify-start text-neutral-700 text-base font-bold font-mulish">Teams Played for</div>
+          <div class="left-[64px] top-[386px] absolute justify-start text-neutral-700 text-sm font-bold font-mulish">Goals</div>
+          <div class="w-16 h-16 left-[124px] top-[484px] absolute rounded-xl border-2 border-purple-100"></div>
+          <div class="w-9 h-9 left-[141.84px] top-[502px] absolute overflow-hidden">
+            <div class="w-5 h-8 left-[8.09px] top-[1.43px] absolute bg-white"></div>
+            <div class="w-5 h-9 left-[7.19px] top-[0.53px] absolute bg-black"></div>
+            <div class="w-5 h-8 left-[7.77px] top-[1.11px] absolute bg-red-600"></div>
+            <div class="w-[1.66px] h-5 left-[14.67px] top-[9.14px] absolute bg-black"></div>
+            <div class="w-[1.66px] h-4 left-[13.01px] top-[9.14px] absolute bg-red-600"></div>
+            <div class="w-[1.66px] h-4 left-[11.34px] top-[10.17px] absolute bg-black"></div>
+            <div class="w-[1.66px] h-3.5 left-[9.68px] top-[11.45px] absolute bg-red-600"></div>
+            <div class="w-[0.76px] h-2 left-[8.91px] top-[13.62px] absolute bg-black"></div>
+            <div class="w-[2.95px] h-4 left-[20.88px] top-[9.19px] absolute bg-black"></div>
+            <div class="w-2.5 h-[2.95px] left-[18px] top-[16.53px] absolute bg-black"></div>
+            <div class="w-3 h-5 left-[16.34px] top-[8.63px] absolute bg-red-600"></div>
+            <div class="w-[0.64px] h-5 left-[18px] top-[8.55px] absolute bg-black"></div>
+            <div class="w-5 h-5 left-[8.44px] top-[8.44px] absolute bg-black"></div>
+            <div class="w-3 h-7 left-[11.85px] top-[3.55px] absolute bg-black"></div>
+          </div>
+          <div class="w-16 h-16 left-[212px] top-[484px] absolute rounded-xl border-2 border-purple-100"></div>
+          <img class="w-9 h-9 left-[230.43px] top-[502px] absolute" src="https://placehold.co/35x36">
+          <div class="w-16 h-16 left-[300px] top-[484px] absolute rounded-xl border-2 border-purple-100"></div>
+          <div class="w-5 h-11 left-[325px] top-[498px] absolute overflow-hidden">
+            <div class="w-5 h-9 left-[3px] top-[3px] absolute bg-black"></div>
+          </div>
+          <div class="w-16 h-16 left-[36px] top-[484px] absolute rounded-xl border-2 border-purple-100"></div>
+          <img class="w-12 h-12 left-[47.37px] top-[495.05px] absolute" src="https://placehold.co/49x50">
+          <div class="left-[193px] top-[386px] absolute text-center justify-start text-neutral-700 text-sm font-bold font-mulish">Age</div>
+          <div class="left-[308px] top-[386px] absolute text-center justify-start text-neutral-700 text-sm font-bold font-mulish">Position</div>
+        </div>
+      </div>
+
+    <script>
+        // Set Date
+        const dateElement = document.getElementById('current-date');
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        const day = today.getDate().toString().padStart(2, '0');
+        dateElement.textContent = `${year}.${month}.${day}`;
+    </script>
+
+</body>
+</html>

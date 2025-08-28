@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Scorers - Team Colors</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* New Color Palette based on Team Colors */
+            --brand-blue: #7B8EE3;
+            --light-purple: #B8AFFF;
+            
+            --primary-text-dark: #2C2C3E;
+            --secondary-text-dark: #8A8A9E;
+            
+            --header-text-light: #FFFFFF;
+            --subheader-text-light: rgba(255, 255, 255, 0.75);
+
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            
+            --gold: #FFC107;
+            --silver: #D0D3D8;
+            --bronze: #CD7F32;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #d8dbe0;
+            font-family: 'Mulish', sans-serif;
+            padding: 20px;
+        }
+
+        .mobile-view {
+            width: 375px;
+            /* Applying the new gradient background */
+            background-image: linear-gradient(to bottom right, var(--brand-blue), var(--light-purple));
+            border-radius: 40px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px 25px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Adjusted background graphic for the new theme */
+        .mobile-view::before {
+            content: 'METEOR CLUB';
+            position: absolute;
+            top: 150px;
+            left: -20px;
+            right: -20px;
+            font-size: 80px;
+            font-weight: 900;
+            /* Made more subtle */
+            color: rgba(255, 255, 255, 0.1);
+            text-align: center;
+            z-index: 1;
+            transform: rotate(-5deg);
+        }
+
+        .mobile-view > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 800;
+            /* Changed to light color for contrast */
+            color: var(--header-text-light);
+        }
+
+        .page-header p {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            /* Changed to light color for contrast */
+            color: var(--subheader-text-light);
+            font-weight: 500;
+        }
+
+        .podium {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        .podium-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100px;
+            position: relative;
+        }
+        
+        .podium-player-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .podium-item .rank {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid var(--brand-blue); /* Border matches new bg */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            z-index: 2;
+        }
+
+        .podium-item .player-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            /* Updated background to be semi-transparent */
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 5px solid;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .podium-item .name, .podium-item .team, .podium-item .goals {
+            /* All text on the podium is now light */
+            color: var(--header-text-light);
+        }
+        .podium-item .name { font-weight: 700; font-size: 14px; line-height: 1.3; }
+        .podium-item .team { font-size: 12px; opacity: 0.8; margin-bottom: 8px; }
+        .podium-item .goals { font-size: 24px; font-weight: 900; }
+        
+        .podium-item.gold { align-self: flex-start; }
+        .podium-item.gold .rank { background-color: var(--gold); }
+        .podium-item.gold .player-img { border-color: var(--gold); width: 84px; height: 84px; }
+
+        .podium-item.silver { margin-top: 20px; }
+        .podium-item.silver .rank { background-color: var(--silver); }
+        .podium-item.silver .player-img { border-color: var(--silver); }
+
+        .podium-item.bronze { margin-top: 35px; }
+        .podium-item.bronze .rank { background-color: var(--bronze); }
+        .podium-item.bronze .player-img { border-color: var(--bronze); }
+
+        .scorers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 12px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .list-item .rank {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--secondary-text-dark);
+            width: 30px;
+            text-align: left;
+        }
+
+        .list-item .player-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .list-item .player-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: var(--primary-text-dark);
+            font-size: 14px;
+        }
+
+        .list-item .details .name {
+            font-weight: 700;
+            color: var(--primary-text-dark);
+            font-size: 15px;
+        }
+
+        .list-item .details .team {
+            font-size: 12px;
+            color: var(--secondary-text-dark);
+        }
+
+        .list-item .goals {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-text-dark);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-view">
+        <header class="page-header">
+            <h1>Top Scorers</h1>
+            <p>Champions League</p>
+        </header>
+
+        <main>
+            <section class="podium">
+                <div class="podium-item silver">
+                    <div class="podium-player-container">
+                        <div class="rank">2</div>
+                        <div class="player-img">CR7</div>
+                    </div>
+                    <div class="name">C. Ronaldo</div>
+                    <div class="team">Man United</div>
+                    <div class="goals">10</div>
+                </div>
+                <div class="podium-item gold">
+                    <div class="podium-player-container">
+                        <div class="rank">1</div>
+                        <div class="player-img">LM</div>
+                    </div>
+                    <div class="name">L. Messi</div>
+                    <div class="team">PSG</div>
+                    <div class="goals">12</div>
+                </div>
+                <div class="podium-item bronze">
+                    <div class="podium-player-container">
+                        <div class="rank">3</div>
+                        <div class="player-img">RL</div>
+                    </div>
+                    <div class="name">R. Lewandowski</div>
+                    <div class="team">FC Bayern</div>
+                    <div class="goals">9</div>
+                </div>
+            </section>
+
+            <section class="scorers-list">
+                <div class="list-item">
+                    <div class="rank">4</div>
+                    <div class="player-info">
+                        <div class="player-img">KB</div>
+                        <div class="details">
+                            <div class="name">Karim Benzema</div>
+                            <div class="team">Real Madrid</div>
+                        </div>
+                    </div>
+                    <div class="goals">8</div>
+                </div>
+                <div class="list-item">
+                    <div class="rank">5</div>
+                    <div class="player-info">
+                        <div class="player-img">MS</div>
+                        <div class="details">
+                            <div class="name">Mohamed Salah</div>
+                            <div class="team">Liverpool</div>
+                        </div>
+                    </div>
+                    <div class="goals">8</div>
+                </div>
+                 <div class="list-item">
+                    <div class="rank">6</div>
+                    <div class="player-info">
+                        <div class="player-img">EH</div>
+                        <div class="details">
+                            <div class="name">Erling Haaland</div>
+                            <div class="team">Dortmund</div>
+                        </div>
+                    </div>
+                    <div class="goals">7</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</body>
+</html>
