@@ -1,0 +1,405 @@
+.container {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.header p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Configuration Section */
+.configSection {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.configSection h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.configGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.configItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.configItem label {
+  font-size: 14px;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.numberInput {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.numberInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.inputGroup span {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.autoCalculated {
+  font-size: 14px;
+  color: #059669;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Summary Section */
+.summarySection {
+  margin-bottom: 24px;
+}
+
+.summarySection h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summaryCard {
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summaryIcon {
+  background: #3b82f6;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.summaryContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.summaryValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Total Breakdown */
+.totalBreakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.baseCosts,
+.collectedFees {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.baseCosts h5,
+.collectedFees h5 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.costItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+
+.costItem:last-child {
+  border-bottom: none;
+}
+
+.costItem.total {
+  font-weight: 600;
+  border-top: 2px solid #e5e7eb;
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.costItem.grandTotal {
+  font-size: 16px;
+  font-weight: 700;
+  color: #059669;
+}
+
+.difference {
+  grid-column: 1 / -1;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 2px solid;
+  text-align: center;
+}
+
+.difference.positive {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.difference.negative {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.difference .costItem {
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.difference.positive .costItem {
+  color: #059669;
+}
+
+.difference.negative .costItem {
+  color: #dc2626;
+}
+
+.differenceNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.difference.positive .differenceNote {
+  color: #059669;
+}
+
+.difference.negative .differenceNote {
+  color: #dc2626;
+}
+
+/* Player Section */
+.playerSection {
+  margin-top: 24px;
+}
+
+.playerSection h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.playerFinancial {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.playerHeader {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.playerName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #374151;
+  flex: 1;
+}
+
+.lateIndicator {
+  background: #fbbf24;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.playerTotal {
+  font-size: 16px;
+  font-weight: 700;
+  color: #059669;
+}
+
+.playerDetails {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.feeBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.feeItem span:first-child {
+  color: #6b7280;
+}
+
+.feeItem span:last-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+.paymentProxy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paymentProxy label {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.proxyInput {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.proxyInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.proxyInput::placeholder {
+  color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+    margin-top: 16px;
+  }
+  
+  .summaryGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .summaryCard {
+    padding: 12px;
+  }
+  
+  .summaryValue {
+    font-size: 18px;
+  }
+  
+  .totalBreakdown {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .playerDetails {
+    padding: 12px;
+  }
+}

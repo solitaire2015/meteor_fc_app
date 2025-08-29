@@ -1,0 +1,636 @@
+.container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header h3 {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  min-width: 60px;
+}
+
+.stat svg {
+  color: #6b7280;
+}
+
+.stat span:nth-child(2) {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.stat span:nth-child(3) {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.attendanceGrid {
+  margin-bottom: 32px;
+}
+
+.gridHeader {
+  margin-bottom: 16px;
+}
+
+.gridHeader h4 {
+  margin: 0 0 4px 0;
+  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gridHeader p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionHeader {
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  padding: 8px;
+  background: #e5e7eb;
+  border-radius: 6px;
+}
+
+.parts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.part {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 120px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.part:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.partHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.partUsers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.partUser {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.partUser .userName {
+  font-weight: 500;
+  color: #374151;
+  font-size: 12px;
+}
+
+.userIndicators {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeValue {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.timeValue.value1 {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.timeValue.value0_5 {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.icon {
+  color: #6b7280;
+}
+
+.emptyCell {
+  color: #9ca3af;
+  font-size: 12px;
+  text-align: center;
+  padding: 16px 8px;
+  font-style: italic;
+}
+
+/* Player List */
+.playerList {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 24px;
+}
+
+.playerList h4 {
+  margin: 0 0 8px 0;
+  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.playerListDescription {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.playerStats {
+  font-size: 12px;
+  color: #059669;
+  background: #d1fae5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 32px 16px;
+  color: #9ca3af;
+}
+
+.emptyState p {
+  margin: 0 0 8px 0;
+}
+
+.emptyState p:last-child {
+  margin: 0;
+  font-size: 14px;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.player {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.player.attending {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.playerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.playerBasic {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.checkbox {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.userName {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.position {
+  font-size: 12px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.gridLocation {
+  font-size: 12px;
+  color: #059669;
+  background: #d1fae5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.expandButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.playerDetails {
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.detailRow label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.numberInput {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.numberInput label {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.numberInput input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Modal Styles */
+.modal {
+  position: relative;
+  z-index: 50;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modalContainer {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+}
+
+.modalContent {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+}
+
+.modalPanel {
+  width: 100%;
+  max-width: 600px;
+  transform: scale(1);
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 24px;
+}
+
+.modalUser {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.modalUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalUserRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  gap: 12px;
+}
+
+.modalUserName {
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.goalkeeperLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.goalkeeperLabel input[type="checkbox"] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.goalkeeperLabel input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timeSelector {
+  display: flex;
+  gap: 8px;
+}
+
+.timeButton {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeButton:hover {
+  border-color: #9ca3af;
+}
+
+.timeButton.active {
+  border-color: transparent;
+  color: white;
+  font-weight: 600;
+}
+
+.timeButton.none.active {
+  background: #ef4444;
+}
+
+.timeButton.half.active {
+  background: #f59e0b;
+}
+
+.timeButton.full.active {
+  background: #10b981;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.closeButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.closeButton:hover {
+  transform: translateY(-1px);
+}
+
+/* Modal Transitions */
+.modalEnter {
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.modalEnterFrom {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.modalEnterTo {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.modalLeave {
+  transition: opacity 200ms ease-in, transform 200ms ease-in;
+}
+
+.modalLeaveFrom {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.modalLeaveTo {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .stats {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .stat {
+    min-width: 50px;
+    padding: 8px;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .parts {
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 8px;
+  }
+  
+  .part {
+    min-height: 100px;
+    padding: 8px;
+  }
+  
+  .modalContent {
+    padding: 8px;
+  }
+  
+  .modalPanel {
+    padding: 20px;
+  }
+  
+  .modalUser {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .modalUserRow {
+    flex-direction: row;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .modalUserName {
+    min-width: auto;
+    text-align: center;
+    font-weight: 600;
+  }
+  
+  .goalkeeperLabel {
+    min-width: auto;
+    justify-content: center;
+  }
+  
+  .timeSelector {
+    justify-content: center;
+  }
+  
+  .detailRow {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}

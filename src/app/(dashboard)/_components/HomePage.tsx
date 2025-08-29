@@ -5,7 +5,7 @@ import { Mulish } from 'next/font/google'
 import { useState } from 'react'
 import Link from 'next/link'
 import Select from 'react-select'
-import styles from '../styles/Home.module.css'
+import styles from './HomePage.module.css'
 
 const mulish = Mulish({
   subsets: ['latin'],

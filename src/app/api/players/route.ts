@@ -1,14 +1,45 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
 
-// GET /api/players - Get all players with stats
-export async function GET() {
+// Validation schemas
+const createUserSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  userType: z.enum(['ADMIN', 'PLAYER']).default('PLAYER'),
+  accountStatus: z.enum(['GHOST', 'CLAIMED']).default('GHOST'),
+  jerseyNumber: z.number().int().positive().optional(),
+  position: z.enum(['GK', 'DF', 'MF', 'FW']).optional(),
+  dominantFoot: z.enum(['LEFT', 'RIGHT', 'BOTH']).optional(),
+  introduction: z.string().optional(),
+  joinDate: z.string().datetime().optional(),
+  createdBy: z.string().optional()
+})
+
+// GET /api/players - Get all users (players) with calculated stats
+export async function GET(request: Request) {
   try {
-    const players = await prisma.player.findMany({
+    const { searchParams } = new URL(request.url)
+    const userType = searchParams.get('userType') || 'PLAYER'
+    const accountStatus = searchParams.get('accountStatus')
+
+    const where: any = { userType }
+    if (accountStatus) {
+      where.accountStatus = accountStatus
+    }
+
+    const users = await prisma.user.findMany({
+      where,
       include: {
-        gameStats: {
+        participations: {
           include: {
-            game: true
+            match: true
+          }
+        },
+        events: {
+          include: {
+            match: true
           }
         }
       },
@@ -17,45 +48,137 @@ export async function GET() {
       }
     })
 
-    // Transform to match your current leaderboard format
-    const transformedPlayers = players.map(player => {
-      const totalGoals = player.gameStats.reduce((sum, stat) => sum + stat.goals, 0)
-      const totalAssists = player.gameStats.reduce((sum, stat) => sum + stat.assists, 0)
+    // Calculate statistics for each user
+    const transformedUsers = users.map(user => {
+      // Calculate goals and assists from events
+      const goals = user.events.filter(event => 
+        event.eventType === 'GOAL' || event.eventType === 'PENALTY_GOAL'
+      ).length
+      
+      const assists = user.events.filter(event => 
+        event.eventType === 'ASSIST'
+      ).length
+
+      const ownGoals = user.events.filter(event => 
+        event.eventType === 'OWN_GOAL'
+      ).length
+
+      const yellowCards = user.events.filter(event => 
+        event.eventType === 'YELLOW_CARD'
+      ).length
+
+      const redCards = user.events.filter(event => 
+        event.eventType === 'RED_CARD'
+      ).length
+
+      const penalties = user.events.filter(event => 
+        event.eventType === 'PENALTY_GOAL'
+      ).length
+
+      const saves = user.events.filter(event => 
+        event.eventType === 'SAVE'
+      ).length
+
+      // Calculate appearances (unique matches with participation)
+      const appearances = user.participations.length
+
+      // Calculate total playing time
+      const totalTime = user.participations.reduce((sum, p) => {
+        return sum + Number(p.section1Part1) + Number(p.section1Part2) + Number(p.section1Part3) +
+                     Number(p.section2Part1) + Number(p.section2Part2) + Number(p.section2Part3) +
+                     Number(p.section3Part1) + Number(p.section3Part2) + Number(p.section3Part3)
+      }, 0)
 
       return {
-        id: parseInt(player.id.slice(-6), 36), // Create a numeric ID for compatibility
-        name: player.name,
-        team: player.team,
-        goals: totalGoals,
-        assists: totalAssists,
-        initials: player.initials
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        userType: user.userType,
+        accountStatus: user.accountStatus,
+        jerseyNumber: user.jerseyNumber,
+        position: user.position,
+        dominantFoot: user.dominantFoot,
+        avatarUrl: user.avatarUrl,
+        introduction: user.introduction,
+        joinDate: user.joinDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        // Statistics
+        goals,
+        assists,
+        ownGoals,
+        yellowCards,
+        redCards,
+        penalties,
+        saves,
+        appearances,
+        totalTime: Number(totalTime.toFixed(1))
       }
     })
 
-    return NextResponse.json(transformedPlayers)
+    return NextResponse.json({
+      success: true,
+      data: transformedUsers
+    })
   } catch (error) {
-    console.error('Error fetching players:', error)
-    return NextResponse.json({ error: 'Failed to fetch players' }, { status: 500 })
+    console.error('Error fetching users:', error)
+    return NextResponse.json({ 
+      success: false,
+      error: { 
+        code: 'SERVER_ERROR',
+        message: 'Failed to fetch users' 
+      } 
+    }, { status: 500 })
   }
 }
 
-// POST /api/players - Create a new player
+// POST /api/players - Create a new user (ghost player)
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, initials, team } = body
+    const validatedData = createUserSchema.parse(body)
 
-    const player = await prisma.player.create({
+    // For ghost accounts, only name is required
+    const user = await prisma.user.create({
       data: {
-        name,
-        initials,
-        team: team || 'Football Club'
+        name: validatedData.name,
+        email: validatedData.email,
+        phone: validatedData.phone,
+        userType: validatedData.userType,
+        accountStatus: validatedData.accountStatus,
+        jerseyNumber: validatedData.jerseyNumber,
+        position: validatedData.position,
+        dominantFoot: validatedData.dominantFoot,
+        introduction: validatedData.introduction,
+        joinDate: validatedData.joinDate ? new Date(validatedData.joinDate) : new Date(),
+        createdBy: validatedData.createdBy
       }
     })
 
-    return NextResponse.json(player)
+    return NextResponse.json({
+      success: true,
+      data: user
+    })
   } catch (error) {
-    console.error('Error creating player:', error)
-    return NextResponse.json({ error: 'Failed to create player' }, { status: 500 })
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid input data',
+          details: error.errors
+        }
+      }, { status: 400 })
+    }
+
+    console.error('Error creating user:', error)
+    return NextResponse.json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Failed to create user'
+      }
+    }, { status: 500 })
   }
 }
