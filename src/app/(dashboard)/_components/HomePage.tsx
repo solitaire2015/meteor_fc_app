@@ -469,7 +469,7 @@ export default function Home({
           <main>
             {/* Navigation Section */}
             <section className={styles.navigationSection}>
-              <Link href="/(dashboard)/leaderboard" className={styles.navCard}>
+              <Link href="/leaderboard" className={styles.navCard}>
                 <div className={styles.navIcon}>🏆</div>
                 <div className={styles.navTitle}>荣誉殿堂</div>
                 <div className={styles.navSubtitle}>查看球员排行榜</div>
