@@ -462,14 +462,14 @@ export default function MatchesAdminPage() {
               <Trash2 size={20} className="text-red-500" />
               确认删除比赛
             </DialogTitle>
-            <DialogDescription className="space-y-2">
-              <p>
+            <div className="space-y-2 text-muted-foreground text-sm">
+              <div>
                 确定要删除与 <strong>"{matchToDelete?.opponentTeam}"</strong> 的比赛吗？
-              </p>
-              <p className="text-red-600 font-medium">
+              </div>
+              <div className="text-red-600 font-medium">
                 此操作将永久删除比赛记录、参与数据和事件记录，无法恢复。
-              </p>
-            </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           <DialogFooter className="flex gap-3">
             <Button variant="outline" onClick={cancelDeleteMatch}>
