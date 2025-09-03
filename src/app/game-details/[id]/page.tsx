@@ -141,8 +141,8 @@ export default function GameDetailsPage() {
   const [match, setMatch] = useState<MatchData | null>(null)
   const [loading, setLoading] = useState(true)
   const [expandedRows, setExpandedRows] = useState<string[]>([])
-  const [gameData, setGameData] = useState<Player[]>(defaultGameData)
-  const [gameStats, setGameStats] = useState<GameStat[]>(defaultGameStats)
+  const [gameData, setGameData] = useState<Player[]>([])
+  const [gameStats, setGameStats] = useState<GameStat[]>([])
   const [videoRecord, setVideoRecord] = useState<VideoRecord | null>(null)
 
   // Helper function to parse attendance data
@@ -219,10 +219,10 @@ export default function GameDetailsPage() {
           }
           
           // Transform events to game stats format
+          // Group events by player
+          const playerStats: { [playerId: string]: { name: string; goals: number; assists: number } } = {}
+          
           if (matchInfo.events && matchInfo.events.length > 0) {
-            // Group events by player
-            const playerStats: { [playerId: string]: { name: string; goals: number; assists: number } } = {}
-            
             matchInfo.events.forEach((event: MatchEvent) => {
               const playerId = event.player.id
               if (!playerStats[playerId]) {
@@ -239,18 +239,23 @@ export default function GameDetailsPage() {
                 playerStats[playerId].assists++
               }
             })
-            
-            // Convert to array and filter players with stats
-            const stats: GameStat[] = Object.values(playerStats)
-              .filter(stat => stat.goals > 0 || stat.assists > 0)
-            
-            console.log('Transformed stats:', stats)
-            setGameStats(stats)
           }
+          
+          // Convert to array and filter players with stats
+          const stats: GameStat[] = Object.values(playerStats)
+            .filter(stat => stat.goals > 0 || stat.assists > 0)
+          
+          console.log('Transformed stats:', stats)
+          setGameStats(stats) // Always set stats (empty array if no events)
           
           // Parse and set video data from match notes
           const videoData = parseVideoData(matchInfo.notes)
-          setVideoRecord(videoData)
+          setVideoRecord(videoData || {
+            fileName: "比赛录像",
+            description: "通过网盘分享的文件",
+            url: "https://pan.baidu.com/s/1example",
+            extractCode: "abc123"
+          })
           console.log('Parsed video data:', videoData)
         }
       } catch (error) {

@@ -108,7 +108,7 @@ export default function PlayerPage() {
         <div className={styles.mobileView}>
           <div className={styles.error}>
             <p>{error || '球员信息未找到'}</p>
-            <Link href="/leaderboard" className={styles.backLink}>
+            <Link href="/(dashboard)/leaderboard" className={styles.backLink}>
               返回排行榜
             </Link>
           </div>
@@ -226,7 +226,7 @@ export default function PlayerPage() {
           )}
 
           <div className={styles.backToLeaderboard}>
-            <Link href="/leaderboard" className={styles.backButton}>
+            <Link href="/(dashboard)/leaderboard" className={styles.backButton}>
               返回排行榜
             </Link>
           </div>
