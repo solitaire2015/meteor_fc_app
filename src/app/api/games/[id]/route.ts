@@ -60,7 +60,7 @@ export async function GET(
 
     // Calculate fees
     const totalCalculatedFees = Math.round(
-      match.fieldFeeTotal + match.waterFeeTotal + (participants * match.feeCoefficient)
+      Number(match.fieldFeeTotal) + Number(match.waterFeeTotal) + (participants * Number(match.feeCoefficient))
     )
 
     const matchData = {
@@ -136,11 +136,11 @@ export async function DELETE(
   try {
     const { id } = await params
     // Delete related data first
-    await prisma.event.deleteMany({
+    await prisma.matchEvent.deleteMany({
       where: { matchId: id }
     })
 
-    await prisma.participation.deleteMany({
+    await prisma.matchParticipation.deleteMany({
       where: { matchId: id }
     })
 

@@ -1,4 +1,12 @@
 // Shared database-related types
+
+// Utility function to safely convert Prisma Decimal to number
+export const decimalToNumber = (decimal: any): number => {
+  if (typeof decimal === 'number') return decimal
+  if (typeof decimal === 'string') return parseFloat(decimal)
+  if (decimal && typeof decimal.toNumber === 'function') return decimal.toNumber()
+  return Number(decimal) || 0
+}
 export interface User {
   id: string
   name: string
@@ -38,10 +46,11 @@ export interface AttendanceData {
   section: number // 1, 2, 3
   part: number // 1, 2, 3
   value: number // 0, 0.5, 1
-  isGoalkeeper: boolean // per-cell goalkeeper status
+  isGoalkeeper: boolean // per-cell goalkeeper status (will be determined by section)
   isLateArrival: boolean // match-level flag
   goals: number
   assists: number
+  notes?: string // Player notes from participation data
 }
 
 export interface MatchEvent {
@@ -54,23 +63,28 @@ export interface MatchEvent {
   createdAt: string
 }
 
+// JSONb structure for attendance data
+export interface AttendanceDataJson {
+  attendance: {
+    [section: string]: {
+      [part: string]: number // 0, 0.5, 1
+    }
+  }
+  goalkeeper: {
+    [section: string]: {
+      [part: string]: boolean
+    }
+  }
+}
+
 export interface MatchParticipation {
   id: string
   userId: string
   matchId: string
-  section1Part1: number
-  section1Part2: number
-  section1Part3: number
-  section2Part1: number
-  section2Part2: number
-  section2Part3: number
-  section3Part1: number
-  section3Part2: number
-  section3Part3: number
-  isGoalkeeper: boolean
+  attendanceData: AttendanceDataJson
+  isLateArrival: boolean
   totalTime: number
   fieldFeeCalculated: number
-  isLate: boolean
   lateFee: number
   videoFee: number
   totalFeeCalculated: number

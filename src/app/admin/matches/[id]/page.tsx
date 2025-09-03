@@ -1,22 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  Users, 
-  Target, 
-  Award, 
-  DollarSign,
-  Save,
-  Trophy,
-  Timer
-} from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
-import AttendanceGrid from '@/components/shared/AttendanceGrid'
-import FinancialCalculator from '@/components/shared/FinancialCalculator'
+import TabContainer from '@/components/shared/TabContainer'
+import MatchInfoTab from '@/components/admin/MatchInfoTab'
+import AttendanceTab from '@/components/admin/AttendanceTab'
+import StatisticsTab from '@/components/admin/StatisticsTab'
+import FinancialTab from '@/components/admin/FinancialTab'
 import { Match, User, AttendanceData, FinancialData } from '@/types'
 import styles from './match-detail.module.css'
 
@@ -31,6 +23,7 @@ export default function MatchDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [financialData, setFinancialData] = useState<FinancialData | null>(null)
+  const [tabUnsavedChanges, setTabUnsavedChanges] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (matchId) {
@@ -46,7 +39,9 @@ export default function MatchDetailPage() {
       
       if (data.success) {
         setMatch(data.data)
-        // TODO: Load existing attendance data when API supports it
+        
+        // Load existing attendance data if available
+        await loadExistingAttendance()
       } else {
         toast.error('获取比赛详情失败')
         router.push('/admin/matches')
@@ -55,6 +50,22 @@ export default function MatchDetailPage() {
       console.error('Error fetching match details:', error)
       toast.error('获取比赛详情时发生错误')
       router.push('/admin/matches')
+    }
+  }
+
+  const loadExistingAttendance = async () => {
+    try {
+      const response = await fetch(`/api/admin/matches/${matchId}/save-details`)
+      const data = await response.json()
+      
+      if (data.success && data.data.attendance.length > 0) {
+        // The API now returns AttendanceData[] directly in the correct format
+        setAttendance(data.data.attendance)
+        toast.success('已加载现有出勤数据')
+      }
+    } catch (error) {
+      // Ignore errors - this just means no existing data
+      console.log('No existing attendance data found')
     }
   }
 
@@ -75,76 +86,78 @@ export default function MatchDetailPage() {
     }
   }
 
-  const handleAttendanceChange = (attendanceData: AttendanceData[]) => {
+  const handleAttendanceChange = useCallback((attendanceData: AttendanceData[]) => {
     setAttendance(attendanceData)
-  }
+  }, [])
 
-  const handleFinancialUpdate = (financialInfo: FinancialData) => {
+  const handleFinancialUpdate = useCallback((financialInfo: FinancialData) => {
     setFinancialData(financialInfo)
-  }
+  }, [])
 
-  // Auto-calculate match result based on scores
-  const getMatchResult = (ourScore?: number, opponentScore?: number): 'WIN' | 'LOSE' | 'DRAW' | undefined => {
-    if (ourScore === undefined || opponentScore === undefined) return undefined
-    
-    if (ourScore > opponentScore) return 'WIN'
-    if (ourScore < opponentScore) return 'LOSE'
-    return 'DRAW'
-  }
+  const handleMatchUpdate = useCallback((updatedMatch: Match) => {
+    setMatch(updatedMatch)
+  }, [])
 
-  const calculatedResult = getMatchResult(match?.ourScore, match?.opponentScore)
+  const handleAttendanceUpdate = useCallback((updatedAttendance: AttendanceData[]) => {
+    setAttendance(updatedAttendance)
+    // Reload existing attendance to get the latest data
+    loadExistingAttendance()
+  }, [])
 
-  const saveAttendance = async () => {
+  const handleTabUnsavedChanges = useCallback((tabId: string, hasChanges: boolean) => {
+    setTabUnsavedChanges(prev => {
+      // Only update if the value actually changed to prevent infinite loops
+      if (prev[tabId] === hasChanges) {
+        return prev
+      }
+      return {
+        ...prev,
+        [tabId]: hasChanges
+      }
+    })
+  }, [])
+
+  const handleExportExcel = async () => {
     if (!match) return
 
-    setSaving(true)
     try {
-      // Use financial calculator data if available, otherwise fallback to basic calculation
-      const totalParticipants = financialData?.totalParticipants || new Set(attendance.filter(a => a.value > 0).map(a => a.userId)).size
-      const totalGoals = attendance.reduce((sum, a) => sum + a.goals, 0)
-      const totalAssists = attendance.reduce((sum, a) => sum + a.assists, 0)
+      toast.loading('生成Excel文件中...', { id: 'excel-export' })
       
-      // Use financial calculator's grand total if available
-      const totalCalculatedFees = financialData?.grandTotal || Math.round(
-        (match.fieldFeeTotal + match.waterFeeTotal) + 
-        (totalParticipants * match.feeCoefficient)
-      )
-
-      // TODO: Replace with actual API call to save attendance
-      // For now, just simulate saving
-      const mockResponse = {
-        success: true,
-        data: {
-          ...match,
-          totalParticipants,
-          totalGoals,
-          totalAssists,
-          totalCalculatedFees
+      const response = await fetch(`/api/admin/excel/export/${match.id}`)
+      
+      if (!response.ok) {
+        throw new Error('导出失败')
+      }
+      
+      // Get filename from Content-Disposition header or create default
+      const contentDisposition = response.headers.get('Content-Disposition')
+      let filename = 'match_export.xlsx'
+      
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?(.+)"?/)
+        if (match) {
+          filename = decodeURIComponent(match[1])
         }
       }
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      if (mockResponse.success) {
-        setMatch(prev => prev ? {
-          ...prev,
-          totalParticipants,
-          totalGoals,
-          totalAssists,
-          totalCalculatedFees
-        } : null)
-        toast.success('出勤数据保存成功！')
-      } else {
-        toast.error('保存出勤数据失败')
-      }
+      
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast.success('Excel文件导出成功', { id: 'excel-export' })
     } catch (error) {
-      console.error('Error saving attendance:', error)
-      toast.error('保存出勤数据时发生错误')
-    } finally {
-      setSaving(false)
+      console.error('Export error:', error)
+      toast.error('导出Excel文件失败', { id: 'excel-export' })
     }
   }
+
 
   if (loading) {
     return (
@@ -161,6 +174,58 @@ export default function MatchDetailPage() {
       </div>
     )
   }
+
+  const tabs = [
+    {
+      id: 'match-info',
+      label: '比赛信息',
+      hasUnsavedChanges: tabUnsavedChanges['match-info'],
+      content: (
+        <MatchInfoTab
+          match={match}
+          onMatchUpdate={handleMatchUpdate}
+          onUnsavedChanges={(hasChanges) => handleTabUnsavedChanges('match-info', hasChanges)}
+        />
+      )
+    },
+    {
+      id: 'attendance',
+      label: '出勤管理',
+      hasUnsavedChanges: tabUnsavedChanges['attendance'],
+      content: (
+        <AttendanceTab
+          match={match}
+          users={users}
+          initialAttendance={attendance}
+          onAttendanceUpdate={handleAttendanceUpdate}
+          onUnsavedChanges={(hasChanges) => handleTabUnsavedChanges('attendance', hasChanges)}
+        />
+      )
+    },
+    {
+      id: 'statistics',
+      label: '比赛统计',
+      content: (
+        <StatisticsTab
+          match={match}
+          users={users}
+          attendance={attendance}
+        />
+      )
+    },
+    {
+      id: 'financial',
+      label: '费用计算',
+      content: (
+        <FinancialTab
+          match={match}
+          users={users}
+          attendance={attendance}
+          onFinancialUpdate={handleFinancialUpdate}
+        />
+      )
+    }
+  ]
 
   return (
     <div className={styles.container}>
@@ -180,147 +245,30 @@ export default function MatchDetailPage() {
             <p>{new Date(match.matchDate).toLocaleDateString('zh-CN')}</p>
           </div>
         </div>
-        <button 
-          className={styles.saveButton}
-          onClick={saveAttendance}
-          disabled={saving}
-        >
-          <Save size={16} />
-          {saving ? '保存中...' : '保存出勤'}
-        </button>
-      </header>
-
-      <div className={styles.matchInfo}>
-        <div className={styles.matchCard}>
-          <div className={styles.score}>
-            <div className={styles.team}>
-              <span className={styles.teamName}>METEOR</span>
-              <span className={styles.teamScore}>{match.ourScore ?? '--'}</span>
-            </div>
-            <div className={styles.vs}>VS</div>
-            <div className={styles.team}>
-              <span className={styles.teamScore}>{match.opponentScore ?? '--'}</span>
-              <span className={styles.teamName}>{match.opponentTeam}</span>
-            </div>
-          </div>
-
-          {calculatedResult && (
-            <div className={`${styles.result} ${styles[calculatedResult.toLowerCase()]}`}>
-              {calculatedResult === 'WIN' ? '胜利' : 
-               calculatedResult === 'LOSE' ? '失败' : '平局'}
+        <div className={styles.headerRight}>
+          <button 
+            className={styles.exportButton}
+            onClick={handleExportExcel}
+            title="导出Excel文件"
+          >
+            <Download size={16} />
+            导出Excel
+          </button>
+          {Object.values(tabUnsavedChanges).some(Boolean) && (
+            <div className={styles.unsavedIndicator}>
+              有未保存的更改
             </div>
           )}
-
-          <div className={styles.matchDetails}>
-            <div className={styles.detail}>
-              <Calendar size={16} />
-              <span>{new Date(match.matchDate).toLocaleDateString('zh-CN')}</span>
-            </div>
-            {match.matchTime && (
-              <div className={styles.detail}>
-                <Clock size={16} />
-                <span>{new Date(match.matchTime).toLocaleTimeString('zh-CN', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}</span>
-              </div>
-            )}
-            <div className={styles.detail}>
-              <Trophy size={16} />
-              <span>{match.status}</span>
-            </div>
-          </div>
         </div>
+      </header>
 
-        <div className={styles.statsCard}>
-          <h3>比赛统计</h3>
-          <div className={styles.statsGrid}>
-            <div className={styles.stat}>
-              <Users size={20} />
-              <span className={styles.statValue}>{financialData?.totalParticipants || match.totalParticipants}</span>
-              <span className={styles.statLabel}>参与人数</span>
-            </div>
-            <div className={styles.stat}>
-              <Target size={20} />
-              <span className={styles.statValue}>{match.totalGoals}</span>
-              <span className={styles.statLabel}>进球</span>
-            </div>
-            <div className={styles.stat}>
-              <Award size={20} />
-              <span className={styles.statValue}>{match.totalAssists}</span>
-              <span className={styles.statLabel}>助攻</span>
-            </div>
-            <div className={styles.stat}>
-              <DollarSign size={20} />
-              <span className={styles.statValue}>{financialData?.grandTotal || match.totalCalculatedFees}</span>
-              <span className={styles.statLabel}>总费用</span>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.feesCard}>
-          <h3>费用明细</h3>
-          <div className={styles.feeBreakdown}>
-            <div className={styles.feeItem}>
-              <span>场地费用:</span>
-              <span>{match.fieldFeeTotal}元</span>
-            </div>
-            <div className={styles.feeItem}>
-              <span>水费等杂费:</span>
-              <span>{match.waterFeeTotal}元</span>
-            </div>
-            <div className={styles.feeItem}>
-              <span>费用系数:</span>
-              <span>{match.feeCoefficient}元/时段</span>
-            </div>
-            <div className={styles.feeItem}>
-              <span>参与人数:</span>
-              <span>{financialData?.totalParticipants || match.totalParticipants}人</span>
-            </div>
-            <div className={`${styles.feeItem} ${styles.total}`}>
-              <span>计算总费用:</span>
-              <span>{financialData?.grandTotal || match.totalCalculatedFees}元</span>
-            </div>
-            {financialData && (
-              <>
-                <div className={styles.feeItem}>
-                  <span>平均费用:</span>
-                  <span>{financialData.averageFeePerPlayer}元/人</span>
-                </div>
-                <div className={styles.feeItem}>
-                  <span>视频费总计:</span>
-                  <span>{financialData.totalVideoFees}元</span>
-                </div>
-                <div className={styles.feeItem}>
-                  <span>迟到罚款:</span>
-                  <span>{financialData.totalLateFees}元</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+      <div className={styles.content}>
+        <TabContainer
+          tabs={tabs}
+          defaultActiveTab="match-info"
+          className={styles.tabContainer}
+        />
       </div>
-
-      <AttendanceGrid
-        matchId={matchId}
-        users={users}
-        onAttendanceChange={handleAttendanceChange}
-        initialAttendance={attendance}
-      />
-
-      <FinancialCalculator
-        match={match}
-        attendance={attendance}
-        users={users}
-        onFinancialUpdate={handleFinancialUpdate}
-      />
-
-      {match.notes && (
-        <div className={styles.notesCard}>
-          <h3>比赛备注</h3>
-          <p>{match.notes}</p>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,0 +1,70 @@
+.container {
+  width: 100%;
+}
+
+.tabHeader {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tab:hover {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+  background: #f8fafc;
+}
+
+.tab.hasChanges {
+  color: #f59e0b;
+}
+
+.tab.hasChanges.active {
+  color: #3b82f6;
+}
+
+.changeIndicator {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #f59e0b;
+}
+
+.tabContent {
+  min-height: 400px;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .tab {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .tabHeader {
+    position: static;
+  }
+}

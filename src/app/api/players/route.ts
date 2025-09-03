@@ -5,6 +5,7 @@ import { z } from 'zod'
 // Validation schemas
 const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
+  shortId: z.string().max(10).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
   userType: z.enum(['ADMIN', 'PLAYER']).default('PLAYER'),
@@ -92,6 +93,7 @@ export async function GET(request: Request) {
       return {
         id: user.id,
         name: user.name,
+        shortId: user.shortId,
         email: user.email,
         phone: user.phone,
         userType: user.userType,
@@ -143,6 +145,7 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         name: validatedData.name,
+        shortId: validatedData.shortId,
         email: validatedData.email,
         phone: validatedData.phone,
         userType: validatedData.userType,

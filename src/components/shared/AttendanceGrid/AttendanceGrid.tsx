@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { Users, Clock, Shield, Target, Award, Timer, CheckCircle, XCircle, Plus, ChevronDown, ChevronRight } from 'lucide-react'
 import { Dialog, Transition, Listbox } from '@headlessui/react'
 import toast from 'react-hot-toast'
-import { User, AttendanceData } from '@/types'
+import { User, AttendanceData, MatchParticipation, AttendanceDataJson } from '@/types'
 import styles from './AttendanceGrid.module.css'
 
 interface AttendanceGridProps {
@@ -12,6 +12,61 @@ interface AttendanceGridProps {
   users: User[]
   onAttendanceChange: (attendanceData: AttendanceData[]) => void
   initialAttendance?: AttendanceData[]
+}
+
+// Helper functions to convert between grid format and JSONb format
+const convertGridToJsonb = (gridData: AttendanceData[], userId: string, isLateArrival: boolean = false, goals: number = 0, assists: number = 0): AttendanceDataJson => {
+  const userAttendances = gridData.filter(a => a.userId === userId)
+  
+  const attendance: AttendanceDataJson['attendance'] = {}
+  const goalkeeper: AttendanceDataJson['goalkeeper'] = {}
+  
+  // Initialize all sections and parts to 0/false
+  for (let section = 1; section <= 3; section++) {
+    attendance[section.toString()] = {}
+    goalkeeper[section.toString()] = {}
+    for (let part = 1; part <= 3; part++) {
+      attendance[section.toString()][part.toString()] = 0
+      goalkeeper[section.toString()][part.toString()] = false
+    }
+  }
+  
+  // Set actual values from grid data
+  userAttendances.forEach(a => {
+    attendance[a.section.toString()][a.part.toString()] = a.value
+    goalkeeper[a.section.toString()][a.part.toString()] = a.isGoalkeeper
+  })
+  
+  return { attendance, goalkeeper }
+}
+
+const convertJsonbToGrid = (userId: string, jsonbData: AttendanceDataJson, isLateArrival: boolean = false, goals: number = 0, assists: number = 0): AttendanceData[] => {
+  const gridData: AttendanceData[] = []
+  
+  for (let section = 1; section <= 3; section++) {
+    for (let part = 1; part <= 3; part++) {
+      const sectionStr = section.toString()
+      const partStr = part.toString()
+      
+      const value = jsonbData.attendance?.[sectionStr]?.[partStr] || 0
+      const isGoalkeeper = jsonbData.goalkeeper?.[sectionStr]?.[partStr] || false
+      
+      if (value > 0) {
+        gridData.push({
+          userId,
+          section,
+          part,
+          value,
+          isGoalkeeper,
+          isLateArrival,
+          goals: section === 1 && part === 1 ? goals : 0, // Only store goals/assists in first cell
+          assists: section === 1 && part === 1 ? assists : 0
+        })
+      }
+    }
+  }
+  
+  return gridData
 }
 
 export default function AttendanceGrid({ 
@@ -24,6 +79,15 @@ export default function AttendanceGrid({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCell, setSelectedCell] = useState<{section: number, part: number} | null>(null)
   const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(new Set())
+  const hasLoadedInitialData = useRef(false)
+
+  // Update attendance when initialAttendance prop changes (for loading existing data)
+  useEffect(() => {
+    if (initialAttendance.length > 0 && !hasLoadedInitialData.current) {
+      setAttendance(initialAttendance)
+      hasLoadedInitialData.current = true
+    }
+  }, [initialAttendance])
 
   // Notify parent of attendance changes
   useEffect(() => {
@@ -50,10 +114,19 @@ export default function AttendanceGrid({
 
   const updateUserAttendance = (userId: string, section: number, part: number, value: number, isGoalkeeper: boolean = false) => {
     setAttendance(prev => {
+      let updatedAttendance = [...prev]
+      
       // Remove any existing attendance for this user in THIS SPECIFIC grid cell
-      const filteredAttendance = prev.filter(a => 
+      updatedAttendance = updatedAttendance.filter(a => 
         !(a.userId === userId && a.section === section && a.part === part)
       )
+      
+      // If setting someone as goalkeeper, remove goalkeeper status from others in this specific section+part
+      if (isGoalkeeper && value > 0) {
+        updatedAttendance = updatedAttendance.map(a => 
+          a.section === section && a.part === part && a.isGoalkeeper ? { ...a, isGoalkeeper: false } : a
+        )
+      }
       
       if (value > 0) {
         // Create new attendance for this specific grid cell
@@ -67,10 +140,10 @@ export default function AttendanceGrid({
           goals: 0,
           assists: 0
         }
-        return [...filteredAttendance, newAttendance]
+        return [...updatedAttendance, newAttendance]
       } else {
         // Just remove the user from this specific cell (value = 0 means not participating)
-        return filteredAttendance
+        return updatedAttendance
       }
     })
     
@@ -107,7 +180,14 @@ export default function AttendanceGrid({
     const totalParticipants = new Set(attendance.filter(a => a.value > 0).map(a => a.userId)).size
     const totalGoals = attendance.reduce((sum, a) => sum + a.goals, 0)
     const totalAssists = attendance.reduce((sum, a) => sum + a.assists, 0)
-    const goalkeepers = new Set(attendance.filter(a => a.isGoalkeeper && a.value > 0).map(a => a.userId)).size
+    
+    // Count unique goalkeeper positions (section+part specific)
+    const goalkeeperPositions = new Set<string>()
+    attendance.filter(a => a.isGoalkeeper && a.value > 0).forEach(a => {
+      goalkeeperPositions.add(`${a.userId}-${a.section}-${a.part}`)
+    })
+    const goalkeepers = goalkeeperPositions.size
+    
     const lateArrivals = new Set(attendance.filter(a => a.isLateArrival && a.value > 0).map(a => a.userId)).size
     
     return { totalParticipants, totalGoals, totalAssists, goalkeepers, lateArrivals }
@@ -186,7 +266,11 @@ export default function AttendanceGrid({
                                 <span className={`${styles.timeValue} ${styles[`value${attendance.value.toString().replace('.', '_')}`]}`}>
                                   {attendance.value === 1 ? '全程' : attendance.value === 0.5 ? '半程' : ''}
                                 </span>
-                                {attendance.isGoalkeeper && <Shield size={12} className={styles.icon} />}
+                                {attendance.isGoalkeeper && (
+                                  <span className={styles.goalkeeperIndicator} title={`门将`}>
+                                    <Shield size={12} className={styles.icon} />
+                                  </span>
+                                )}
                               </div>
                             </div>
                           )

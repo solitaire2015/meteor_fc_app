@@ -218,6 +218,12 @@
   margin-bottom: 16px;
 }
 
+.matchHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .matchDate {
   font-size: 14px;
   font-weight: 600;
@@ -301,6 +307,28 @@
 .matchResult.draw {
   background: #e0e7ff;
   color: #3730a3;
+}
+
+.deleteButton {
+  background: none;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+  opacity: 0.7;
+}
+
+.deleteButton:hover {
+  background: #ef4444;
+  color: white;
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .matchStats {

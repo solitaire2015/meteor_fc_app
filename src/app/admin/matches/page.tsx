@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Calendar, 
@@ -13,8 +13,10 @@ import {
   ArrowLeft,
   Trophy,
   Medal,
-  Minus
+  Minus,
+  Trash2
 } from 'lucide-react'
+import { Dialog, Transition } from '@headlessui/react'
 import toast, { Toaster } from 'react-hot-toast'
 import styles from './matches.module.css'
 
@@ -50,6 +52,8 @@ export default function MatchesAdminPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [matchToDelete, setMatchToDelete] = useState<{ id: string; team: string } | null>(null)
   const [formData, setFormData] = useState({
     matchDate: '',
     matchTime: '',
@@ -159,6 +163,42 @@ export default function MatchesAdminPage() {
 
   const handleMatchClick = (matchId: string) => {
     router.push(`/admin/matches/${matchId}`)
+  }
+
+  const handleDeleteMatch = async (matchId: string, matchTeam: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering the match click
+    setMatchToDelete({ id: matchId, team: matchTeam })
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteMatch = async () => {
+    if (!matchToDelete) return
+
+    try {
+      const response = await fetch(`/api/games/${matchToDelete.id}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        await fetchMatches() // Refresh the list
+        toast.success('比赛删除成功')
+      } else {
+        toast.error('删除比赛失败: ' + (data.error?.message || '未知错误'))
+      }
+    } catch (error) {
+      console.error('Error deleting match:', error)
+      toast.error('删除比赛时发生错误')
+    } finally {
+      setDeleteDialogOpen(false)
+      setMatchToDelete(null)
+    }
+  }
+
+  const cancelDeleteMatch = () => {
+    setDeleteDialogOpen(false)
+    setMatchToDelete(null)
   }
 
   // Auto-calculate match result based on scores
@@ -336,8 +376,17 @@ export default function MatchesAdminPage() {
                   <div className={styles.matchDate}>
                     {new Date(match.matchDate).toLocaleDateString('zh-CN')}
                   </div>
-                  <div className={`${styles.matchStatus} ${styles[match.status.toLowerCase()]}`}>
-                    {match.status}
+                  <div className={styles.matchHeaderRight}>
+                    <div className={`${styles.matchStatus} ${styles[match.status.toLowerCase()]}`}>
+                      {match.status}
+                    </div>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={(e) => handleDeleteMatch(match.id, match.opponentTeam, e)}
+                      title="删除比赛"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
                 
@@ -396,6 +445,72 @@ export default function MatchesAdminPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Transition appear show={deleteDialogOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={cancelDeleteMatch}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900 flex items-center gap-2"
+                  >
+                    <Trash2 size={20} className="text-red-500" />
+                    确认删除比赛
+                  </Dialog.Title>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">
+                      确定要删除与 <strong>"{matchToDelete?.team}"</strong> 的比赛吗？
+                    </p>
+                    <p className="mt-2 text-sm text-red-600 font-medium">
+                      此操作将永久删除比赛记录、参与数据和事件记录，无法恢复。
+                    </p>
+                  </div>
+
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      onClick={cancelDeleteMatch}
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      onClick={confirmDeleteMatch}
+                    >
+                      删除比赛
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   )
 }

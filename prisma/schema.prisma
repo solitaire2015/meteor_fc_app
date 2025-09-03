@@ -15,6 +15,7 @@ datasource db {
 model User {
   id            String        @id @default(cuid())
   name          String
+  shortId       String?       @unique
   email         String?       @unique
   phone         String?       @unique
   passwordHash  String?
@@ -78,24 +79,26 @@ model MatchParticipation {
   userId   String
   matchId  String
 
-  // Attendance tracking (3 sections × 3 parts)
-  section1Part1 Decimal @default(0)
-  section1Part2 Decimal @default(0)
-  section1Part3 Decimal @default(0)
-  section2Part1 Decimal @default(0)
-  section2Part2 Decimal @default(0)
-  section2Part3 Decimal @default(0)
-  section3Part1 Decimal @default(0)
-  section3Part2 Decimal @default(0)
-  section3Part3 Decimal @default(0)
+  // Attendance data (JSONb structure)
+  // Structure: {
+  //   "attendance": {
+  //     "1": {"1": 1, "2": 0.5, "3": 0},     // section 1: parts 1,2,3
+  //     "2": {"1": 0, "2": 1, "3": 0.5},     // section 2: parts 1,2,3
+  //     "3": {"1": 0.5, "2": 0, "3": 1}      // section 3: parts 1,2,3
+  //   },
+  //   "goalkeeper": {
+  //     "1": {"2": true},                     // goalkeeper in section 1, part 2
+  //     "2": {"1": true, "3": true}           // goalkeeper in section 2, parts 1 & 3
+  //   }
+  // }
+  attendanceData Json @default("{}")
 
-  // Special roles
-  isGoalkeeper Boolean @default(false)
+  // Special flags
+  isLateArrival Boolean @default(false)
 
   // Calculated fields (for reference)
   totalTime           Decimal @default(0)
   fieldFeeCalculated  Decimal @default(0)
-  isLate              Boolean @default(false)
   lateFee             Decimal @default(0)
   videoFee            Decimal @default(0)
   totalFeeCalculated  Decimal @default(0)

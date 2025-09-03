@@ -168,7 +168,7 @@ export async function POST(request: Request) {
     
     const validatedMatchData = createMatchSchema.parse(matchData)
 
-    // Create match with participations in a transaction
+    // Create match with participations in a transaction with timeout
     const match = await prisma.$transaction(async (tx) => {
       // Create the match
       const newMatch = await tx.match.create({
@@ -187,9 +187,9 @@ export async function POST(request: Request) {
         }
       })
 
-      // Create participations if provided
+      // Create participations in batch if provided
       if (participations && Array.isArray(participations)) {
-        for (const participation of participations) {
+        const participationData = participations.map(participation => {
           const validatedParticipation = participationSchema.parse(participation)
           
           // Calculate totals
@@ -203,50 +203,56 @@ export async function POST(request: Request) {
           const videoFee = 0 // Will be set later when video is added
           const totalFeeCalculated = fieldFeeCalculated + lateFee + videoFee
 
-          await tx.matchParticipation.create({
-            data: {
-              userId: validatedParticipation.userId,
-              matchId: newMatch.id,
-              section1Part1: validatedParticipation.section1Part1,
-              section1Part2: validatedParticipation.section1Part2,
-              section1Part3: validatedParticipation.section1Part3,
-              section2Part1: validatedParticipation.section2Part1,
-              section2Part2: validatedParticipation.section2Part2,
-              section2Part3: validatedParticipation.section2Part3,
-              section3Part1: validatedParticipation.section3Part1,
-              section3Part2: validatedParticipation.section3Part2,
-              section3Part3: validatedParticipation.section3Part3,
-              isGoalkeeper: validatedParticipation.isGoalkeeper,
-              totalTime,
-              fieldFeeCalculated,
-              isLate: validatedParticipation.isLate,
-              lateFee,
-              videoFee,
-              totalFeeCalculated,
-              paymentProxy: validatedParticipation.paymentProxy,
-              notes: validatedParticipation.notes
-            }
-          })
-        }
+          return {
+            userId: validatedParticipation.userId,
+            matchId: newMatch.id,
+            section1Part1: validatedParticipation.section1Part1,
+            section1Part2: validatedParticipation.section1Part2,
+            section1Part3: validatedParticipation.section1Part3,
+            section2Part1: validatedParticipation.section2Part1,
+            section2Part2: validatedParticipation.section2Part2,
+            section2Part3: validatedParticipation.section2Part3,
+            section3Part1: validatedParticipation.section3Part1,
+            section3Part2: validatedParticipation.section3Part2,
+            section3Part3: validatedParticipation.section3Part3,
+            isGoalkeeper: validatedParticipation.isGoalkeeper,
+            totalTime,
+            fieldFeeCalculated,
+            isLate: validatedParticipation.isLate,
+            lateFee,
+            videoFee,
+            totalFeeCalculated,
+            paymentProxy: validatedParticipation.paymentProxy,
+            notes: validatedParticipation.notes
+          }
+        })
+
+        // Create all participations in batch
+        await tx.matchParticipation.createMany({
+          data: participationData
+        })
       }
 
-      // Create events if provided
+      // Create events in batch if provided
       if (events && Array.isArray(events)) {
-        for (const event of events) {
-          await tx.matchEvent.create({
-            data: {
-              matchId: newMatch.id,
-              playerId: event.playerId,
-              eventType: event.eventType,
-              minute: event.minute,
-              description: event.description,
-              createdBy: validatedMatchData.createdBy
-            }
-          })
-        }
+        const eventData = events.map(event => ({
+          matchId: newMatch.id,
+          playerId: event.playerId,
+          eventType: event.eventType,
+          minute: event.minute,
+          description: event.description,
+          createdBy: validatedMatchData.createdBy
+        }))
+
+        await tx.matchEvent.createMany({
+          data: eventData
+        })
       }
 
       return newMatch
+    }, {
+      maxWait: 5000, // 5 seconds max wait to acquire a transaction
+      timeout: 10000 // 10 seconds max transaction time
     })
 
     // Fetch complete match data

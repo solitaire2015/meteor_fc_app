@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { DollarSign, Calculator, Users, Clock, CreditCard, User, AlertCircle } from 'lucide-react'
+import { DollarSign, Calculator, Users, Clock, CreditCard, User, AlertCircle, Save } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { User as UserType, AttendanceData, Match, FinancialData, PlayerFinancialData } from '@/types'
+import { calculatePlayerFees, AttendanceData as FeeAttendanceData } from '@/lib/feeCalculation'
 import styles from './FinancialCalculator.module.css'
 
 interface FinancialCalculatorProps {
@@ -21,6 +23,48 @@ export default function FinancialCalculator({
 }: FinancialCalculatorProps) {
   const [lateFeeAmount, setLateFeeAmount] = useState(10) // Constant 10 yuan late fee
   const [paymentProxies, setPaymentProxies] = useState<{[userId: string]: string}>({})
+  const [saving, setSaving] = useState(false)
+  const [hasUnsavedNotes, setHasUnsavedNotes] = useState(false)
+
+  // Load existing notes on mount
+  useEffect(() => {
+    const loadExistingNotes = async () => {
+      try {
+        const response = await fetch(`/api/admin/matches/${match.id}/save-details`)
+        const data = await response.json()
+        
+        if (data.success) {
+          const notesMap: {[userId: string]: string} = {}
+          
+          // Load notes from participationNotes if available
+          if (data.data.participationNotes) {
+            data.data.participationNotes.forEach((note: any) => {
+              if (note.notes) {
+                notesMap[note.userId] = note.notes
+              }
+            })
+          }
+          
+          // Also check attendance data for notes (fallback)
+          if (data.data.attendance) {
+            data.data.attendance.forEach((player: any) => {
+              if (player.notes && !notesMap[player.userId]) {
+                notesMap[player.userId] = player.notes
+              }
+            })
+          }
+          
+          if (Object.keys(notesMap).length > 0) {
+            setPaymentProxies(notesMap)
+          }
+        }
+      } catch (error) {
+        console.log('No existing notes found')
+      }
+    }
+    
+    loadExistingNotes()
+  }, [match.id])
 
   // Calculate financial data
   const financialData = useMemo((): FinancialData => {
@@ -31,32 +75,49 @@ export default function FinancialCalculator({
       const user = users.find(u => u.id === userId)
       const userAttendances = attendance.filter(a => a.userId === userId && a.value > 0)
       
-      // Calculate total time from all attendance records
+      // Calculate total time from all attendance records (for display purposes)
       const totalTime = userAttendances.reduce((sum, a) => sum + a.value, 0)
       
       // Check if user is late (any attendance record marked as late)
       const isLate = userAttendances.some(a => a.isLateArrival)
       
-      // Calculate field fee based on total time and coefficient
-      const fieldFeeCalculated = Math.round(totalTime * Number(match.feeCoefficient))
+      // Convert attendance data to centralized format
+      const attendanceData: FeeAttendanceData = {
+        attendance: {
+          "1": {"1": 0, "2": 0, "3": 0},
+          "2": {"1": 0, "2": 0, "3": 0},
+          "3": {"1": 0, "2": 0, "3": 0}
+        },
+        goalkeeper: {
+          "1": {"1": false, "2": false, "3": false},
+          "2": {"1": false, "2": false, "3": false},
+          "3": {"1": false, "2": false, "3": false}
+        }
+      }
       
-      // Late fee: Constant 10 yuan
-      const lateFee = isLate ? lateFeeAmount : 0
+      // Populate attendance data from userAttendances
+      userAttendances.forEach(attendance => {
+        const section = attendance.section.toString()
+        const part = attendance.part.toString()
+        attendanceData.attendance[section][part] = attendance.value
+        attendanceData.goalkeeper[section][part] = attendance.isGoalkeeper || false
+      })
       
-      // Video fee calculation: ROUNDUP(parts_played/3*2, 0)
-      const videoFee = Math.ceil((totalTime / 3) * 2)
-      
-      // Total calculated fee
-      const totalFeeCalculated = fieldFeeCalculated + lateFee + videoFee
+      // Use centralized fee calculation
+      const fees = calculatePlayerFees({
+        attendanceData,
+        isLateArrival: isLate,
+        feeCoefficient: Number(match.feeCoefficient)
+      })
       
       return {
         userId,
         userName: user?.name || '未知用户',
         totalTime,
-        fieldFeeCalculated,
-        lateFee,
-        videoFee,
-        totalFeeCalculated,
+        fieldFeeCalculated: fees.fieldFee,
+        lateFee: fees.lateFee,
+        videoFee: fees.videoFee,
+        totalFeeCalculated: fees.totalFee,
         paymentProxy: paymentProxies[userId],
         isLate
       }
@@ -91,6 +152,38 @@ export default function FinancialCalculator({
       ...prev,
       [userId]: proxy
     }))
+    setHasUnsavedNotes(true)
+  }
+
+  const handleSaveNotes = async () => {
+    setSaving(true)
+    try {
+      const participationNotes = Object.entries(paymentProxies)
+        .filter(([_, notes]) => notes.trim() !== '')
+        .map(([userId, notes]) => ({ userId, notes }))
+
+      const response = await fetch(`/api/admin/matches/${match.id}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participationNotes })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success('代付备注已保存')
+        setHasUnsavedNotes(false)
+      } else {
+        toast.error(`保存失败: ${data.error?.message || '未知错误'}`)
+      }
+    } catch (error) {
+      console.error('Error saving notes:', error)
+      toast.error('保存备注信息时发生错误')
+    } finally {
+      setSaving(false)
+    }
   }
 
   // Calculate base costs from match data (ensure numbers)
@@ -239,7 +332,19 @@ export default function FinancialCalculator({
 
       {/* Player Financial Details */}
       <div className={styles.playerSection}>
-        <h4>球员费用明细</h4>
+        <div className={styles.playerSectionHeader}>
+          <h4>球员费用明细</h4>
+          {hasUnsavedNotes && (
+            <button
+              className={styles.saveButton}
+              onClick={handleSaveNotes}
+              disabled={saving}
+            >
+              <Save size={16} />
+              {saving ? '保存中...' : '保存备注'}
+            </button>
+          )}
+        </div>
         <div className={styles.playerList}>
           {financialData.playerFinancials.map(player => (
             <div key={player.userId} className={styles.playerFinancial}>

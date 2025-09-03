@@ -31,6 +31,12 @@
   gap: 20px;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .backButton {
   background: #f3f4f6;
   color: #374151;
@@ -51,6 +57,26 @@
   transform: translateY(-1px);
 }
 
+.exportButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exportButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 .matchTitle h1 {
   margin: 0 0 4px 0;
   color: #1a1a1a;
@@ -64,223 +90,28 @@
   font-size: 14px;
 }
 
-.saveButton {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.unsavedIndicator {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #fbbf24;
 }
 
-.saveButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+.content {
+  margin-top: 2rem;
 }
 
-.saveButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.matchInfo {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-.matchCard, .statsCard, .feesCard, .notesCard {
+.tabContainer {
   background: white;
   border-radius: 12px;
-  padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.score {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.teamName {
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.teamScore {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.vs {
-  font-size: 14px;
-  font-weight: 600;
-  color: #6b7280;
-  letter-spacing: 1px;
-}
-
-.result {
-  text-align: center;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.result.win {
-  background: #d1fae5;
-  color: #047857;
-}
-
-.result.lose {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.result.draw {
-  background: #e0e7ff;
-  color: #3730a3;
-}
-
-.matchDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detail {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.detail svg {
-  color: #9ca3af;
-}
-
-.statsCard h3, .feesCard h3, .notesCard h3 {
-  margin: 0 0 16px 0;
-  color: #1a1a1a;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.stat svg {
-  color: #6b7280;
-}
-
-.statValue {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.statLabel {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.feeBreakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.feeItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f3f4f6;
-  font-size: 14px;
-}
-
-.feeItem:last-child {
-  border-bottom: none;
-}
-
-.feeItem span:first-child {
-  color: #6b7280;
-}
-
-.feeItem span:last-child {
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.feeItem.total {
-  padding-top: 12px;
-  border-top: 2px solid #e5e7eb;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.feeItem.total span {
-  color: #1a1a1a;
-}
-
-.notesCard {
-  grid-column: 1 / -1;
-  margin-top: 24px;
-}
-
-.notesCard p {
-  margin: 0;
-  color: #374151;
-  line-height: 1.6;
+  overflow: hidden;
 }
 
 /* Mobile responsiveness */
-@media (max-width: 1024px) {
-  .matchInfo {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .statsGrid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
   .container {
     padding: 15px;
@@ -297,28 +128,8 @@
     gap: 12px;
   }
   
-  .matchCard, .statsCard, .feesCard {
-    padding: 16px;
-  }
-  
-  .score {
-    padding: 16px 0;
-  }
-  
-  .teamScore {
-    font-size: 24px;
-  }
-  
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  
-  .stat {
-    padding: 12px;
-  }
-  
-  .statValue {
-    font-size: 18px;
+  .unsavedIndicator {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }

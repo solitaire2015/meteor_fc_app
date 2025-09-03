@@ -46,6 +46,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  border: none;
+  cursor: pointer;
 }
 
 .navLink:hover {
@@ -265,6 +267,200 @@
   color: #6b7280;
 }
 
+/* Edit functionality styles */
+.actionsCell {
+  text-align: center;
+  width: 80px;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.actionButton {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.editButton {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.editButton:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.saveButton {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.saveButton:hover {
+  background: #10b981;
+  color: white;
+}
+
+.cancelButton {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.cancelButton:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.editInput {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  margin-bottom: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.editSelect {
+  margin-bottom: 4px;
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modalCloseButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modalContent {
+  padding: 24px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  justify-content: flex-end;
+}
+
+.cancelModalButton {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelModalButton:hover {
+  background: #e5e7eb;
+}
+
+.saveModalButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveModalButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .container {
@@ -293,5 +489,230 @@
   .table th,
   .table td {
     padding: 12px 8px;
+  }
+  
+  .actionsCell {
+    width: 60px;
+  }
+  
+  .actionButton {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+  
+  .editInput {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+  
+  /* Improve table scrolling on mobile */
+  .tableContainer {
+    position: relative;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+  
+  .tableContainer::before {
+    content: "→ 滑动查看更多";
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+  
+  /* Hide scroll hint when not needed */
+  .tableContainer:not(:hover)::before {
+    animation: fadeInOut 3s ease-in-out infinite;
+  }
+  
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.8; }
+  }
+  
+  /* Modal full screen on very small devices */
+  .modal {
+    margin: 0;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .modalActions {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 2px solid #e5e7eb;
+  }
+}
+
+/* Excel section styles */
+.sectionDescription {
+  color: #6b7280;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.excelActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.uploadSection,
+.downloadSection {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.uploadSection h3,
+.downloadSection h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.uploadDescription,
+.downloadDescription {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.uploadArea {
+  text-align: center;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+}
+
+.uploadButton:hover:not(.uploading) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.uploadButton.uploading {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.uploadHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.downloadHint {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+.excelInfo {
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.excelInfo h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0c4a6e;
+}
+
+.excelInfo ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #0c4a6e;
+}
+
+.excelInfo li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.excelInfo strong {
+  font-weight: 600;
+}
+
+/* ShortId display styles */
+.shortIdDisplay {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: #f0f9ff;
+  color: #0c4a6e;
+  border-radius: 4px;
+  border: 1px solid #0ea5e9;
+}
+
+.shortIdMissing {
+  font-size: 12px;
+  color: #ef4444;
+  font-style: italic;
+  padding: 4px 8px;
+  background: #fef2f2;
+  border-radius: 4px;
+  border: 1px solid #f87171;
+}
+
+/* Mobile styles for Excel section */
+@media (max-width: 768px) {
+  .excelActions {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .uploadSection,
+  .downloadSection {
+    padding: 15px;
+  }
+  
+  .excelInfo {
+    padding: 15px;
+  }
+  
+  .excelInfo ul {
+    padding-left: 15px;
   }
 }

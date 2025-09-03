@@ -3,7 +3,9 @@
 import Head from 'next/head'
 import { Mulish } from 'next/font/google'
 import { useState, useRef, useEffect } from 'react'
-import styles from '../styles/Leaderboard.module.css'
+import { useRouter } from 'next/navigation'
+import YearSelector from '@/components/shared/YearSelector'
+import styles from './Leaderboard.module.css'
 
 const mulish = Mulish({
   subsets: ['latin'],
@@ -117,38 +119,83 @@ const defaultPlayers = [
   }
 ];
 
-export default function Leaderboard({ 
-  subtitle = "Champions League", 
-  players = defaultPlayers
-}) {
+export default function Leaderboard() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState(0)
+  const [players, setPlayers] = useState(defaultPlayers)
+  const [loading, setLoading] = useState(true)
   const tabsRef = useRef(null)
   const touchStartX = useRef(0)
   const touchEndX = useRef(0)
+  
+  // Year selector state
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
 
   const tabs = ['射手榜', '助攻榜']
 
-  // Sort all players based on active tab
+  // Fetch leaderboard data
+  const fetchLeaderboard = async (type: 'goals' | 'assists') => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/leaderboard?type=${type}&year=${selectedYear}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        // Transform API data to component format
+        const transformedPlayers = data.data.players.map((player: any) => ({
+          id: player.id, // Use actual player ID for navigation
+          rank: player.rank,
+          name: player.name,
+          team: "Football Club",
+          goals: player.goals,
+          assists: player.assists,
+          initials: player.abbreviation
+        }))
+        
+        setPlayers(transformedPlayers)
+      } else {
+        console.error('Failed to fetch leaderboard:', data.error)
+        // Keep default data on error
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error)
+      // Keep default data on error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const type = activeTab === 0 ? 'goals' : 'assists'
+    fetchLeaderboard(type)
+  }, [activeTab, selectedYear])
+
+  // Handle player navigation
+  const handlePlayerClick = (playerId: string) => {
+    router.push(`/player/${playerId}`)
+  }
+
+  // Sort all players based on active tab (data comes pre-sorted from API)
   const getSortedPlayers = () => {
-    const sortKey = activeTab === 0 ? 'goals' : 'assists'
-    return [...players].sort((a, b) => b[sortKey] - a[sortKey]).map((player, index) => ({
+    return players.map((player, index) => ({
       ...player,
-      position: index + 1
+      position: player.rank || (index + 1)
     }))
   }
 
   const sortedPlayers = getSortedPlayers()
   const podiumPlayers = sortedPlayers.slice(0, 3).map((player, index) => ({
     ...player,
-    rank: index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze'
+    medal: index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze'
   }))
   const listPlayers = sortedPlayers.slice(3)
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
   }
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX
   }
 
@@ -171,8 +218,9 @@ export default function Leaderboard({
         <meta name="description" content="Football club leaderboard" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-
+      
       <div className={`${styles.container} ${mulish.className}`}>
+        
         <div className={styles.mobileView}>
           <header className={styles.pageHeader}>
             <div className={styles.backButton}>
@@ -181,8 +229,16 @@ export default function Leaderboard({
                 返回
               </a>
             </div>
-            
-            {/* Tabbed Navigation */}
+            {/* Year Selector */}
+            <div className={styles.yearSelector}>
+              <YearSelector
+                value={selectedYear}
+                onChange={setSelectedYear}
+                minYear={currentYear - 2}  // Allow 2 years back
+                maxYear={currentYear}      // Up to current year
+              />
+            </div>
+            {/* Tabbed Navigation and Year Selector */}
             <div className={styles.tabContainer}>
               <div 
                 className={styles.tabWrapper}
@@ -201,35 +257,41 @@ export default function Leaderboard({
                   </button>
                 ))}
               </div>
+              
+              
             </div>
-            
-           
           </header>
 
           <main>
-            <div 
-              className={styles.contentContainer}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
+            {loading ? (
+              <div className={styles.loading}>加载中...</div>
+            ) : (
+              <div className={styles.contentContainer}>
               <section className={styles.podium}>
-                {podiumPlayers.map((player, index) => (
-                  <div key={player.id} className={`${styles.podiumItem} ${styles[player.rank]}`}>
+                {podiumPlayers.map((player) => (
+                  <div 
+                    key={player.id} 
+                    className={`${styles.podiumItem} ${styles[player.medal]} ${styles.clickable}`}
+                    onClick={() => handlePlayerClick(player.id.toString())}
+                  >
                     <div className={styles.podiumPlayerContainer}>
                       <div className={styles.rank}>{player.position}</div>
                       <div className={styles.playerImg}>{player.initials}</div>
                     </div>
                     <div className={styles.name}>{player.name}</div>
                     {/* <div className={styles.team}>{player.team}</div> */}
-                    <div className={styles.goals}>{player[currentStat]}</div>
+                    <div className={styles.goals}>{player[currentStat] as number}</div>
                   </div>
                 ))}
               </section>
 
               <section className={styles.scorersList}>
                 {listPlayers.map((player) => (
-                  <div key={player.id} className={styles.listItem}>
+                  <div 
+                    key={player.id} 
+                    className={`${styles.listItem} ${styles.clickable}`}
+                    onClick={() => handlePlayerClick(player.id.toString())}
+                  >
                     <div className={styles.rank}>{player.position}</div>
                     <div className={styles.playerInfo}>
                       <div className={styles.playerImg}>{player.initials}</div>
@@ -238,11 +300,12 @@ export default function Leaderboard({
                         {/* <div className={styles.team}>{player.team}</div> */}
                       </div>
                     </div>
-                    <div className={styles.goals}>{player[currentStat]}</div>
+                    <div className={styles.goals}>{player[currentStat] as number}</div>
                   </div>
                 ))}
               </section>
-            </div>
+              </div>
+            )}
           </main>
         </div>
       </div>

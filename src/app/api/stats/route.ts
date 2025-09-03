@@ -72,14 +72,23 @@ async function getTeamStatistics(year: number, month?: number) {
   if (month) {
     dateFilter.matchDate = {
       gte: new Date(`${year}-${month.toString().padStart(2, '0')}-01`),
-      lte: new Date(year, month, 0) // Last day of month
+      lte: new Date(year, month, 0) // Last day of month (month is 1-indexed, constructor expects 0-indexed)
     }
   }
 
   const matches = await prisma.match.findMany({
     where: {
       ...dateFilter,
-      matchResult: { not: null }
+      // Include matches that have either matchResult set OR both scores available
+      OR: [
+        { matchResult: { not: null } },
+        { 
+          AND: [
+            { ourScore: { not: null } },
+            { opponentScore: { not: null } }
+          ]
+        }
+      ]
     },
     include: {
       events: true
@@ -88,9 +97,31 @@ async function getTeamStatistics(year: number, month?: number) {
 
   // Calculate team statistics
   const totalMatches = matches.length
-  const wins = matches.filter(m => m.matchResult === 'WIN').length
-  const draws = matches.filter(m => m.matchResult === 'DRAW').length
-  const losses = matches.filter(m => m.matchResult === 'LOSE').length
+  
+  // Calculate win/draw/loss - use matchResult if available, otherwise calculate from scores
+  const wins = matches.filter(m => {
+    if (m.matchResult === 'WIN') return true
+    if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+      return m.ourScore > m.opponentScore
+    }
+    return false
+  }).length
+  
+  const draws = matches.filter(m => {
+    if (m.matchResult === 'DRAW') return true
+    if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+      return m.ourScore === m.opponentScore
+    }
+    return false
+  }).length
+  
+  const losses = matches.filter(m => {
+    if (m.matchResult === 'LOSE') return true
+    if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+      return m.ourScore < m.opponentScore
+    }
+    return false
+  }).length
   
   const goalsFor = matches.reduce((sum, m) => sum + (m.ourScore || 0), 0)
   const goalsAgainst = matches.reduce((sum, m) => sum + (m.opponentScore || 0), 0)
@@ -132,14 +163,34 @@ async function getPlayerStatistics(year: number, month?: number) {
       matchDate: {
         gte: new Date(`${year}-01-01`),
         lte: new Date(`${year}-12-31`)
-      }
+      },
+      OR: [
+        { matchResult: { not: null } },
+        { 
+          AND: [
+            { ourScore: { not: null } },
+            { opponentScore: { not: null } }
+          ]
+        }
+      ]
     }
   }
 
   if (month) {
-    dateFilter.match.matchDate = {
-      gte: new Date(`${year}-${month.toString().padStart(2, '0')}-01`),
-      lte: new Date(year, month, 0)
+    dateFilter.match = {
+      matchDate: {
+        gte: new Date(`${year}-${month.toString().padStart(2, '0')}-01`),
+        lte: new Date(year, month, 0)
+      },
+      OR: [
+        { matchResult: { not: null } },
+        { 
+          AND: [
+            { ourScore: { not: null } },
+            { opponentScore: { not: null } }
+          ]
+        }
+      ]
     }
   }
 
@@ -254,14 +305,42 @@ async function getMonthlyBreakdown(year: number) {
           gte: startDate,
           lte: endDate
         },
-        matchResult: { not: null }
+        OR: [
+          { matchResult: { not: null } },
+          { 
+            AND: [
+              { ourScore: { not: null } },
+              { opponentScore: { not: null } }
+            ]
+          }
+        ]
       }
     })
 
     const totalMatches = matches.length
-    const wins = matches.filter(m => m.matchResult === 'WIN').length
-    const draws = matches.filter(m => m.matchResult === 'DRAW').length
-    const losses = matches.filter(m => m.matchResult === 'LOSE').length
+    const wins = matches.filter(m => {
+      if (m.matchResult === 'WIN') return true
+      if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+        return m.ourScore > m.opponentScore
+      }
+      return false
+    }).length
+    
+    const draws = matches.filter(m => {
+      if (m.matchResult === 'DRAW') return true
+      if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+        return m.ourScore === m.opponentScore
+      }
+      return false
+    }).length
+    
+    const losses = matches.filter(m => {
+      if (m.matchResult === 'LOSE') return true
+      if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+        return m.ourScore < m.opponentScore
+      }
+      return false
+    }).length
     const goalsFor = matches.reduce((sum, m) => sum + (m.ourScore || 0), 0)
     const goalsAgainst = matches.reduce((sum, m) => sum + (m.opponentScore || 0), 0)
 
@@ -309,14 +388,42 @@ async function getYearlyStatistics() {
           gte: new Date(`${year}-01-01`),
           lte: new Date(`${year}-12-31`)
         },
-        matchResult: { not: null }
+        OR: [
+          { matchResult: { not: null } },
+          { 
+            AND: [
+              { ourScore: { not: null } },
+              { opponentScore: { not: null } }
+            ]
+          }
+        ]
       }
     })
 
     const totalMatches = matches.length
-    const wins = matches.filter(m => m.matchResult === 'WIN').length
-    const draws = matches.filter(m => m.matchResult === 'DRAW').length
-    const losses = matches.filter(m => m.matchResult === 'LOSE').length
+    const wins = matches.filter(m => {
+      if (m.matchResult === 'WIN') return true
+      if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+        return m.ourScore > m.opponentScore
+      }
+      return false
+    }).length
+    
+    const draws = matches.filter(m => {
+      if (m.matchResult === 'DRAW') return true
+      if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+        return m.ourScore === m.opponentScore
+      }
+      return false
+    }).length
+    
+    const losses = matches.filter(m => {
+      if (m.matchResult === 'LOSE') return true
+      if (m.matchResult === null && m.ourScore !== null && m.opponentScore !== null) {
+        return m.ourScore < m.opponentScore
+      }
+      return false
+    }).length
     const goalsFor = matches.reduce((sum, m) => sum + (m.ourScore || 0), 0)
     const goalsAgainst = matches.reduce((sum, m) => sum + (m.opponentScore || 0), 0)
 
