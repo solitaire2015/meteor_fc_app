@@ -5,6 +5,8 @@ import { DollarSign, Calculator, Users, Clock, CreditCard, User, AlertCircle, Sa
 import toast from 'react-hot-toast'
 import { User as UserType, AttendanceData, Match, FinancialData, PlayerFinancialData } from '@/types'
 import { calculatePlayerFees, AttendanceData as FeeAttendanceData } from '@/lib/feeCalculation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import styles from './FinancialCalculator.module.css'
 
 interface ParticipationNote {
@@ -236,12 +238,12 @@ export default function FinancialCalculator({
           <div className={styles.configItem}>
             <label>迟到罚款:</label>
             <div className={styles.inputGroup}>
-              <input
+              <Input
                 type="number"
-                min="0"
+                min={0}
                 value={lateFeeAmount}
                 onChange={(e) => setLateFeeAmount(parseInt(e.target.value) || 0)}
-                className={styles.numberInput}
+                className="w-20"
               />
               <span>元</span>
             </div>
@@ -353,14 +355,15 @@ export default function FinancialCalculator({
         <div className={styles.playerSectionHeader}>
           <h4>球员费用明细</h4>
           {hasUnsavedNotes && (
-            <button
-              className={styles.saveButton}
+            <Button
               onClick={handleSaveNotes}
               disabled={saving}
+              className="flex items-center gap-2"
+              size="sm"
             >
               <Save size={16} />
               {saving ? '保存中...' : '保存备注'}
-            </button>
+            </Button>
           )}
         </div>
         <div className={styles.playerList}>
@@ -393,12 +396,12 @@ export default function FinancialCalculator({
                 
                 <div className={styles.paymentProxy}>
                   <label>代付备注:</label>
-                  <input
+                  <Input
                     type="text"
                     placeholder="输入代付人姓名或备注"
                     value={player.paymentProxy || ''}
                     onChange={(e) => handlePaymentProxyChange(player.userId, e.target.value)}
-                    className={styles.proxyInput}
+                    className="flex-1"
                   />
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Calendar, Clock, Trophy, DollarSign, Save, Target, Video, Link } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Match } from '@/types'
+import { Button } from '@/components/ui/button'
 import styles from './MatchInfoTab.module.css'
 
 interface MatchInfoTabProps {
@@ -193,14 +194,14 @@ export default function MatchInfoTab({
     <div className={styles.container}>
       <div className={styles.header}>
         <h3>比赛基本信息</h3>
-        <button 
-          className={styles.saveButton}
+        <Button 
           onClick={handleSave}
           disabled={saving || !hasUnsavedChanges}
+          className="flex items-center gap-2"
         >
           <Save size={16} />
           {saving ? '保存中...' : '保存信息'}
-        </button>
+        </Button>
       </div>
 
       <div className={styles.form}>
