@@ -100,7 +100,7 @@ export function calculatePlayerFees(input: FeeCalculationInput): FeeCalculationR
  * Helper function to convert legacy participation data format to new AttendanceData format
  * Used for backward compatibility with existing data structures
  */
-export function convertLegacyParticipationToAttendanceData(participation: any): AttendanceData {
+export function convertLegacyParticipationToAttendanceData(participation: Record<string, unknown>): AttendanceData {
   const attendanceData: AttendanceData = {
     attendance: {
       "1": { "1": 0, "2": 0, "3": 0 },
@@ -139,7 +139,7 @@ export function convertLegacyParticipationToAttendanceData(participation: any): 
 /**
  * Validate attendance data structure
  */
-export function validateAttendanceData(attendanceData: any): attendanceData is AttendanceData {
+export function validateAttendanceData(attendanceData: unknown): attendanceData is AttendanceData {
   if (!attendanceData || typeof attendanceData !== 'object') {
     return false;
   }

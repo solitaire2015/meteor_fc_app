@@ -1,10 +1,12 @@
 // Shared database-related types
 
 // Utility function to safely convert Prisma Decimal to number
-export const decimalToNumber = (decimal: any): number => {
+export const decimalToNumber = (decimal: unknown): number => {
   if (typeof decimal === 'number') return decimal
   if (typeof decimal === 'string') return parseFloat(decimal)
-  if (decimal && typeof decimal.toNumber === 'function') return decimal.toNumber()
+  if (decimal && typeof decimal === 'object' && 'toNumber' in decimal && typeof (decimal as any).toNumber === 'function') {
+    return (decimal as any).toNumber()
+  }
   return Number(decimal) || 0
 }
 export interface User {

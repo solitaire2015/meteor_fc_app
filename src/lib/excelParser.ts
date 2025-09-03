@@ -45,7 +45,7 @@ export function parseExcelFile(buffer: Buffer): ExcelMatchData {
     const rawData = XLSX.utils.sheet_to_json(worksheet, { 
       header: 1,
       defval: null 
-    }) as any[][]
+    }) as (string | number | null)[][]
     
     return parseExcelData(rawData, sheetName)
   } catch (error) {
@@ -56,7 +56,7 @@ export function parseExcelFile(buffer: Buffer): ExcelMatchData {
 /**
  * Parse raw Excel data array into structured match data
  */
-export function parseExcelData(rawData: any[][], sheetName: string): ExcelMatchData {
+export function parseExcelData(rawData: (string | number | null)[][], sheetName: string): ExcelMatchData {
   if (!rawData || rawData.length < 4) {
     throw new Error('Excel file appears to be empty or invalid')
   }
@@ -259,7 +259,7 @@ export function parseExcelData(rawData: any[][], sheetName: string): ExcelMatchD
 /**
  * Parse attendance value (1, 0.5, '守门', null/undefined -> 0)
  */
-function parseAttendanceValue(value: any): number | string {
+function parseAttendanceValue(value: string | number | null | undefined): number | string {
   if (value === null || value === undefined || value === '') {
     return 0
   }
@@ -282,7 +282,7 @@ function parseAttendanceValue(value: any): number | string {
 /**
  * Parse goals and assists from Excel cell (e.g., "进球1 助攻1", "进球1", "助攻1")
  */
-function parseGoalsAssists(value: any): { goals: number; assists: number } {
+function parseGoalsAssists(value: string | number | null | undefined): { goals: number; assists: number } {
   let goals = 0
   let assists = 0
   

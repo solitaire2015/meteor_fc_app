@@ -5,7 +5,7 @@ export interface ApiResponse<T> {
   error?: {
     code: string
     message: string
-    details?: any
+    details?: Record<string, unknown>
   }
   pagination?: {
     page: number
@@ -20,7 +20,7 @@ export interface ErrorResponse {
   error: {
     code: 'VALIDATION_ERROR' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'SERVER_ERROR'
     message: string
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   }
 }
 
