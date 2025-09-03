@@ -12,6 +12,25 @@ const mulish = Mulish({
   weight: ['400', '500', '600', '700', '800', '900'],
 })
 
+interface Player {
+  id: string | number
+  rank?: number
+  name: string
+  team: string
+  goals: number
+  assists: number
+  initials: string
+}
+
+interface ApiPlayer {
+  id: string
+  rank: number
+  name: string
+  goals: number
+  assists: number
+  abbreviation: string
+}
+
 const defaultPlayers = [
   {
     id: 1,
@@ -143,7 +162,7 @@ export default function Leaderboard() {
       
       if (data.success) {
         // Transform API data to component format
-        const transformedPlayers = data.data.players.map((player: any) => ({
+        const transformedPlayers = data.data.players.map((player: ApiPlayer) => ({
           id: player.id, // Use actual player ID for navigation
           rank: player.rank,
           name: player.name,

@@ -81,7 +81,7 @@ export default function MatchInfoTab({
     }
   }, [formData, match, initialVideoInfo, hasUnsavedChanges, onUnsavedChanges])
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     // Convert fee fields to numbers to ensure proper calculation
     let processedValue = value
     if (field === 'fieldFeeTotal' || field === 'waterFeeTotal' || field === 'feeCoefficient') {

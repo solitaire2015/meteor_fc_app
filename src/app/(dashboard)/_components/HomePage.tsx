@@ -26,7 +26,10 @@ interface Game {
 interface APIResponse<T> {
   success: boolean;
   data: T;
-  error?: any;
+  error?: {
+    message: string;
+    code?: string;
+  };
 }
 
 interface TeamStats {

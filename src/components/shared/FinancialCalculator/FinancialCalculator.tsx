@@ -7,6 +7,24 @@ import { User as UserType, AttendanceData, Match, FinancialData, PlayerFinancial
 import { calculatePlayerFees, AttendanceData as FeeAttendanceData } from '@/lib/feeCalculation'
 import styles from './FinancialCalculator.module.css'
 
+interface ParticipationNote {
+  userId: string
+  notes: string
+}
+
+interface AttendancePlayer {
+  userId: string
+  notes?: string
+}
+
+interface SaveDetailsResponse {
+  success: boolean
+  data: {
+    participationNotes?: ParticipationNote[]
+    attendance?: AttendancePlayer[]
+  }
+}
+
 interface FinancialCalculatorProps {
   match: Match
   attendance: AttendanceData[]
@@ -38,7 +56,7 @@ export default function FinancialCalculator({
           
           // Load notes from participationNotes if available
           if (data.data.participationNotes) {
-            data.data.participationNotes.forEach((note: any) => {
+            data.data.participationNotes.forEach((note: ParticipationNote) => {
               if (note.notes) {
                 notesMap[note.userId] = note.notes
               }
@@ -47,7 +65,7 @@ export default function FinancialCalculator({
           
           // Also check attendance data for notes (fallback)
           if (data.data.attendance) {
-            data.data.attendance.forEach((player: any) => {
+            data.data.attendance.forEach((player: AttendancePlayer) => {
               if (player.notes && !notesMap[player.userId]) {
                 notesMap[player.userId] = player.notes
               }

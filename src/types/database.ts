@@ -4,8 +4,8 @@
 export const decimalToNumber = (decimal: unknown): number => {
   if (typeof decimal === 'number') return decimal
   if (typeof decimal === 'string') return parseFloat(decimal)
-  if (decimal && typeof decimal === 'object' && 'toNumber' in decimal && typeof (decimal as any).toNumber === 'function') {
-    return (decimal as any).toNumber()
+  if (decimal && typeof decimal === 'object' && 'toNumber' in decimal && typeof (decimal as { toNumber: () => number }).toNumber === 'function') {
+    return (decimal as { toNumber: () => number }).toNumber()
   }
   return Number(decimal) || 0
 }
