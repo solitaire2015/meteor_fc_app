@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, Fragment } from 'react'
-import { Users, Clock, Shield, Target, Award, Timer, CheckCircle, XCircle, Plus, ChevronDown, ChevronRight } from 'lucide-react'
-import { Dialog, Transition, Listbox } from '@headlessui/react'
+import { Users, Shield, Target, Award, Timer, Plus, ChevronDown, ChevronRight } from 'lucide-react'
+import { Dialog, Transition } from '@headlessui/react'
 import toast from 'react-hot-toast'
-import { User, AttendanceData, MatchParticipation, AttendanceDataJson } from '@/types'
+import { User, AttendanceData, AttendanceDataJson } from '@/types'
 import styles from './AttendanceGrid.module.css'
 
 interface AttendanceGridProps {
@@ -15,7 +15,7 @@ interface AttendanceGridProps {
 }
 
 // Helper functions to convert between grid format and JSONb format
-const convertGridToJsonb = (gridData: AttendanceData[], userId: string, isLateArrival: boolean = false, goals: number = 0, assists: number = 0): AttendanceDataJson => {
+const convertGridToJsonb = (gridData: AttendanceData[], userId: string): AttendanceDataJson => {
   const userAttendances = gridData.filter(a => a.userId === userId)
   
   const attendance: AttendanceDataJson['attendance'] = {}

@@ -1,6 +1,7 @@
 'use client'
 
-import Head from 'next/head'
+import Image from 'next/image'
+import Link from 'next/link'
 import { Mulish } from 'next/font/google'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -231,22 +232,15 @@ export default function Leaderboard() {
   const currentStat = activeTab === 0 ? 'goals' : 'assists'
 
   return (
-    <>
-      <Head>
-        <title>{`${tabs[activeTab]} - Team Colors`}</title>
-        <meta name="description" content="Football club leaderboard" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      
       <div className={`${styles.container} ${mulish.className}`}>
         
         <div className={styles.mobileView}>
           <header className={styles.pageHeader}>
             <div className={styles.backButton}>
-              <a href="/">
-                <img src="/back.svg" alt="返回" className={styles.backIcon} />
+              <Link href="/">
+                <Image src="/back.svg" alt="返回" className={styles.backIcon} width={16} height={16} />
                 返回
-              </a>
+              </Link>
             </div>
             {/* Year Selector */}
             <div className={styles.yearSelector}>
@@ -328,7 +322,6 @@ export default function Leaderboard() {
           </main>
         </div>
       </div>
-    </>
   )
 }
 

@@ -19,13 +19,6 @@ interface AttendancePlayer {
   notes?: string
 }
 
-interface SaveDetailsResponse {
-  success: boolean
-  data: {
-    participationNotes?: ParticipationNote[]
-    attendance?: AttendancePlayer[]
-  }
-}
 
 interface FinancialCalculatorProps {
   match: Match
