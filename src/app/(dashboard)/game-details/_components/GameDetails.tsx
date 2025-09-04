@@ -1,6 +1,7 @@
 'use client'
 
 import Head from 'next/head'
+import Link from 'next/link'
 import { Mulish } from 'next/font/google'
 import { useState } from 'react'
 import styles from '../styles/GameDetails.module.css'
@@ -143,15 +144,15 @@ export default function GameDetails({
     );
   };
 
-  const renderSection = (sectionData: any) => {
+  const renderSection = (sectionData: (string | number)[]) => {
     return (
       <div className={styles.sectionGroup}>
-        {sectionData.map((value: any, partIndex: number) => (
+        {sectionData.map((value: string | number, partIndex: number) => (
           <div 
             key={partIndex}
             className={`${styles.sectionPart} ${
-              value === 1 ? styles.full : 
-              value === 0.5 ? styles.half : 
+              Number(value) === 1 ? styles.full : 
+              Number(value) === 0.5 ? styles.half : 
               value === "守门" ? styles.goalkeeper :
               styles.empty
             }`}
@@ -175,10 +176,10 @@ export default function GameDetails({
         <div className={styles.mobileView}>
           <header className={styles.pageHeader}>
             <div className={styles.backButton}>
-              <a href="/">
+              <Link href="/">
                 <img src="/back.svg" alt="返回" className={styles.backIcon} />
                 返回
-              </a>
+              </Link>
             </div>
             <h1>{title}</h1>
             <p>{subtitle}</p>

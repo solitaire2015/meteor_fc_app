@@ -23,6 +23,35 @@ interface Game {
   matchDate?: string;
 }
 
+interface MatchData {
+  id: string;
+  matchDate: string;
+  matchTime: string | null;
+  opponentTeam: string;
+  ourScore: number | null;
+  opponentScore: number | null;
+  matchResult: string | null;
+  fieldFeeTotal: number;
+  waterFeeTotal: number;
+  feeCoefficient: number;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  totalParticipants: number;
+  totalGoals: number;
+  totalAssists: number;
+  totalCalculatedFees: number;
+  participationsCount: number;
+  eventsCount: number;
+  videosCount: number;
+  commentsCount: number;
+  date: string;
+  opponent: string;
+  result: string;
+  status: "已结束" | "即将开始";
+}
+
 interface APIResponse<T> {
   success: boolean;
   data: T;
@@ -220,7 +249,7 @@ export default function Home({
   const fetchGames = async () => {
     try {
       const response = await fetch('/api/games')
-      const data: APIResponse<any[]> = await response.json()
+      const data: APIResponse<MatchData[]> = await response.json()
       
       if (data.success) {
         const formattedGames: Game[] = data.data.map(match => ({
@@ -373,7 +402,7 @@ export default function Home({
 
   // Custom styles for react-select
   const selectStyles = {
-    control: (provided: any, state: any) => ({
+    control: (provided: Record<string, unknown>, state: { isFocused: boolean }) => ({
       ...provided,
       background: 'rgba(255, 255, 255, 0.25)',
       backdropFilter: 'blur(10px)',
@@ -391,18 +420,18 @@ export default function Home({
         borderColor: 'rgba(255, 255, 255, 0.4)'
       }
     }),
-    singleValue: (provided: any) => ({
+    singleValue: (provided: Record<string, unknown>) => ({
       ...provided,
       color: '#FFFFFF',
       fontSize: '14px',
       fontWeight: '600'
     }),
-    placeholder: (provided: any) => ({
+    placeholder: (provided: Record<string, unknown>) => ({
       ...provided,
       color: 'rgba(255, 255, 255, 0.7)',
       fontSize: '14px'
     }),
-    menu: (provided: any) => ({
+    menu: (provided: Record<string, unknown>) => ({
       ...provided,
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px)',
@@ -412,7 +441,7 @@ export default function Home({
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
       overflow: 'hidden'
     }),
-    option: (provided: any, state: any) => ({
+    option: (provided: Record<string, unknown>, state: { isSelected: boolean; isFocused: boolean }) => ({
       ...provided,
       backgroundColor: state.isSelected 
         ? 'rgba(123, 142, 227, 0.8)' 
@@ -429,7 +458,7 @@ export default function Home({
       }
     }),
     indicatorSeparator: () => ({ display: 'none' }),
-    dropdownIndicator: (provided: any) => ({
+    dropdownIndicator: (provided: Record<string, unknown>) => ({
       ...provided,
       color: 'rgba(255, 255, 255, 0.7)',
       '&:hover': {
