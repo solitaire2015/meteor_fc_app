@@ -58,11 +58,18 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async redirect({ url, baseUrl }) {
-      // Redirect to welcome page after successful login
-      if (url.startsWith("/login") || url === baseUrl || url === "/") {
+      // Only redirect to welcome page when coming FROM the login page
+      if (url === `${baseUrl}/login` || url === "/login") {
         return `${baseUrl}/welcome`;
       }
-      return url.startsWith(baseUrl) ? url : baseUrl;
+      
+      // Allow other internal redirects (like from welcome to home)
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      
+      // For external URLs or invalid URLs, redirect to home
+      return baseUrl;
     },
     async jwt({ token, user }) {
       if (user) {
@@ -81,7 +88,7 @@ export const authOptions: NextAuthOptions = {
           where: { id: token.sub! },
           select: { avatarUrl: true }
         });
-        session.user.avatarUrl = user?.avatarUrl;
+        session.user.avatarUrl = user?.avatarUrl || undefined;
       }
       return session;
     },
