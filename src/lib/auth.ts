@@ -57,6 +57,13 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Redirect to welcome page after successful login
+      if (url.startsWith("/login") || url === baseUrl || url === "/") {
+        return `${baseUrl}/welcome`;
+      }
+      return url.startsWith(baseUrl) ? url : baseUrl;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.userType = user.userType;
