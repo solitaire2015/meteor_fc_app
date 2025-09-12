@@ -39,45 +39,57 @@ export default function WelcomePage() {
       return;
     }
 
-    // Start countdown timer
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        const newValue = prev - 1;
-        if (newValue <= 0) {
-          clearInterval(timer);
-          return 0;
-        }
-        return newValue;
-      });
-    }, 1000);
+    // Ensure session is fully established before starting countdown
+    // This prevents production environment session sync issues
+    const sessionCheckTimer = setTimeout(() => {
+      // Start countdown timer
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          const newValue = prev - 1;
+          if (newValue <= 0) {
+            clearInterval(timer);
+            return 0;
+          }
+          return newValue;
+        });
+      }, 1000);
 
-    // Update progress bar
-    const progressTimer = setInterval(() => {
-      setProgress((prev) => {
-        const newValue = prev - (100 / 30); // 100% over 3 seconds (30 intervals of 100ms)
-        if (newValue <= 0) {
-          clearInterval(progressTimer);
-          return 0;
-        }
-        return newValue;
-      });
-    }, 100);
+      // Update progress bar
+      const progressTimer = setInterval(() => {
+        setProgress((prev) => {
+          const newValue = prev - (100 / 30); // 100% over 3 seconds (30 intervals of 100ms)
+          if (newValue <= 0) {
+            clearInterval(progressTimer);
+            return 0;
+          }
+          return newValue;
+        });
+      }, 100);
+
+      return () => {
+        clearInterval(timer);
+        clearInterval(progressTimer);
+      };
+    }, 500); // Wait 500ms for session to fully establish
 
     return () => {
-      clearInterval(timer);
-      clearInterval(progressTimer);
+      clearTimeout(sessionCheckTimer);
     };
   }, [session, status, router]);
 
   // Separate effect to handle redirect when countdown reaches 0
   useEffect(() => {
-    if (countdown === 0) {
+    if (countdown === 0 && session && status === "authenticated") {
+      // Double-check session is still valid before redirecting
       router.push("/");
     }
-  }, [countdown, router]);
+  }, [countdown, router, session, status]);
 
   const handleSkip = () => {
-    router.push("/");
+    // Ensure session is valid before manual redirect
+    if (session && status === "authenticated") {
+      router.push("/");
+    }
   };
 
   if (status === "loading") {
