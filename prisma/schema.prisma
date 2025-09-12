@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String
+  shortId             String?              @unique
+  email               String?              @unique
+  phone               String?              @unique
+  passwordHash        String?
+  userType            UserType             @default(PLAYER)
+  accountStatus       AccountStatus        @default(GHOST)
+  jerseyNumber        Int?
+  position            Position?
+  dominantFoot        DominantFoot?
+  avatarUrl           String?
+  avatarFileKey       String?
+  introduction        String?
+  joinDate            DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  createdBy           String?
+  deletedAt           DateTime?
+  deletedBy           String?
+  deletionReason      String?
+  auditLogs           AuditLog[]
+  comments            Comment[]
+  createdEvents       MatchEvent[]         @relation("EventCreatedBy")
+  events              MatchEvent[]
+  participations      MatchParticipation[]
+  createdMatches      Match[]              @relation("MatchCreatedBy")
+  systemConfigUpdates SystemConfig[]
+  createdByUser       User?                @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdUsers        User[]               @relation("UserCreatedBy")
+  createdVideos       Video[]              @relation("VideoCreatedBy")
+  matchPlayers        MatchPlayer[]        @relation("MatchPlayerParticipant")
+  feeOverrides        FeeOverride[]        @relation("FeeOverridePlayer")
+
+  @@map("users")
+}
+
+model Match {
+  id                String               @id @default(cuid())
+  matchDate         DateTime
+  matchTime         DateTime?
+  opponentTeam      String
+  ourScore          Int?
+  opponentScore     Int?
+  matchResult       MatchResult?
+  fieldFeeTotal     Decimal              @default(0)
+  waterFeeTotal     Decimal              @default(0)
+  lateFeeRate       Decimal              @default(10)
+  videoFeePerUnit   Decimal              @default(2)
+  notes             String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  createdBy         String
+  comments       Comment[]
+  events         MatchEvent[]
+  participations MatchParticipation[]
+  createdByUser  User                 @relation("MatchCreatedBy", fields: [createdBy], references: [id])
+  videos         Video[]
+  matchPlayers   MatchPlayer[]
+  feeOverrides   FeeOverride[]
+
+  @@map("matches")
+}
+
+model MatchParticipation {
+  id                 String   @id @default(cuid())
+  userId             String
+  matchId            String
+  attendanceData     Json     @default("{}")
+  isLateArrival      Boolean  @default(false)
+  totalTime          Decimal  @default(0)
+  fieldFeeCalculated Decimal  @default(0)
+  lateFee            Decimal  @default(0)
+  videoFee           Decimal  @default(0)
+  totalFeeCalculated Decimal  @default(0)
+  paymentProxy       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  match              Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@map("match_participations")
+}
+
+model MatchEvent {
+  id            String    @id @default(cuid())
+  matchId       String
+  playerId      String
+  eventType     EventType
+  minute        Int?
+  description   String?
+  createdAt     DateTime  @default(now())
+  createdBy     String
+  createdByUser User      @relation("EventCreatedBy", fields: [createdBy], references: [id])
+  match         Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player        User      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("match_events")
+}
+
+model Video {
+  id              String      @id @default(cuid())
+  matchId         String
+  title           String
+  description     String?
+  storageType     StorageType @default(LOCAL)
+  filePath        String
+  s3Bucket        String?
+  s3Region        String?
+  cdnUrl          String?
+  fileSize        BigInt?
+  durationSeconds Int?
+  thumbnailUrl    String?
+  createdAt       DateTime    @default(now())
+  createdBy       String
+  createdByUser   User        @relation("VideoCreatedBy", fields: [createdBy], references: [id])
+  match           Match       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@map("videos")
+}
+
+model Comment {
+  id              String    @id @default(cuid())
+  matchId         String
+  userId          String
+  parentCommentId String?
+  content         String
+  images          Json?
+  isEdited        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  match           Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("CommentReplies")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  userId     String
+  tableName  String
+  recordId   String
+  actionType ActionType
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime   @default(now())
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  key           String   @id
+  value         String
+  description   String?
+  updatedAt     DateTime @updatedAt
+  updatedBy     String
+  updatedByUser User     @relation(fields: [updatedBy], references: [id])
+
+  @@map("system_config")
+}
+
+model GlobalSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  dataType    String
+  description String?
+  category    String
+  updatedAt   DateTime @updatedAt
+
+  @@map("global_settings")
+}
+
+model MatchPlayer {
+  id        String   @id @default(cuid())
+  matchId   String
+  playerId  String
+  createdAt DateTime @default(now())
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player    User     @relation("MatchPlayerParticipant", fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId])
+  @@map("match_players")
+}
+
+model FeeOverride {
+  id                String    @id @default(cuid())
+  matchId           String
+  playerId          String
+  fieldFeeOverride  Decimal?
+  videoFeeOverride  Decimal?
+  lateFeeOverride   Decimal?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  match             Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player            User      @relation("FeeOverridePlayer", fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId])
+  @@map("fee_overrides")
+}
+
+enum UserType {
+  ADMIN
+  PLAYER
+
+  @@map("user_type")
+}
+
+enum AccountStatus {
+  GHOST
+  CLAIMED
+
+  @@map("account_status")
+}
+
+enum Position {
+  GK
+  CB
+  LB
+  RB
+  LWB
+  RWB
+  DMF
+  CMF
+  AMF
+  LMF
+  RMF
+  CF
+  ST
+  SS
+  LWF
+  RWF
+
+  @@map("position")
+}
+
+enum DominantFoot {
+  LEFT
+  RIGHT
+  BOTH
+
+  @@map("dominant_foot")
+}
+
+enum MatchResult {
+  WIN
+  LOSE
+  DRAW
+
+  @@map("match_result")
+}
+
+enum EventType {
+  GOAL
+  ASSIST
+  YELLOW_CARD
+  RED_CARD
+  PENALTY_GOAL
+  OWN_GOAL
+  SAVE
+
+  @@map("event_type")
+}
+
+enum StorageType {
+  LOCAL
+  S3
+
+  @@map("storage_type")
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+
+  @@map("action_type")
+}

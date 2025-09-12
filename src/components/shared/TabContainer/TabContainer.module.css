@@ -1,0 +1,308 @@
+.container {
+  width: 100%;
+  position: relative;
+}
+
+.tabHeader {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabHeader::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex: 1;
+  min-width: 120px;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tab:hover:not(:disabled) {
+  color: #374151;
+  background: #f9fafb;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+  background: #f8fafc;
+}
+
+.tab.hasChanges {
+  color: #f59e0b;
+  position: relative;
+}
+
+.tab.hasChanges.active {
+  color: #3b82f6;
+}
+
+.tab.hasError {
+  color: #ef4444;
+  position: relative;
+}
+
+.tab.hasError.active {
+  color: #3b82f6;
+}
+
+.tab.disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.tabLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  line-height: 1;
+}
+
+.changeIndicator {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #f59e0b;
+}
+
+.loadingIcon {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+  color: #6b7280;
+}
+
+.errorIcon {
+  width: 1rem;
+  height: 1rem;
+  color: #ef4444;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tabContent {
+  min-height: 400px;
+  padding: 0;
+}
+
+.savingIndicator {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 50;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.savingIcon {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+  color: #3b82f6;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 28rem;
+  width: 90%;
+  margin: 1rem;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.5rem 0;
+}
+
+.warningIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.modalBody {
+  padding: 1rem 1.5rem;
+}
+
+.modalBody p {
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.cancelButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.confirmButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ef4444;
+  background: #ef4444;
+  color: white;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirmButton:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .tab {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+    min-width: 100px;
+  }
+  
+  .tabHeader {
+    position: static;
+  }
+
+  .tabLabel {
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .badge {
+    font-size: 0.625rem;
+    padding: 0.0625rem 0.25rem;
+  }
+
+  .savingIndicator {
+    bottom: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .modal {
+    margin: 0.5rem;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalActions button {
+    width: 100%;
+  }
+}
