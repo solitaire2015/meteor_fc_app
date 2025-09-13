@@ -1,6 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import sharp from 'sharp'
 
 if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
   throw new Error("AWS credentials not found in environment variables");
@@ -68,34 +67,14 @@ export function validateFile(file: File, type: UploadType): { valid: boolean; er
   return { valid: true }
 }
 
-// Process image (resize, optimize)
-export async function processImage(file: File, type: UploadType): Promise<Buffer> {
-  const config = UPLOAD_CONFIG[type]
+// Process image - simplified version without sharp
+// Client-side should handle image resizing before upload
+export async function processImage(file: File, _type: UploadType): Promise<Buffer> {
+  // Simply convert file to buffer without processing
+  // Image optimization should be done on client-side before upload
+  // The _type parameter is kept for API compatibility but not used
   const buffer = Buffer.from(await file.arrayBuffer())
-  
-  let processor = sharp(buffer)
-  
-  // Resize to target dimensions
-  if (type === 'avatar') {
-    // For avatars, create square crops
-    processor = processor
-      .resize(config.dimensions.width, config.dimensions.height, {
-        fit: 'cover',
-        position: 'center'
-      })
-  } else {
-    // For comments, maintain aspect ratio but limit max dimensions
-    processor = processor
-      .resize(config.dimensions.width, config.dimensions.height, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-  }
-  
-  // Convert to JPEG with optimization
-  return processor
-    .jpeg({ quality: 85, progressive: true })
-    .toBuffer()
+  return buffer
 }
 
 // Upload file to S3
