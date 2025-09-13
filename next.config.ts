@@ -12,12 +12,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    // Configure sharp for better Vercel compatibility
-    loader: 'default',
-    formats: ['image/webp'],
+    // Disable image optimization to avoid sharp dependency
+    unoptimized: true,
   },
-  // Ensure sharp works properly on Vercel
-  serverExternalPackages: ['sharp'],
 };
 
 export default nextConfig;
