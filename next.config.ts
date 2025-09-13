@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     // Allow build to continue even with TypeScript errors
     ignoreBuildErrors: true,
   },
+  images: {
+    // Configure sharp for better Vercel compatibility
+    loader: 'default',
+    formats: ['image/webp'],
+  },
+  // Ensure sharp works properly on Vercel
+  serverExternalPackages: ['sharp'],
 };
 
 export default nextConfig;
