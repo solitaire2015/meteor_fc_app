@@ -78,7 +78,7 @@ model MatchParticipation {
   userId             String
   matchId            String
   attendanceData     Json     @default("{}")
-  isLateArrival      Boolean  @default(false)
+  isLateArrival      Boolean  @default(true)
   totalTime          Decimal  @default(0)
   fieldFeeCalculated Decimal  @default(0)
   lateFee            Decimal  @default(0)
