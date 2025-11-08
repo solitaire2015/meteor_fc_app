@@ -13,6 +13,8 @@ import { Separator } from '@/components/ui/separator'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cn } from '@/lib/utils'
 import { type Player, type AttendanceGrid, type AttendanceDataItem } from '@/lib/validations/match'
+import { getPositionGroup } from '@/lib/utils/position'
+import { Position } from '@prisma/client'
 
 interface EnhancedAttendanceGridProps {
   players: Player[]
@@ -55,7 +57,7 @@ export default function EnhancedAttendanceGrid({
               part,
               value: 0,
               isGoalkeeper: false,
-              isLateArrival: false,
+              isLateArrival: true, // Default to true (late) for new matches
               goals: 0,
               assists: 0,
             })
@@ -198,22 +200,46 @@ export default function EnhancedAttendanceGrid({
     )
   }
 
+  // Sort players by position: 前锋 → 中场 → 后卫 → 门将 → No position
+  const sortPlayersByPosition = useCallback((playersList: Player[]) => {
+    const forwards = ['CF', 'ST', 'SS', 'LWF', 'RWF']
+    const midfielders = ['DMF', 'CMF', 'AMF', 'LMF', 'RMF']
+    const defenders = ['CB', 'LB', 'RB', 'LWB', 'RWB']
+    const goalkeepers = ['GK']
+
+    const getPositionOrder = (position: string | null | undefined): number => {
+      if (!position) return 4 // No position - last
+      if (forwards.includes(position)) return 0 // 前锋 - first
+      if (midfielders.includes(position)) return 1 // 中场 - second
+      if (defenders.includes(position)) return 2 // 后卫 - third
+      if (goalkeepers.includes(position)) return 3 // 门将 - fourth
+      return 4 // Unknown position - last
+    }
+
+    return [...playersList].sort((a, b) => {
+      const orderA = getPositionOrder(a.position)
+      const orderB = getPositionOrder(b.position)
+      return orderA - orderB
+    })
+  }, [])
+
   // Render player assignment interface
   const renderPlayerAssignment = () => {
     if (!selectedCell) return null
 
     const { section, part } = selectedCell
+    const sortedPlayers = sortPlayersByPosition(players)
 
     return (
       <div className="space-y-4">
         <div className="text-sm text-gray-600">
           为第{section}节第{part}部分分配球员
         </div>
-        
+
         <Separator />
 
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {players.map((player) => {
+          {sortedPlayers.map((player) => {
             const playerAttendance = getPlayerAttendanceInCell(player.id, section, part)
             const currentValue = playerAttendance?.value || 0
             const isGoalkeeper = playerAttendance?.isGoalkeeper || false
@@ -221,15 +247,17 @@ export default function EnhancedAttendanceGrid({
             return (
               <div key={player.id} className="space-y-2 p-3 rounded-lg border bg-card">
                 <div className="flex items-center justify-between">
-                  <div className="font-medium text-sm">
-                    {player.name}
-                    {player.jerseyNumber && ` #${player.jerseyNumber}`}
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">
+                      {player.name}
+                      {player.jerseyNumber && ` #${player.jerseyNumber}`}
+                    </span>
+                    {player.position && (
+                      <Badge className={getPositionGroup(player.position as Position)?.color || 'text-gray-600 bg-gray-50'}>
+                        {player.position}
+                      </Badge>
+                    )}
                   </div>
-                  {player.position && (
-                    <Badge variant="outline" className="text-xs">
-                      {player.position}
-                    </Badge>
-                  )}
                 </div>
 
                 {/* Attendance Value Buttons */}
@@ -307,7 +335,8 @@ export default function EnhancedAttendanceGrid({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {players.map((player) => {
                 const isLate = getPlayerLateStatus(player.id)
-                
+                const isOnTime = !isLate // Invert the logic for display
+
                 return (
                   <div key={player.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                     <div className="font-medium text-sm">
@@ -316,12 +345,12 @@ export default function EnhancedAttendanceGrid({
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id={`late-${player.id}`}
-                        checked={isLate}
-                        onCheckedChange={(checked) => updatePlayerLateArrival(player.id, !!checked)}
+                        id={`ontime-${player.id}`}
+                        checked={isOnTime}
+                        onCheckedChange={(checked) => updatePlayerLateArrival(player.id, !checked)}
                       />
-                      <Label htmlFor={`late-${player.id}`} className="text-sm">
-                        迟到
+                      <Label htmlFor={`ontime-${player.id}`} className="text-sm">
+                        准时
                       </Label>
                     </div>
                   </div>
