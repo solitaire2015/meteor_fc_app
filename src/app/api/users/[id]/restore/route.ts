@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { successResponse, errorResponse, validationError, notFoundError } from '@/lib/apiResponse'
 import { IdParamSchema, RestoreUserSchema, validateRequest } from '@/lib/validationSchemas'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -74,6 +75,14 @@ export async function POST(
         updatedAt: true
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return successResponse({ 
       message: 'User restored successfully',

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { DateFilter, WhereClause, PlayerStats } from '@/types/common'
-import { handleApiError, apiSuccess } from '@/lib/errors'
+import { APIResponse, WhereClause, PlayerStats } from '@/types/common'
+import { handleApiError } from '@/lib/errors'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/cache'
 
 // Validation schema
 const statsQuerySchema = z.object({
@@ -21,32 +22,58 @@ export async function GET(request: Request) {
       type: searchParams.get('type') || undefined
     })
 
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<APIResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
+
     const currentYear = new Date().getFullYear()
     const targetYear = query.year ? parseInt(query.year) : currentYear
 
+    let data: APIResponse['data']
+
     switch (query.type) {
       case 'team':
-        return await getTeamStatistics(targetYear, query.month ? parseInt(query.month) : undefined)
+        data = await getTeamStatistics(targetYear, query.month ? parseInt(query.month) : undefined)
+        break
       
       case 'player':
-        return await getPlayerStatistics(targetYear, query.month ? parseInt(query.month) : undefined)
+        data = await getPlayerStatistics(targetYear, query.month ? parseInt(query.month) : undefined)
+        break
       
       case 'monthly':
-        return await getMonthlyBreakdown(targetYear)
+        data = await getMonthlyBreakdown(targetYear)
+        break
       
       case 'yearly':
-        return await getYearlyStatistics()
+        data = await getYearlyStatistics()
+        break
       
       default:
-        return await getTeamStatistics(targetYear)
+        data = await getTeamStatistics(targetYear)
+        break
     }
+
+    const payload: APIResponse = {
+      success: true,
+      data
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.STATS]
+    })
+
+    return NextResponse.json(payload)
   } catch (error) {
     return handleApiError(error);
   }
 }
 
 async function getTeamStatistics(year: number, month?: number) {
-  let dateFilter: WhereClause = {
+  const dateFilter: WhereClause = {
     matchDate: {
       gte: new Date(`${year}-01-01`),
       lte: new Date(`${year}-12-31`)
@@ -129,7 +156,7 @@ async function getTeamStatistics(year: number, month?: number) {
   const totalYellowCards = allEvents.filter(e => e.eventType === 'YELLOW_CARD').length
   const totalRedCards = allEvents.filter(e => e.eventType === 'RED_CARD').length
 
-  return apiSuccess({
+  return {
     period: month ? `${year}-${month.toString().padStart(2, '0')}` : year.toString(),
     totalMatches,
     wins,
@@ -145,11 +172,11 @@ async function getTeamStatistics(year: number, month?: number) {
     totalRedCards,
     averageGoalsPerMatch: totalMatches > 0 ? (goalsFor / totalMatches).toFixed(2) : '0.00',
     averageGoalsAgainstPerMatch: totalMatches > 0 ? (goalsAgainst / totalMatches).toFixed(2) : '0.00'
-  })
+  }
 }
 
 async function getPlayerStatistics(year: number, month?: number) {
-  let dateFilter: WhereClause = {
+  const dateFilter: WhereClause = {
     match: {
       matchDate: {
         gte: new Date(`${year}-01-01`),
@@ -324,13 +351,10 @@ async function getPlayerStatistics(year: number, month?: number) {
 
   const sortedPlayers = Object.values(playerStats).sort((a: PlayerStats, b: PlayerStats) => b.goals - a.goals)
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      period: month ? `${year}-${month.toString().padStart(2, '0')}` : year.toString(),
-      players: sortedPlayers
-    }
-  })
+  return {
+    period: month ? `${year}-${month.toString().padStart(2, '0')}` : year.toString(),
+    players: sortedPlayers
+  }
 }
 
 async function getMonthlyBreakdown(year: number) {
@@ -398,13 +422,10 @@ async function getMonthlyBreakdown(year: number) {
     })
   }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      year,
-      months: monthlyStats
-    }
-  })
+  return {
+    year,
+    months: monthlyStats
+  }
 }
 
 async function getYearlyStatistics() {
@@ -480,10 +501,7 @@ async function getYearlyStatistics() {
     })
   }
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      years: yearlyStats
-    }
-  })
+  return {
+    years: yearlyStats
+  }
 }

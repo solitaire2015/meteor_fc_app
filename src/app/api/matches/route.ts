@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { successResponse, errorResponse, validationError } from '@/lib/apiResponse'
+import { ApiResponse, successResponse, errorResponse, validationError } from '@/lib/apiResponse'
 import { CreateMatchSchema, PaginationSchema, validateRequest } from '@/lib/validationSchemas'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -19,6 +20,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { page, limit } = paginationValidation.data
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
 
     // Get total count for pagination
     const total = await prisma.match.count()
@@ -51,12 +57,24 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return successResponse(matches, {
-      page,
-      limit,
-      total,
-      totalPages
+    const payload: ApiResponse = {
+      success: true,
+      data: matches,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages
+      }
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.MATCHES]
     })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error fetching matches:', error)
     return errorResponse('Failed to fetch matches')
@@ -118,6 +136,15 @@ export async function POST(request: NextRequest) {
         updatedAt: true
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return successResponse(match)
   } catch (error) {

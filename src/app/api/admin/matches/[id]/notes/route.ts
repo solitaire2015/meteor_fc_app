@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
 const updateNotesSchema = z.object({
   participationNotes: z.array(z.object({
@@ -55,6 +56,15 @@ export async function POST(
       
       return updates
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,

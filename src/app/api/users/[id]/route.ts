@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { successResponse, errorResponse, validationError, notFoundError } from '@/lib/apiResponse'
+import { ApiResponse, successResponse, errorResponse, validationError, notFoundError } from '@/lib/apiResponse'
 import { IdParamSchema, UpdateUserSchema, DeleteUserSchema, RestoreUserSchema, validateRequest } from '@/lib/validationSchemas'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -17,6 +18,11 @@ export async function GET(
     }
 
     const { id } = paramValidation.data
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -39,7 +45,18 @@ export async function GET(
       return notFoundError('User not found')
     }
 
-    return successResponse(user)
+    const payload: ApiResponse = {
+      success: true,
+      data: user
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.USERS]
+    })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error fetching user:', error)
     return errorResponse('Failed to fetch user')
@@ -112,6 +129,14 @@ export async function PUT(
       }
     })
 
+    await invalidateCacheTags([
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return successResponse(updatedUser)
   } catch (error) {
     console.error('Error updating user:', error)
@@ -169,6 +194,14 @@ export async function DELETE(
         deletionReason: true
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return successResponse({ 
       message: 'User deleted successfully',

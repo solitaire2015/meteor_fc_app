@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { WhereClause } from '@/types/common'
 import { z } from 'zod'
 import { globalSettingsService } from '@/lib/services/globalSettingsService'
+import { ApiResponse } from '@/lib/apiResponse'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 // Validation schemas
 const createMatchSchema = z.object({
@@ -43,7 +45,13 @@ export async function GET(request: Request) {
     const month = searchParams.get('month')
     const limit = searchParams.get('limit')
 
-    let where: WhereClause = {}
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
+
+    const where: WhereClause = {}
     
     if (year) {
       const startDate = new Date(`${year}-01-01`)
@@ -175,10 +183,18 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({
+    const payload = {
       success: true,
       data: transformedMatches
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.GAMES]
     })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error fetching matches:', error)
     return NextResponse.json({
@@ -326,6 +342,15 @@ export async function POST(request: Request) {
         }
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { successResponse, errorResponse, validationError } from '@/lib/apiResponse'
+import { ApiResponse, successResponse, errorResponse, validationError } from '@/lib/apiResponse'
 import { CreateUserSchema, PaginationSchema, validateRequest } from '@/lib/validationSchemas'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson, invalidateCacheTags } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -20,6 +21,12 @@ export async function GET(request: NextRequest) {
 
     const { page, limit } = paginationValidation.data
     const includeDeleted = searchParams.get('includeDeleted') === 'true'
+
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
 
     // Build where clause based on deletion status
     const whereClause = includeDeleted ? {} : { deletedAt: null }
@@ -55,13 +62,25 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return successResponse(users, {
-      page,
-      limit,
-      total,
-      totalPages,
-      includeDeleted
+    const payload = {
+      success: true,
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        includeDeleted
+      }
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.USERS]
     })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error fetching users:', error)
     return errorResponse('Failed to fetch users')
@@ -115,6 +134,14 @@ export async function POST(request: NextRequest) {
         updatedAt: true
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return successResponse(user)
   } catch (error) {

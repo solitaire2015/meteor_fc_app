@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
+import { ApiResponse } from '@/lib/apiResponse'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 export async function GET(
   request: NextRequest,
@@ -8,6 +10,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
+
     const match = await prisma.match.findUnique({
       where: {
         id,
@@ -82,10 +90,18 @@ export async function GET(
       calculatedCoefficient: coefficient, // Add calculated coefficient for display
     }
 
-    return NextResponse.json({
+    const payload: ApiResponse = {
       success: true,
       data: matchData
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.GAMES]
     })
+
+    return NextResponse.json(payload)
 
   } catch (error) {
     console.error('Error fetching match:', error)
@@ -124,6 +140,15 @@ export async function PUT(
       }
     })
 
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return NextResponse.json({
       success: true,
       data: updatedMatch
@@ -161,6 +186,15 @@ export async function DELETE(
         id,
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { calculatePlayerFees } from '@/lib/feeCalculation'
+import { calculatePlayerFees, type AttendanceData } from '@/lib/feeCalculation'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
 // Validation schemas for frontend data format
 const attendanceDataSchema = z.object({
@@ -209,6 +210,15 @@ export async function POST(
     const participantsCount = result?.participationsCount || 0
     const eventsCount = result?.eventsCount || 0
     
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return NextResponse.json({
       success: true,
       data: {
@@ -316,7 +326,7 @@ export async function GET(
       const playerNotes = playerOverride?.notes || undefined
       
       // Convert JSONb attendance data back to grid format
-      const attendanceJson = p.attendanceData as any
+      const attendanceJson = p.attendanceData as AttendanceData | null
       
       for (let section = 1; section <= 3; section++) {
         for (let part = 1; part <= 3; part++) {

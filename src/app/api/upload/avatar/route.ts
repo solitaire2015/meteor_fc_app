@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { uploadFile, extractFileKeyFromUrl } from '@/lib/aws'
 import { PrismaClient } from '@prisma/client'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -68,6 +69,14 @@ export async function POST(request: NextRequest) {
         avatarFileKey: true
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,
@@ -149,6 +158,14 @@ export async function DELETE(request: NextRequest) {
         avatarUrl: true
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,

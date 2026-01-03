@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
+import { ApiResponse } from '@/lib/apiResponse'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 // Validation schemas
 const createUserSchema = z.object({
@@ -24,6 +26,8 @@ const createUserSchema = z.object({
   createdBy: z.string().optional()
 })
 
+type CreateUserInput = z.infer<typeof createUserSchema>
+
 // GET /api/players - Get all users (players and admins) with calculated stats
 export async function GET(request: Request) {
   try {
@@ -32,7 +36,13 @@ export async function GET(request: Request) {
     const accountStatus = searchParams.get('accountStatus')
     const includeDeleted = searchParams.get('includeDeleted') === 'true'
 
-    const where: any = {}
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
+
+    const where: Prisma.UserWhereInput = {}
     
     // Only filter by userType if explicitly requested
     if (userType) {
@@ -174,10 +184,18 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({
+    const payload = {
       success: true,
       data: transformedUsers
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.PLAYERS]
     })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error fetching users:', error)
     return NextResponse.json({ 
@@ -192,7 +210,7 @@ export async function GET(request: Request) {
 
 // POST /api/players - Create a new user (ghost player)
 export async function POST(request: Request) {
-  let validatedData: any = null
+  let validatedData: CreateUserInput | null = null
   
   try {
     const body = await request.json()
@@ -215,6 +233,14 @@ export async function POST(request: Request) {
         createdBy: validatedData.createdBy
       }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,

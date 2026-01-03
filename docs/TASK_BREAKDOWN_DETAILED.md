@@ -885,6 +885,29 @@ describe('Game Management Workflow', () => {
 - **I2**: Data Migration and Cleanup (Backend Dev)
 - **I3**: End-to-End Testing and Validation (QA/Full-stack Dev)
 
+---
+
+### B4: Redis Cache Layer
+**Priority**: High  
+**Dependencies**: None  
+**Estimated Time**: 1 day  
+**Developer**: Backend  
+**Status**: Completed
+
+**Description**:
+Add Redis read-through caching for public/user-facing GET APIs, plus tag-based invalidation on writes.
+
+**Tasks**:
+1. Add Redis client and cache helpers (key builder, JSON get/set, tags).
+2. Cache GET endpoints: users, players, matches, games, leaderboard, stats, statistics.
+3. Invalidate caches on write routes (user, match, admin match, excel import, avatar).
+4. Document Redis env configuration.
+
+**Deliverables**:
+- Cache helpers in `src/lib/cache/`
+- Updated API route handlers with cache read-through + invalidation
+- README env notes for Redis configuration
+
 ## TASK DEPENDENCIES
 
 ```

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { FeesUpdateSchema } from '@/lib/validationSchemas'
 import { feeCalculationService } from '@/lib/services/feeCalculationService'
 import { feeOverrideService } from '@/lib/services/feeOverrideService'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
+import { ZodError } from 'zod'
 
 // Removed deprecated PATCH endpoint that directly modified match_participation table
 // This was problematic as it overwrote calculated fees with manual overrides
@@ -56,6 +58,15 @@ export async function PUT(
       }, { status: 400 })
     }
 
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return NextResponse.json({
       success: true,
       data: {
@@ -67,13 +78,13 @@ export async function PUT(
     })
 
   } catch (error) {
-    if (error instanceof Error && error.constructor.name === 'ZodError') {
+    if (error instanceof ZodError) {
       return NextResponse.json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid request data',
-          details: (error as any).issues
+          details: error.issues
         }
       }, { status: 400 })
     }

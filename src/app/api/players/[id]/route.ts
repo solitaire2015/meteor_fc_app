@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
 // Validation schema for updating user
 const updateUserSchema = z.object({
@@ -72,6 +73,14 @@ export async function PUT(
       }
     })
 
+    await invalidateCacheTags([
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return NextResponse.json({
       success: true,
       data: updatedUser
@@ -126,6 +135,14 @@ export async function DELETE(
     await prisma.user.delete({
       where: { id }
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return NextResponse.json({
       success: true,

@@ -4,6 +4,7 @@ import { parseExcelFile, ExcelPlayerData } from '@/lib/excelParser'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
 import { calculatePlayerFees, type AttendanceData } from '@/lib/feeCalculation'
 import { globalSettingsService } from '@/lib/services/globalSettingsService'
+import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -250,6 +251,16 @@ export async function POST(request: NextRequest) {
       })
     }
     
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return NextResponse.json({
       success: true,
       data: {

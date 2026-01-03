@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { DateFilter, WhereClause, LeaderboardPlayerStats, LeaderboardPlayer } from '@/types/common'
+import { WhereClause, LeaderboardPlayerStats, LeaderboardPlayer } from '@/types/common'
+import { ApiResponse } from '@/lib/apiResponse'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/cache'
 
 // Validation schema
 const leaderboardQuerySchema = z.object({
@@ -22,12 +24,18 @@ export async function GET(request: Request) {
       limit: searchParams.get('limit') || undefined
     })
 
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
+
     const currentYear = new Date().getFullYear()
     const targetYear = query.year ? parseInt(query.year) : currentYear
     const limit = query.limit ? parseInt(query.limit) : 50
 
     // Build date filter for matches
-    let dateFilter: WhereClause = {
+    const dateFilter: WhereClause = {
       matchDate: {
         gte: new Date(`${targetYear}-01-01`),
         lte: new Date(`${targetYear}-12-31`)
@@ -155,7 +163,7 @@ export async function GET(request: Request) {
       lastMatchDate: player.lastMatchDate
     }))
 
-    return NextResponse.json({
+    const payload: ApiResponse = {
       success: true,
       data: {
         type: query.type,
@@ -163,7 +171,15 @@ export async function GET(request: Request) {
         players: rankedPlayers,
         totalPlayers: rankedPlayers.length
       }
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.LEADERBOARD]
     })
+
+    return NextResponse.json(payload)
 
   } catch (error) {
     if (error instanceof z.ZodError) {

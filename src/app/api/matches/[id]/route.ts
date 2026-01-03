@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { successResponse, errorResponse, validationError, notFoundError } from '@/lib/apiResponse'
+import { ApiResponse, successResponse, errorResponse, validationError, notFoundError } from '@/lib/apiResponse'
 import { IdParamSchema, UpdateMatchSchema, validateRequest } from '@/lib/validationSchemas'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -17,6 +18,11 @@ export async function GET(
     }
 
     const { id } = paramValidation.data
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
 
     const match = await prisma.match.findUnique({
       where: { id },
@@ -53,7 +59,18 @@ export async function GET(
       return notFoundError('Match not found')
     }
 
-    return successResponse(match)
+    const payload: ApiResponse = {
+      success: true,
+      data: match
+    }
+
+    await setCachedJson({
+      key: cacheKey,
+      value: payload,
+      tags: [CACHE_TAGS.MATCHES]
+    })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Error fetching match:', error)
     return errorResponse('Failed to fetch match')
@@ -130,6 +147,15 @@ export async function PUT(
       }
     })
 
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
+
     return successResponse(updatedMatch)
   } catch (error) {
     console.error('Error updating match:', error)
@@ -176,6 +202,15 @@ export async function DELETE(
         where: { id }
       })
     })
+
+    await invalidateCacheTags([
+      CACHE_TAGS.MATCHES,
+      CACHE_TAGS.GAMES,
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ])
 
     return successResponse({ message: 'Match deleted successfully' })
   } catch (error) {

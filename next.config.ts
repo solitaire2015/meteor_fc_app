@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
   eslint: {
     // Only run ESLint on these directories during build
     dirs: ['src'],

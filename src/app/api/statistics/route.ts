@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import { successResponse, errorResponse, validationError } from '@/lib/apiResponse'
+import { NextRequest, NextResponse } from 'next/server'
+import { Prisma, PrismaClient } from '@prisma/client'
+import { ApiResponse, errorResponse, validationError } from '@/lib/apiResponse'
 import { StatsQuerySchema, validateRequest } from '@/lib/validationSchemas'
+import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -20,21 +21,48 @@ export async function GET(request: NextRequest) {
     }
 
     const { type, year, month } = validation.data
+    const cacheKey = buildCacheKey(new URL(request.url))
+    const cached = await getCachedJson<ApiResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json(cached)
+    }
 
     if (type === 'player') {
       const playerStats = await getPlayerStatistics(year, month)
-      return successResponse({
-        type: 'player',
-        period: `${year || 'All'}${month ? `-${month.toString().padStart(2, '0')}` : ''}`,
-        players: playerStats
+      const payload: ApiResponse = {
+        success: true,
+        data: {
+          type: 'player',
+          period: `${year || 'All'}${month ? `-${month.toString().padStart(2, '0')}` : ''}`,
+          players: playerStats
+        }
+      }
+
+      await setCachedJson({
+        key: cacheKey,
+        value: payload,
+        tags: [CACHE_TAGS.STATISTICS]
       })
+
+      return NextResponse.json(payload)
     } else {
       const teamStats = await getTeamStatistics(year, month)
-      return successResponse({
-        type: 'team',
-        period: `${year || 'All'}${month ? `-${month.toString().padStart(2, '0')}` : ''}`,
-        ...teamStats
+      const payload: ApiResponse = {
+        success: true,
+        data: {
+          type: 'team',
+          period: `${year || 'All'}${month ? `-${month.toString().padStart(2, '0')}` : ''}`,
+          ...teamStats
+        }
+      }
+
+      await setCachedJson({
+        key: cacheKey,
+        value: payload,
+        tags: [CACHE_TAGS.STATISTICS]
       })
+
+      return NextResponse.json(payload)
     }
   } catch (error) {
     console.error('Error fetching statistics:', error)
@@ -44,7 +72,7 @@ export async function GET(request: NextRequest) {
 
 async function getPlayerStatistics(year?: number, month?: number) {
   // Build date filter
-  const dateFilter: any = {}
+  const dateFilter: Prisma.MatchWhereInput = {}
   if (year) {
     const startDate = new Date(year, month ? month - 1 : 0, 1)
     const endDate = month 
@@ -109,7 +137,7 @@ async function getPlayerStatistics(year?: number, month?: number) {
 
 async function getTeamStatistics(year?: number, month?: number) {
   // Build date filter
-  const dateFilter: any = {}
+  const dateFilter: Prisma.MatchWhereInput = {}
   if (year) {
     const startDate = new Date(year, month ? month - 1 : 0, 1)
     const endDate = month 
