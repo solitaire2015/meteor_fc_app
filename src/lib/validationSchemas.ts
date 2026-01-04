@@ -46,10 +46,20 @@ export const CreateMatchSchema = z.object({
 export const UpdateMatchSchema = CreateMatchSchema.partial()
 
 // Stats query schema
+const optionalStatsNumber = (min: number, max: number) =>
+  z.preprocess((value) => {
+    if (value === null || value === undefined || value === '') {
+      return undefined
+    }
+
+    const numberValue = typeof value === 'string' ? Number(value) : value
+    return Number.isNaN(numberValue) ? undefined : numberValue
+  }, z.number().int().min(min).max(max).optional())
+
 export const StatsQuerySchema = z.object({
   type: z.enum(['team', 'player']).optional(),
-  year: z.coerce.number().int().min(2020).max(2030).optional(),
-  month: z.coerce.number().int().min(1).max(12).optional()
+  year: optionalStatsNumber(2020, 2030),
+  month: optionalStatsNumber(1, 12)
 })
 
 // Match event schema

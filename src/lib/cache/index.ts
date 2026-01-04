@@ -15,6 +15,16 @@ export const CACHE_TAGS = {
   STATISTICS: 'statistics'
 } as const
 
+const TAG_KEY_PREFIXES: Record<string, string> = {
+  [CACHE_TAGS.USERS]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:users`,
+  [CACHE_TAGS.PLAYERS]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:players`,
+  [CACHE_TAGS.MATCHES]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:matches`,
+  [CACHE_TAGS.GAMES]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:games`,
+  [CACHE_TAGS.LEADERBOARD]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:leaderboard`,
+  [CACHE_TAGS.STATS]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:stats`,
+  [CACHE_TAGS.STATISTICS]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:statistics`
+}
+
 function normalizeSearchParams(searchParams: URLSearchParams): string {
   const entries = Array.from(searchParams.entries()).sort((a, b) => {
     if (a[0] === b[0]) {
@@ -119,6 +129,23 @@ export async function invalidateCacheTags(tags: string[]): Promise<void> {
     for (const tagKey of tagKeys) {
       const members = await client.sMembers(tagKey)
       members.forEach((key) => keysToDelete.add(key))
+    }
+
+    for (const tag of uniqueTags) {
+      const prefix = TAG_KEY_PREFIXES[tag]
+      if (!prefix) {
+        continue
+      }
+
+      let cursor = '0'
+      do {
+        const { cursor: nextCursor, keys } = await client.scan(cursor, {
+          MATCH: `${prefix}*`,
+          COUNT: 100
+        })
+        keys.forEach((key) => keysToDelete.add(key))
+        cursor = nextCursor
+      } while (cursor !== '0')
     }
 
     if (keysToDelete.size > 0) {
