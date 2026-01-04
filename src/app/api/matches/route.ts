@@ -47,11 +47,6 @@ export async function GET(request: NextRequest) {
         fieldFeeTotal: true,
         waterFeeTotal: true,
         notes: true,
-        totalParticipants: true,
-        totalGoals: true,
-        totalAssists: true,
-        totalCalculatedFees: true,
-        status: true,
         createdAt: true,
         updatedAt: true
       }
@@ -109,12 +104,7 @@ export async function POST(request: NextRequest) {
     const match = await prisma.match.create({
       data: {
         ...matchData,
-        matchResult,
-        totalParticipants: 0,
-        totalGoals: 0,
-        totalAssists: 0,
-        totalCalculatedFees: 0,
-        status: 'SCHEDULED'
+        matchResult
       },
       select: {
         id: true,
@@ -127,11 +117,6 @@ export async function POST(request: NextRequest) {
         fieldFeeTotal: true,
         waterFeeTotal: true,
         notes: true,
-        totalParticipants: true,
-        totalGoals: true,
-        totalAssists: true,
-        totalCalculatedFees: true,
-        status: true,
         createdAt: true,
         updatedAt: true
       }
