@@ -51,14 +51,18 @@ export async function PUT(
 
     const result = await attendanceService.updateAttendance(matchId, updateRequest, matchInfo, selectedPlayerIds)
 
-    await invalidateCacheTags([
-      CACHE_TAGS.MATCHES,
-      CACHE_TAGS.GAMES,
-      CACHE_TAGS.PLAYERS,
-      CACHE_TAGS.LEADERBOARD,
-      CACHE_TAGS.STATS,
-      CACHE_TAGS.STATISTICS
-    ])
+    try {
+      await invalidateCacheTags([
+        CACHE_TAGS.MATCHES,
+        CACHE_TAGS.GAMES,
+        CACHE_TAGS.PLAYERS,
+        CACHE_TAGS.LEADERBOARD,
+        CACHE_TAGS.STATS,
+        CACHE_TAGS.STATISTICS
+      ])
+    } catch (cacheError) {
+      console.warn('Cache invalidation failed after attendance update:', cacheError)
+    }
 
     return NextResponse.json({
       success: true,

@@ -4,7 +4,7 @@ import { WhereClause } from '@/types/common'
 import { z } from 'zod'
 import { globalSettingsService } from '@/lib/services/globalSettingsService'
 import { ApiResponse } from '@/lib/apiResponse'
-import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
+import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 // Validation schemas
 const createMatchSchema = z.object({
@@ -343,14 +343,24 @@ export async function POST(request: Request) {
       }
     })
 
-    await invalidateCacheTags([
-      CACHE_TAGS.MATCHES,
-      CACHE_TAGS.GAMES,
-      CACHE_TAGS.PLAYERS,
-      CACHE_TAGS.LEADERBOARD,
-      CACHE_TAGS.STATS,
-      CACHE_TAGS.STATISTICS
-    ])
+    const cacheTasks = [
+      invalidateCacheTags([
+        CACHE_TAGS.MATCHES,
+        CACHE_TAGS.GAMES,
+        CACHE_TAGS.PLAYERS,
+        CACHE_TAGS.LEADERBOARD,
+        CACHE_TAGS.STATS,
+        CACHE_TAGS.STATISTICS
+      ]),
+      deleteCacheKeys([buildCacheKey(new URL(request.url))]),
+      deleteCacheByPrefixes([
+        `${buildCacheKey(new URL('/api/games', request.url))}`,
+        `${buildCacheKey(new URL('/api/matches', request.url))}`
+      ])
+    ]
+    void Promise.all(cacheTasks).catch((cacheError) => {
+      console.warn('Cache invalidation failed after match create:', cacheError)
+    })
 
     return NextResponse.json({
       success: true,

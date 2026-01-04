@@ -147,14 +147,16 @@ export async function PUT(
       }
     })
 
-    await invalidateCacheTags([
+    void invalidateCacheTags([
       CACHE_TAGS.MATCHES,
       CACHE_TAGS.GAMES,
       CACHE_TAGS.PLAYERS,
       CACHE_TAGS.LEADERBOARD,
       CACHE_TAGS.STATS,
       CACHE_TAGS.STATISTICS
-    ])
+    ]).catch((cacheError) => {
+      console.warn('Cache invalidation failed after match delete:', cacheError)
+    })
 
     return successResponse(updatedMatch)
   } catch (error) {
@@ -185,19 +187,35 @@ export async function DELETE(
       return notFoundError('Match not found')
     }
 
-    // Delete match and related data in a transaction
     await prisma.$transaction(async (tx) => {
-      // Delete match events
+      await tx.comment.deleteMany({
+        where: { matchId: id, parentCommentId: { not: null } }
+      })
+
+      await tx.comment.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.video.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.matchPlayer.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.feeOverride.deleteMany({
+        where: { matchId: id }
+      })
+
       await tx.matchEvent.deleteMany({
         where: { matchId: id }
       })
 
-      // Delete match participations
       await tx.matchParticipation.deleteMany({
         where: { matchId: id }
       })
 
-      // Delete the match
       await tx.match.delete({
         where: { id }
       })

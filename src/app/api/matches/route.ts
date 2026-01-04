@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { ApiResponse, successResponse, errorResponse, validationError } from '@/lib/apiResponse'
 import { CreateMatchSchema, PaginationSchema, validateRequest } from '@/lib/validationSchemas'
-import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
+import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
 
@@ -137,14 +137,24 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    await invalidateCacheTags([
-      CACHE_TAGS.MATCHES,
-      CACHE_TAGS.GAMES,
-      CACHE_TAGS.PLAYERS,
-      CACHE_TAGS.LEADERBOARD,
-      CACHE_TAGS.STATS,
-      CACHE_TAGS.STATISTICS
-    ])
+    const cacheTasks = [
+      invalidateCacheTags([
+        CACHE_TAGS.MATCHES,
+        CACHE_TAGS.GAMES,
+        CACHE_TAGS.PLAYERS,
+        CACHE_TAGS.LEADERBOARD,
+        CACHE_TAGS.STATS,
+        CACHE_TAGS.STATISTICS
+      ]),
+      deleteCacheKeys([buildCacheKey(new URL(request.url))]),
+      deleteCacheByPrefixes([
+        `${buildCacheKey(new URL('/api/games', request.url))}`,
+        `${buildCacheKey(new URL('/api/matches', request.url))}`
+      ])
+    ]
+    void Promise.all(cacheTasks).catch((cacheError) => {
+      console.warn('Cache invalidation failed after match create:', cacheError)
+    })
 
     return successResponse(match)
   } catch (error) {

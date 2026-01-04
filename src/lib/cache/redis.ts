@@ -9,9 +9,23 @@ declare global {
 
 const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true'
 
+function normalizeRedisUrl(redisUrl: string): string {
+  try {
+    const parsed = new URL(redisUrl)
+    if (parsed.password && !parsed.username) {
+      parsed.username = process.env.REDIS_USERNAME || 'default'
+      return parsed.toString()
+    }
+  } catch {
+    return redisUrl
+  }
+
+  return redisUrl
+}
+
 function buildRedisUrl(): string | null {
   if (process.env.REDIS_URL) {
-    return process.env.REDIS_URL
+    return normalizeRedisUrl(process.env.REDIS_URL)
   }
 
   const host = process.env.REDIS_HOST
@@ -21,7 +35,14 @@ function buildRedisUrl(): string | null {
 
   const port = process.env.REDIS_PORT || '6379'
   const password = process.env.REDIS_PASSWORD
-  const authSegment = password ? `:${encodeURIComponent(password)}@` : ''
+  const username = process.env.REDIS_USERNAME || (password ? 'default' : '')
+  const encodedUsername = username ? encodeURIComponent(username) : ''
+  const encodedPassword = password ? encodeURIComponent(password) : ''
+  const authSegment = password
+    ? `${encodedUsername}:${encodedPassword}@`
+    : encodedUsername
+      ? `${encodedUsername}@`
+      : ''
 
   return `redis://${authSegment}${host}:${port}`
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
 import { ApiResponse } from '@/lib/apiResponse'
-import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
+import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 export async function GET(
   request: NextRequest,
@@ -140,14 +140,24 @@ export async function PUT(
       }
     })
 
-    await invalidateCacheTags([
-      CACHE_TAGS.MATCHES,
-      CACHE_TAGS.GAMES,
-      CACHE_TAGS.PLAYERS,
-      CACHE_TAGS.LEADERBOARD,
-      CACHE_TAGS.STATS,
-      CACHE_TAGS.STATISTICS
-    ])
+    const cacheTasks = [
+      invalidateCacheTags([
+        CACHE_TAGS.MATCHES,
+        CACHE_TAGS.GAMES,
+        CACHE_TAGS.PLAYERS,
+        CACHE_TAGS.LEADERBOARD,
+        CACHE_TAGS.STATS,
+        CACHE_TAGS.STATISTICS
+      ]),
+      deleteCacheKeys([buildCacheKey(new URL('/api/games', request.url))]),
+      deleteCacheByPrefixes([
+        `${buildCacheKey(new URL('/api/games', request.url))}`,
+        `${buildCacheKey(new URL('/api/matches', request.url))}`
+      ])
+    ]
+    void Promise.all(cacheTasks).catch((cacheError) => {
+      console.warn('Cache invalidation failed after match update:', cacheError)
+    })
 
     return NextResponse.json({
       success: true,
@@ -169,32 +179,62 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let matchId = ''
   try {
     const { id } = await params
-    // Delete related data first
-    await prisma.matchEvent.deleteMany({
-      where: { matchId: id }
+    matchId = id
+    await prisma.$transaction(async (tx) => {
+      await tx.comment.deleteMany({
+        where: { matchId: id, parentCommentId: { not: null } }
+      })
+
+      await tx.comment.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.video.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.matchPlayer.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.feeOverride.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.matchEvent.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.matchParticipation.deleteMany({
+        where: { matchId: id }
+      })
+
+      await tx.match.delete({
+        where: { id }
+      })
     })
 
-    await prisma.matchParticipation.deleteMany({
-      where: { matchId: id }
+    const cacheTasks = [
+      invalidateCacheTags([
+        CACHE_TAGS.MATCHES,
+        CACHE_TAGS.GAMES,
+        CACHE_TAGS.PLAYERS,
+        CACHE_TAGS.LEADERBOARD,
+        CACHE_TAGS.STATS,
+        CACHE_TAGS.STATISTICS
+      ]),
+      deleteCacheKeys([buildCacheKey(new URL('/api/games', request.url))]),
+      deleteCacheByPrefixes([
+        `${buildCacheKey(new URL('/api/games', request.url))}`,
+        `${buildCacheKey(new URL('/api/matches', request.url))}`
+      ])
+    ]
+    void Promise.all(cacheTasks).catch((cacheError) => {
+      console.warn('Cache invalidation failed after match delete:', cacheError)
     })
-
-    // Delete the match
-    await prisma.match.delete({
-      where: {
-        id,
-      }
-    })
-
-    await invalidateCacheTags([
-      CACHE_TAGS.MATCHES,
-      CACHE_TAGS.GAMES,
-      CACHE_TAGS.PLAYERS,
-      CACHE_TAGS.LEADERBOARD,
-      CACHE_TAGS.STATS,
-      CACHE_TAGS.STATISTICS
-    ])
 
     return NextResponse.json({
       success: true,
@@ -203,6 +243,17 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error deleting match:', error)
+    if (matchId) {
+      const existingMatch = await prisma.match.findUnique({
+        where: { id: matchId }
+      })
+      if (!existingMatch) {
+        return NextResponse.json({
+          success: true,
+          message: 'Match deleted successfully'
+        })
+      }
+    }
     return NextResponse.json({
       success: false,
       error: {

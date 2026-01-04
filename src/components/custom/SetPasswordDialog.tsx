@@ -70,7 +70,8 @@ export function SetPasswordDialog({
       }
     } catch (validationError: unknown) {
       if (validationError instanceof ZodError) {
-        setError(validationError.errors[0].message);
+        const message = validationError.issues?.[0]?.message || "密码格式不正确";
+        setError(message);
       } else {
         setError("密码格式不正确");
       }

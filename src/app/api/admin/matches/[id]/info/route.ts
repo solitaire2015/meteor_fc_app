@@ -71,14 +71,18 @@ export async function PUT(
       }
     }
 
-    await invalidateCacheTags([
-      CACHE_TAGS.MATCHES,
-      CACHE_TAGS.GAMES,
-      CACHE_TAGS.PLAYERS,
-      CACHE_TAGS.LEADERBOARD,
-      CACHE_TAGS.STATS,
-      CACHE_TAGS.STATISTICS
-    ])
+    try {
+      await invalidateCacheTags([
+        CACHE_TAGS.MATCHES,
+        CACHE_TAGS.GAMES,
+        CACHE_TAGS.PLAYERS,
+        CACHE_TAGS.LEADERBOARD,
+        CACHE_TAGS.STATS,
+        CACHE_TAGS.STATISTICS
+      ])
+    } catch (cacheError) {
+      console.warn('Cache invalidation failed after match info update:', cacheError)
+    }
 
     return NextResponse.json({
       success: true,
