@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { globalSettingsService } from '@/lib/services/globalSettingsService'
 import { ApiResponse } from '@/lib/apiResponse'
 import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 // Validation schemas
 const createMatchSchema = z.object({
@@ -17,7 +19,8 @@ const createMatchSchema = z.object({
   fieldFeeTotal: z.number().min(0).default(0),
   waterFeeTotal: z.number().min(0).default(0),
   notes: z.string().nullable().optional(),
-  createdBy: z.string().min(1, 'Creator ID is required')
+  // Backward-compatible: client may send it, but server will use authenticated user id.
+  createdBy: z.string().min(1).optional()
 })
 
 const participationSchema = z.object({
@@ -210,6 +213,32 @@ export async function GET(request: Request) {
 // POST /api/games - Create a new match
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Unauthorized' }
+        },
+        { status: 401 }
+      )
+    }
+
+    const creatorId = session.user.id
+    const creatorExists = await prisma.user.findUnique({
+      where: { id: creatorId },
+      select: { id: true }
+    })
+    if (!creatorExists) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: 'CREATOR_NOT_FOUND', message: 'Creator user not found' }
+        },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const { participations, events, ...matchData } = body
     
@@ -234,7 +263,7 @@ export async function POST(request: Request) {
           lateFeeRate: baseLateFeeRate,
           videoFeePerUnit: baseVideoFeeRate,
           notes: validatedMatchData.notes,
-          createdBy: validatedMatchData.createdBy
+          createdBy: creatorId
         }
       })
 
@@ -292,7 +321,7 @@ export async function POST(request: Request) {
           eventType: event.eventType,
           minute: event.minute,
           description: event.description,
-          createdBy: validatedMatchData.createdBy
+          createdBy: creatorId
         }))
 
         await tx.matchEvent.createMany({
