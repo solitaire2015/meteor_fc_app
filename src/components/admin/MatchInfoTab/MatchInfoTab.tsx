@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Calendar, Clock, Trophy, DollarSign, Save } from 'lucide-react'
 import { useUpdateMatchInfo, useSaveMatchInfo, useIsDirty, useIsLoading } from '@/stores/useMatchStore'
 import { type MatchInfo } from '@/lib/validations/match'
@@ -26,16 +26,22 @@ export default function MatchInfoTab({
   const saveMatchInfo = useSaveMatchInfo()
 
   // Form state
-  const [formData, setFormData] = useState({
-    opponentTeam: match.opponentTeam,
-    matchDate: match.matchDate.split('T')[0], // Convert to YYYY-MM-DD format
-    matchTime: match.matchTime ? new Date(match.matchTime).toTimeString().slice(0, 5) : '',
-    ourScore: match.ourScore ?? '',
-    opponentScore: match.opponentScore ?? '',
-    fieldFeeTotal: Number(match.fieldFeeTotal),
-    waterFeeTotal: Number(match.waterFeeTotal),
-    notes: match.notes || '',
-  })
+  const toFormData = useCallback((source: MatchInfo) => ({
+    opponentTeam: source.opponentTeam,
+    matchDate: source.matchDate.split('T')[0], // Convert to YYYY-MM-DD format
+    matchTime: source.matchTime ? new Date(source.matchTime).toTimeString().slice(0, 5) : '',
+    ourScore: source.ourScore ?? '',
+    opponentScore: source.opponentScore ?? '',
+    fieldFeeTotal: Number(source.fieldFeeTotal),
+    waterFeeTotal: Number(source.waterFeeTotal),
+    notes: source.notes || '',
+  }), [])
+
+  const [formData, setFormData] = useState(() => toFormData(match))
+
+  useEffect(() => {
+    setFormData(toFormData(match))
+  }, [match, toFormData])
 
   // Handle input changes (optimistic update)
   const handleInputChange = useCallback((field: string, value: string | number) => {

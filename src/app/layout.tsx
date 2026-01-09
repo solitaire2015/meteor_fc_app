@@ -3,6 +3,7 @@ import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { HeaderNavigation } from "@/components/custom/HeaderNavigation";
 import { Toaster } from "react-hot-toast";
+import GeneralAssistant from "@/components/ai/GeneralAssistant";
 
 export const metadata: Metadata = {
   title: "Meteor FC - Football Club Management System",
@@ -24,6 +25,7 @@ export default function RootLayout({
           <main className="flex-1">
             {children}
           </main>
+          <GeneralAssistant />
           <Toaster position="top-right" />
         </SessionProvider>
       </body>

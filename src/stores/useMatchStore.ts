@@ -688,7 +688,46 @@ export const useMatchStore = create<MatchStore>()(
       }))
 
       try {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        const manualOverrides = Object.entries(feeOverrides).reduce(
+          (acc, [playerId, override]) => {
+            const payload: {
+              fieldFeeOverride?: number | null
+              videoFeeOverride?: number | null
+              lateFeeOverride?: number | null
+              notes?: string | null
+            } = {}
+
+            if (override.fieldFee !== undefined) payload.fieldFeeOverride = override.fieldFee
+            if (override.videoFee !== undefined) payload.videoFeeOverride = override.videoFee
+            if (override.lateFee !== undefined) payload.lateFeeOverride = override.lateFee
+            if (override.notes !== undefined) payload.notes = override.notes
+
+            if (Object.keys(payload).length > 0) {
+              acc[playerId] = payload
+            }
+            return acc
+          },
+          {} as Record<string, {
+            fieldFeeOverride?: number | null
+            videoFeeOverride?: number | null
+            lateFeeOverride?: number | null
+            notes?: string | null
+          }>
+        )
+
+        const response = await fetch(`/api/admin/matches/${matchInfo.id}/fees`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ manualOverrides })
+        })
+
+        const data = await response.json()
+
+        if (!data.success) {
+          throw new Error(data.error?.message || 'Failed to save fees')
+        }
+
+        await get().loadFees(matchInfo.id)
         
         set(state => ({
           ...state,

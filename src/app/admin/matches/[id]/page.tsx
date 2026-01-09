@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Download, Save } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
@@ -14,6 +14,7 @@ import FinancialTab from '@/components/admin/FinancialTab'
 import { 
   useMatchInfo, 
   useSelectedPlayers, 
+  useAvailablePlayers,
   useAttendanceData, 
   useIsDirty, 
   useIsLoading, 
@@ -24,8 +25,14 @@ import {
   useSaveAll,
   useHasUnsavedChanges,
   useGetAttendanceStats,
-  useClearErrors
+  useClearErrors,
+  useUpdateMatchInfo,
+  useSetSelectedPlayers,
+  useUpdateAttendance,
+  useSetFeeOverride
 } from '@/stores/useMatchStore'
+import AssistantWidget from '@/components/ai/AssistantWidget'
+import { type PatchEnvelope } from '@/lib/ai/schema'
 import styles from './match-detail.module.css'
 
 export default function MatchDetailPage() {
@@ -36,6 +43,7 @@ export default function MatchDetailPage() {
   // Store state
   const matchInfo = useMatchInfo()
   const selectedPlayers = useSelectedPlayers()
+  const availablePlayers = useAvailablePlayers()
   const attendanceData = useAttendanceData()
   const isDirty = useIsDirty()
   const isLoading = useIsLoading()
@@ -49,6 +57,10 @@ export default function MatchDetailPage() {
   const hasUnsavedChanges = useHasUnsavedChanges()
   const getAttendanceStats = useGetAttendanceStats()
   const clearErrors = useClearErrors()
+  const updateMatchInfo = useUpdateMatchInfo()
+  const setSelectedPlayers = useSetSelectedPlayers()
+  const updateAttendance = useUpdateAttendance()
+  const setFeeOverride = useSetFeeOverride()
 
   // Load data on mount
   useEffect(() => {
@@ -83,6 +95,12 @@ export default function MatchDetailPage() {
       console.error('Error saving changes:', error)
     }
   }, [saveAll])
+
+  const handleAutoSaveFromAi = useCallback(async (patches: PatchEnvelope[]) => {
+    const hasMatchPatch = patches.some(patch => patch.target === 'match_detail')
+    if (!hasMatchPatch) return
+    await handleSaveAll()
+  }, [handleSaveAll])
 
   // Handle Excel export
   const handleExportExcel = useCallback(async () => {
@@ -126,6 +144,176 @@ export default function MatchDetailPage() {
     }
   }, [matchInfo])
 
+  // Get computed stats for display
+  const stats = getAttendanceStats()
+
+  const compactAttendance = useMemo(() => {
+    return attendanceData
+      .filter(item =>
+        item.value > 0 ||
+        item.isGoalkeeper ||
+        item.isLateArrival ||
+        item.goals > 0 ||
+        item.assists > 0
+      )
+      .map(item => ({
+        userId: item.userId,
+        section: item.section,
+        part: item.part,
+        value: item.value,
+        isGoalkeeper: item.isGoalkeeper,
+        isLateArrival: item.isLateArrival,
+        goals: item.goals,
+        assists: item.assists
+      }))
+  }, [attendanceData])
+
+  const applyMatchDetailPatch = useCallback((patch: PatchEnvelope) => {
+    if (patch.target !== 'match_detail' || !matchInfo) return
+
+    patch.changes.forEach(change => {
+      if (change.type === 'match_info') {
+        const updates = { ...change.data }
+
+        if (change.data.matchDate) {
+          const dateStr = change.data.matchDate
+          updates.matchDate = new Date(`${dateStr}T00:00:00.000Z`).toISOString()
+
+          if (change.data.matchTime) {
+            updates.matchTime = new Date(`${dateStr}T${change.data.matchTime}:00.000Z`).toISOString()
+          }
+        } else if (change.data.matchTime) {
+          const dateStr = matchInfo.matchDate.split('T')[0]
+          updates.matchTime = new Date(`${dateStr}T${change.data.matchTime}:00.000Z`).toISOString()
+        }
+
+        updateMatchInfo(updates)
+        return
+      }
+
+      if (change.type === 'player_selection') {
+        const addIds = new Set(change.data.addPlayerIds || [])
+        const removeIds = new Set(change.data.removePlayerIds || [])
+        const byId = new Map(availablePlayers.map(player => [player.id, player]))
+
+        const remaining = selectedPlayers.filter(player => !removeIds.has(player.id))
+        const remainingIds = new Set(remaining.map(player => player.id))
+        const additions = Array.from(addIds)
+          .map(id => byId.get(id))
+          .filter(player => player && !remainingIds.has(player.id))
+
+        const nextSelected = [...remaining, ...additions].filter(Boolean)
+
+        setSelectedPlayers(nextSelected as typeof selectedPlayers)
+        return
+      }
+
+      if (change.type === 'attendance') {
+        let nextAttendance = attendanceData.map(item => ({ ...item }))
+
+        change.data.updates.forEach(update => {
+          if (update.isLateArrival !== undefined) {
+            nextAttendance = nextAttendance.map(item =>
+              item.userId === update.playerId
+                ? { ...item, isLateArrival: update.isLateArrival }
+                : item
+            )
+          }
+
+          if (update.section !== undefined && update.part !== undefined) {
+            const section = update.section
+            const part = update.part
+
+            if (update.isGoalkeeper) {
+              nextAttendance = nextAttendance.map(item =>
+                item.section === section &&
+                item.part === part &&
+                item.userId !== update.playerId
+                  ? { ...item, isGoalkeeper: false }
+                  : item
+              )
+            }
+
+            const index = nextAttendance.findIndex(
+              item =>
+                item.userId === update.playerId &&
+                item.section === section &&
+                item.part === part
+            )
+
+            if (index >= 0) {
+              const current = nextAttendance[index]
+              nextAttendance[index] = {
+                ...current,
+                value: update.value ?? current.value,
+                isGoalkeeper: update.isGoalkeeper ?? current.isGoalkeeper,
+                isLateArrival: update.isLateArrival ?? current.isLateArrival
+              }
+            } else {
+              nextAttendance.push({
+                userId: update.playerId,
+                section,
+                part,
+                value: update.value ?? 0,
+                isGoalkeeper: update.isGoalkeeper ?? false,
+                isLateArrival: update.isLateArrival ?? false,
+                goals: 0,
+                assists: 0
+              })
+            }
+          }
+        })
+
+        updateAttendance(nextAttendance)
+        return
+      }
+
+      if (change.type === 'events') {
+        const nextAttendance = attendanceData.map(item => ({ ...item }))
+
+        change.data.updates.forEach(update => {
+          const indices = nextAttendance
+            .map((item, index) => (item.userId === update.playerId ? index : -1))
+            .filter(index => index >= 0)
+
+          if (indices.length === 0) return
+
+          indices.forEach(index => {
+            nextAttendance[index].goals = 0
+            nextAttendance[index].assists = 0
+          })
+
+          const firstIndex = indices[0]
+          if (update.goals !== undefined) nextAttendance[firstIndex].goals = update.goals
+          if (update.assists !== undefined) nextAttendance[firstIndex].assists = update.assists
+        })
+
+        updateAttendance(nextAttendance)
+        return
+      }
+
+      if (change.type === 'fees') {
+        change.data.overrides.forEach(override => {
+          setFeeOverride(override.playerId, {
+            fieldFee: override.fieldFee,
+            videoFee: override.videoFee,
+            lateFee: override.lateFee,
+            notes: override.paymentNote
+          })
+        })
+      }
+    })
+  }, [
+    attendanceData,
+    availablePlayers,
+    matchInfo,
+    selectedPlayers,
+    setFeeOverride,
+    setSelectedPlayers,
+    updateAttendance,
+    updateMatchInfo
+  ])
+
   // Loading state
   if (isLoading.match) {
     return (
@@ -159,9 +347,6 @@ export default function MatchDetailPage() {
       </div>
     )
   }
-
-  // Get computed stats for display
-  const stats = getAttendanceStats()
 
   // Define tabs with store integration
   const tabs = [
@@ -216,6 +401,27 @@ export default function MatchDetailPage() {
   return (
     <div className={styles.container}>
       <Toaster position="top-center" />
+      <AssistantWidget
+        context={{
+          page: 'admin/matches/[id]',
+          matchId,
+          locale: 'zh-CN',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          availablePlayers: availablePlayers.map(player => ({
+            id: player.id,
+            name: player.name,
+            jerseyNumber: player.jerseyNumber,
+            position: player.position
+          })),
+          formState: {
+            matchInfo,
+            selectedPlayerIds: selectedPlayers.map(player => player.id),
+            attendance: compactAttendance
+          }
+        }}
+        onApplyPatch={applyMatchDetailPatch}
+        onAfterApplyAll={handleAutoSaveFromAi}
+      />
       
       <header className={styles.header}>
         <div className={styles.headerLeft}>

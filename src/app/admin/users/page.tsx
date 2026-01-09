@@ -13,7 +13,9 @@ import { PositionSelector } from "@/components/custom/PositionSelector";
 import { SetPasswordDialog } from "@/components/custom/SetPasswordDialog";
 import { EditUserDialog } from "@/components/custom/EditUserDialog";
 import { DeleteUserDialog } from "@/components/custom/DeleteUserDialog";
+import AssistantWidget from "@/components/ai/AssistantWidget";
 import { getPositionColor, getPositionLabel } from "@/lib/utils/position";
+import { type PatchEnvelope } from "@/lib/ai/schema";
 import { Position } from "@prisma/client";
 import { Plus, Key, Mail, Phone, Edit, Target, Award, BarChart3, Trash2, RotateCcw, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
@@ -52,6 +54,35 @@ interface CreateUserForm {
   jerseyNumber: string;
   position: Position | '';
 }
+
+type UserActionChange = Extract<PatchEnvelope["changes"][number], { type: "user_action" }>;
+type UserActionData = UserActionChange["data"]["data"];
+
+const buildUserPayload = (data?: UserActionData) => {
+  if (!data) return {};
+  const payload: Record<string, unknown> = {};
+  const fields: (keyof NonNullable<UserActionData>)[] = [
+    "name",
+    "shortId",
+    "email",
+    "phone",
+    "userType",
+    "accountStatus",
+    "jerseyNumber",
+    "position",
+    "dominantFoot",
+    "introduction",
+    "joinDate",
+  ];
+
+  fields.forEach((field) => {
+    if (data[field] !== undefined) {
+      payload[field] = data[field];
+    }
+  });
+
+  return payload;
+};
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -94,6 +125,112 @@ export default function UsersPage() {
       toast.error('Error fetching users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const applyUserActionPatch = async (patch: PatchEnvelope) => {
+    if (patch.target !== "user_admin") return;
+
+    const requestJson = async (url: string, options: RequestInit) => {
+      const response = await fetch(url, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error?.message ||
+            data?.error ||
+            data?.message ||
+            "请求失败"
+        );
+      }
+
+      if ("success" in data && data.success === false) {
+        throw new Error(data?.error?.message || "请求失败");
+      }
+
+      return data;
+    };
+
+    try {
+      for (const change of patch.changes) {
+        if (change.type !== "user_action") continue;
+
+        const { action, userId, data } = change.data;
+
+        if (action === "create_user") {
+          if (!data?.name) {
+            throw new Error("创建用户需要姓名");
+          }
+          const payload = buildUserPayload(data);
+          await requestJson("/api/players", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          continue;
+        }
+
+        if (action === "update_user") {
+          if (!userId) {
+            throw new Error("更新用户需要指定用户");
+          }
+          const payload = buildUserPayload(data);
+          if (Object.keys(payload).length === 0) {
+            throw new Error("没有可更新的字段");
+          }
+          await requestJson(`/api/players/${userId}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          });
+          continue;
+        }
+
+        if (action === "delete_user") {
+          if (!userId) {
+            throw new Error("删除用户需要指定用户");
+          }
+          await requestJson(`/api/users/${userId}`, {
+            method: "DELETE",
+            body: JSON.stringify({ deletionReason: data?.deletionReason }),
+          });
+          continue;
+        }
+
+        if (action === "restore_user") {
+          if (!userId) {
+            throw new Error("恢复用户需要指定用户");
+          }
+          await requestJson(`/api/users/${userId}/restore`, {
+            method: "POST",
+            body: JSON.stringify({ confirmed: true }),
+          });
+          continue;
+        }
+
+        if (action === "set_password") {
+          if (!userId) {
+            throw new Error("设置密码需要指定用户");
+          }
+          if (!data?.password) {
+            throw new Error("设置密码需要提供密码");
+          }
+          await requestJson("/api/auth/set-password", {
+            method: "POST",
+            body: JSON.stringify({ userId, password: data.password }),
+          });
+          continue;
+        }
+      }
+
+      toast.success(patch.summary || "已执行 AI 操作");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "AI 操作执行失败";
+      toast.error(message);
+      throw error;
+    } finally {
+      await fetchUsers();
     }
   };
 
@@ -224,6 +361,27 @@ export default function UsersPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
+      <AssistantWidget
+        context={{
+          page: "admin/users",
+          locale: "zh-CN",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          availableUsers: users.map(user => ({
+            id: user.id,
+            name: user.name,
+            jerseyNumber: user.jerseyNumber,
+            position: user.position,
+            email: user.email,
+            phone: user.phone,
+            userType: user.userType,
+            accountStatus: user.accountStatus,
+          })),
+          formState: {
+            showDeleted,
+          },
+        }}
+        onApplyPatch={applyUserActionPatch}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">用户管理</h1>

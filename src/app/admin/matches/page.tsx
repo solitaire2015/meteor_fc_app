@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Calendar, 
@@ -31,6 +31,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import toast, { Toaster } from 'react-hot-toast'
 import ExcelImportSection from '@/components/admin/ExcelImport/ExcelImportSection'
+import AssistantWidget from '@/components/ai/AssistantWidget'
+import { type PatchEnvelope } from '@/lib/ai/schema'
 import styles from './matches.module.css'
 
 interface Match {
@@ -77,13 +79,60 @@ export default function MatchesAdminPage() {
     waterFeeTotal: '50',
     notes: ''
   })
+
+  const formDataRef = useRef(formData)
   
   const router = useRouter()
+
+  const applyMatchCreatePatch = useCallback((patch: PatchEnvelope) => {
+    if (patch.target !== 'match_create') return
+
+    patch.changes.forEach(change => {
+      if (change.type !== 'match_info') return
+
+      setFormData(prev => ({
+        ...prev,
+        opponentTeam: change.data.opponentTeam ?? prev.opponentTeam,
+        matchDate: change.data.matchDate ?? prev.matchDate,
+        matchTime: change.data.matchTime ?? prev.matchTime,
+        ourScore:
+          change.data.ourScore === null
+            ? ''
+            : change.data.ourScore !== undefined
+              ? String(change.data.ourScore)
+              : prev.ourScore,
+        opponentScore:
+          change.data.opponentScore === null
+            ? ''
+            : change.data.opponentScore !== undefined
+              ? String(change.data.opponentScore)
+              : prev.opponentScore,
+        fieldFeeTotal:
+          change.data.fieldFeeTotal !== undefined
+            ? String(change.data.fieldFeeTotal)
+            : prev.fieldFeeTotal,
+        waterFeeTotal:
+          change.data.waterFeeTotal !== undefined
+            ? String(change.data.waterFeeTotal)
+            : prev.waterFeeTotal,
+        notes:
+          change.data.notes === null
+            ? ''
+            : change.data.notes !== undefined
+              ? change.data.notes
+              : prev.notes
+      }))
+    })
+  }, [])
 
   useEffect(() => {
     fetchMatches()
     fetchUsers()
   }, [])
+
+  useEffect(() => {
+    formDataRef.current = formData
+  }, [formData])
 
   const fetchMatches = async () => {
     try {
@@ -115,30 +164,27 @@ export default function MatchesAdminPage() {
     }
   }
 
-  const handleCreateMatch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Get admin user ID (assuming first admin user for now)
+  const createMatch = useCallback(async (data: typeof formData) => {
     const adminUser = users.find(u => u.name === '管理员') || users[0]
     if (!adminUser) {
-      alert('需要管理员用户才能创建比赛')
+      toast.error('需要管理员用户才能创建比赛')
       return
     }
 
     const matchData: any = {
-      matchDate: new Date(formData.matchDate).toISOString(),
-      matchTime: formData.matchTime ? new Date(`${formData.matchDate}T${formData.matchTime}`).toISOString() : undefined,
-      opponentTeam: formData.opponentTeam,
-      ourScore: formData.ourScore ? parseInt(formData.ourScore) : undefined,
-      opponentScore: formData.opponentScore ? parseInt(formData.opponentScore) : undefined,
-      fieldFeeTotal: parseFloat(formData.fieldFeeTotal),
-      waterFeeTotal: parseFloat(formData.waterFeeTotal),
+      matchDate: new Date(data.matchDate).toISOString(),
+      matchTime: data.matchTime ? new Date(`${data.matchDate}T${data.matchTime}`).toISOString() : undefined,
+      opponentTeam: data.opponentTeam,
+      ourScore: data.ourScore ? parseInt(data.ourScore) : undefined,
+      opponentScore: data.opponentScore ? parseInt(data.opponentScore) : undefined,
+      fieldFeeTotal: parseFloat(data.fieldFeeTotal),
+      waterFeeTotal: parseFloat(data.waterFeeTotal),
       createdBy: adminUser.id
     }
 
     // Only add notes if it's not empty
-    if (formData.notes.trim()) {
-      matchData.notes = formData.notes.trim()
+    if (data.notes.trim()) {
+      matchData.notes = data.notes.trim()
     }
 
     try {
@@ -173,7 +219,21 @@ export default function MatchesAdminPage() {
       console.error('Error creating match:', error)
       toast.error('创建比赛时发生错误')
     }
-  }
+  }, [users, fetchMatches])
+
+  const handleCreateMatch = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    await createMatch(formDataRef.current)
+  }, [createMatch])
+
+  const handleAutoCreateFromAi = useCallback(async () => {
+    const data = formDataRef.current
+    if (!data.matchDate || !data.opponentTeam) {
+      toast.error('AI 已填充，但缺少比赛日期或对手名称，无法自动创建')
+      return
+    }
+    await createMatch(data)
+  }, [createMatch])
 
   const handleMatchClick = (matchId: string) => {
     router.push(`/admin/matches/${matchId}`)
@@ -235,6 +295,25 @@ export default function MatchesAdminPage() {
   return (
     <div className={styles.container}>
       <Toaster position="top-center" />
+      <AssistantWidget
+        context={{
+          page: 'admin/matches',
+          matchId: null,
+          locale: 'zh-CN',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          availablePlayers: users.map(user => ({
+            id: user.id,
+            name: user.name,
+            jerseyNumber: user.jerseyNumber,
+            position: user.position
+          })),
+          formState: {
+            matchInfo: formData
+          }
+        }}
+        onApplyPatch={applyMatchCreatePatch}
+        onAfterApplyAll={handleAutoCreateFromAi}
+      />
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <Button 
