@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
 import { 
   ArrowLeft, 
   Calendar,
@@ -128,7 +129,8 @@ export default function GameDetailsPage() {
         // Fetch fee overrides
         const overrideResponse = await fetch(`/api/admin/matches/${matchId}/overrides`);
         let feeOverrides: FeeOverride[] = [];
-        if (overrideResponse.ok) {
+        const overrideContentType = overrideResponse.headers.get('content-type') || '';
+        if (overrideResponse.ok && overrideContentType.includes('application/json')) {
           const overrideData = await overrideResponse.json();
           feeOverrides = overrideData.success ? overrideData.data : [];
         }
@@ -381,6 +383,11 @@ export default function GameDetailsPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-6xl space-y-8">
+      <GuestSignupBanner
+        className="border-muted bg-muted/30 text-foreground"
+        buttonVariant="default"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button asChild variant="outline">

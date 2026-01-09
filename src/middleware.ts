@@ -2,6 +2,35 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const PUBLIC_PAGE_PREFIXES = ["/leaderboard", "/games"];
+const PUBLIC_API_PREFIXES = ["/api/games", "/api/stats", "/api/leaderboard", "/api/statistics"];
+
+const isPublicPage = (pathname: string) => {
+  if (pathname === "/") {
+    return true;
+  }
+
+  return PUBLIC_PAGE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+};
+
+const isPublicApi = (req: NextRequest) => {
+  const { pathname, searchParams } = req.nextUrl;
+
+  const matchesPublicPrefix = PUBLIC_API_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
+  if (matchesPublicPrefix) {
+    return true;
+  }
+
+  if (pathname === "/api/players") {
+    return searchParams.get("public") === "true";
+  }
+
+  return false;
+};
+
 export default withAuth(
   function middleware(req: NextRequest) {
     const token = req.nextauth.token;
@@ -9,6 +38,10 @@ export default withAuth(
 
     // Allow access to login and welcome pages
     if (pathname === "/login" || pathname === "/welcome") {
+      return NextResponse.next();
+    }
+
+    if (!token && (isPublicPage(pathname) || isPublicApi(req))) {
       return NextResponse.next();
     }
 
@@ -48,6 +81,10 @@ export default withAuth(
         
         // Always allow login and welcome pages
         if (pathname === "/login" || pathname === "/welcome") {
+          return true;
+        }
+
+        if (isPublicPage(pathname) || isPublicApi(req)) {
           return true;
         }
         

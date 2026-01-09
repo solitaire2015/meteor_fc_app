@@ -34,7 +34,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const userType = searchParams.get('userType') // No default filter - include all users
     const accountStatus = searchParams.get('accountStatus')
-    const includeDeleted = searchParams.get('includeDeleted') === 'true'
+    const isPublic = searchParams.get('public') === 'true'
+    const includeDeleted = !isPublic && searchParams.get('includeDeleted') === 'true'
 
     const cacheKey = buildCacheKey(new URL(request.url))
     const cached = await getCachedJson<ApiResponse>(cacheKey)
@@ -148,6 +149,22 @@ export async function GET(request: Request) {
                      Number(p.section2Part1) + Number(p.section2Part2) + Number(p.section2Part3) +
                      Number(p.section3Part1) + Number(p.section3Part2) + Number(p.section3Part3)
       }, 0)
+
+      const publicPayload = {
+        id: user.id,
+        name: user.name,
+        jerseyNumber: user.jerseyNumber,
+        position: user.position,
+        avatarUrl: user.avatarUrl,
+        goals,
+        assists,
+        appearances,
+        totalTime: Number(totalTime.toFixed(1))
+      }
+
+      if (isPublic) {
+        return publicPayload
+      }
 
       return {
         id: user.id,

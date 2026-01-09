@@ -16,6 +16,8 @@ export const CACHE_TAGS = {
 } as const
 
 const INVALIDATION_PREFIXES: Record<string, string> = {
+  [CACHE_TAGS.GAMES]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:games`,
+  [CACHE_TAGS.MATCHES]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:matches`,
   [CACHE_TAGS.LEADERBOARD]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:leaderboard`,
   [CACHE_TAGS.STATS]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:stats`,
   [CACHE_TAGS.STATISTICS]: `${CACHE_PREFIX}:${CACHE_SCOPE}:api:statistics`

@@ -156,7 +156,10 @@ export async function GET(
 
     // Get selected players
     const selectedPlayers = await prisma.matchPlayer.findMany({
-      where: { matchId },
+      where: {
+        matchId,
+        player: { deletedAt: null }
+      },
       include: {
         player: {
           select: {
@@ -178,7 +181,8 @@ export async function GET(
     // Also get all available players for selection (including admins and ghost players)
     const allPlayers = await prisma.user.findMany({
       where: {
-        userType: { in: ['PLAYER', 'ADMIN'] }
+        userType: { in: ['PLAYER', 'ADMIN'] },
+        deletedAt: null
         // Removed accountStatus filter to include GHOST players
       },
       select: {

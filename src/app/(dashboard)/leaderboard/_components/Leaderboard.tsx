@@ -24,6 +24,7 @@ import {
   Eye
 } from "lucide-react";
 import toast from "react-hot-toast";
+import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
 
 interface Player {
   id: string;
@@ -99,7 +100,7 @@ export default function Leaderboard() {
   const fetchAllTimeStats = async () => {
     try {
       setAllTimeLoading(true);
-      const response = await fetch('/api/players');
+      const response = await fetch('/api/players?public=true');
       const data = await response.json();
       
       if (data.success) {
@@ -187,6 +188,10 @@ export default function Leaderboard() {
 
   return (
     <div className="container mx-auto py-8 max-w-6xl space-y-8">
+      <GuestSignupBanner
+        className="border-muted bg-muted/30 text-foreground"
+        buttonVariant="default"
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <Button asChild variant="outline">

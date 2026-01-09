@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
 import { ArrowLeft, Calendar, Users, Trophy, Eye } from "lucide-react";
 
 interface MatchData {
@@ -78,6 +79,11 @@ export default function GamesPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-6xl space-y-8">
+      <GuestSignupBanner
+        className="border-muted bg-muted/30 text-foreground"
+        buttonVariant="default"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

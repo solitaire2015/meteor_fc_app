@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import GuestSignupBanner from '@/components/custom/GuestSignupBanner'
 
 // Type definitions
 interface Game {
@@ -229,6 +230,12 @@ export default function Home({
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           <p className="text-white/75 font-medium">{subtitle}</p>
         </header>
+
+        <GuestSignupBanner
+          className="border-white/30 bg-white/20 text-white"
+          buttonVariant="secondary"
+          buttonClassName="text-slate-900"
+        />
 
         {/* Navigation Card */}
         <section className="mb-6">
