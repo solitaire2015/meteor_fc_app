@@ -28,9 +28,15 @@ Set Redis connection values in your environment to enable API cache:
 REDIS_HOST=39.98.172.148
 REDIS_PORT=6379
 REDIS_PASSWORD=your_password
+REDIS_DB=1 # optional: use a non-default logical DB index
 # Optional: REDIS_URL=redis://:password@host:port
 # Optional: REDIS_DISABLED=true
 ```
+
+## Vercel Preview Environment
+
+For a separate Preview (pre) environment on Vercel (same Postgres/Redis instances but isolated data),
+see `docs/VERCEL_PREVIEW_ENV.md`.
 
 ## Learn More
 

@@ -14,13 +14,26 @@ function normalizeRedisUrl(redisUrl: string): string {
     const parsed = new URL(redisUrl)
     if (parsed.password && !parsed.username) {
       parsed.username = process.env.REDIS_USERNAME || 'default'
-      return parsed.toString()
     }
+
+    const redisDb = process.env.REDIS_DB
+    const redisDbIndex =
+      typeof redisDb === 'string' && redisDb.trim() !== '' && Number.isFinite(Number(redisDb))
+        ? Number(redisDb)
+        : null
+
+    if (redisDbIndex !== null) {
+      const currentPath = parsed.pathname || '/'
+      const hasDbInUrl = currentPath !== '/' && currentPath.trim() !== ''
+      if (!hasDbInUrl) {
+        parsed.pathname = `/${redisDbIndex}`
+      }
+    }
+
+    return parsed.toString()
   } catch {
     return redisUrl
   }
-
-  return redisUrl
 }
 
 function buildRedisUrl(): string | null {
@@ -44,7 +57,14 @@ function buildRedisUrl(): string | null {
       ? `${encodedUsername}@`
       : ''
 
-  return `redis://${authSegment}${host}:${port}`
+  const redisDb = process.env.REDIS_DB
+  const redisDbIndex =
+    typeof redisDb === 'string' && redisDb.trim() !== '' && Number.isFinite(Number(redisDb))
+      ? Number(redisDb)
+      : null
+
+  const dbSegment = redisDbIndex !== null ? `/${redisDbIndex}` : ''
+  return `redis://${authSegment}${host}:${port}${dbSegment}`
 }
 
 export function isCacheEnabled(): boolean {
