@@ -40,20 +40,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - .env.docker
     environment:
       NODE_ENV: production
       PORT: 3000
-
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-meteordb}?schema=public"
-      DIRECT_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-meteordb}?schema=public"
-
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: "6379"
-      REDIS_DB: ${REDIS_DB:-0}
-
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me}
-      PRISMA_DB_PUSH: ${PRISMA_DB_PUSH:-false}
     ports:
       - "${APP_PORT:-3000}:3000"
 
