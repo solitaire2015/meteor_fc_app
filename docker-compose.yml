@@ -9,7 +9,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /data/meteor_fc_app/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -34,6 +34,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+        AWS_REGION: ${AWS_REGION}
+        AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+        AWS_CLOUDFRONT_DOMAIN: ${AWS_CLOUDFRONT_DOMAIN}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -49,5 +55,4 @@ services:
       - "${APP_PORT:-3000}:3000"
 
 volumes:
-  postgres_data:
   redis_data:
