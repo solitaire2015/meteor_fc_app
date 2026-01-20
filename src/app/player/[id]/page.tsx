@@ -435,7 +435,7 @@ export default function PlayerPage() {
                 <div className="text-center pt-2 border-t">
                   <div className="text-sm text-muted-foreground">个人费用</div>
                   <div className="text-lg font-semibold">
-                    ¥{Number(playerData.latestMatch.totalFee || 0).toFixed(2)}
+                    ¥{Math.ceil(Number(playerData.latestMatch.totalFee || 0))}
                   </div>
                 </div>
               </CardContent>
@@ -502,7 +502,7 @@ export default function PlayerPage() {
                       </TableCell>
                       <TableCell className="font-medium">{match.opponent}</TableCell>
                       <TableCell>{Number(match.totalTime || 0).toFixed(1)} 个时间单位</TableCell>
-                      <TableCell>¥{Number(match.totalFee || 0).toFixed(2)}</TableCell>
+                      <TableCell>¥{Math.ceil(Number(match.totalFee || 0))}</TableCell>
                       <TableCell>
                         <Badge variant={match.isLateArrival ? "destructive" : "default"}>
                           {match.isLateArrival ? "迟到" : "准时到场"}

@@ -13,6 +13,7 @@ const attendanceRules = [
   "出勤的节次和部分规则：",
   "section=1/2/3 表示第一节/第二节/第三节。",
   "part=1/2/3 表示该节内第一部分/第二部分/第三部分。",
+  "一般，用户说某一节，就是这一节的全部三个部分，比如第一节，就代表第一节的一整节。如果用户说某一节的半节，就是这一节的第一部分的全勤，第二部分半程，第三部分不参加",
   "isLateArrival 是球员级别的状态，应用时会同步到该球员所有单元格。",
 ].join("\n");
 
@@ -34,7 +35,9 @@ const agentDescriptions: Record<AgentType, string> = {
 };
 
 export const buildSystemPrompt = (agentType: AgentType, context: AssistantContext) => {
-  const contextJson = JSON.stringify(context, null, 2);
+  const { currentUser, ...restContext } = context;
+  const contextJson = JSON.stringify(restContext, null, 2);
+  const currentUserJson = currentUser ? JSON.stringify(currentUser, null, 2) : "未提供";
   const agentIntro = agentDescriptions[agentType] || agentDescriptions.general;
 
   return [
@@ -43,6 +46,9 @@ export const buildSystemPrompt = (agentType: AgentType, context: AssistantContex
     agentIntro,
     "",
     attendanceRules,
+    "",
+    "当前用户(JSON):",
+    currentUserJson,
     "",
     "当前页面上下文(JSON):",
     contextJson,

@@ -12,6 +12,18 @@ import { prisma } from '@/lib/prisma'
 import { calculatePlayerFees, type AttendanceData, type FeeCalculationResult } from '@/lib/feeCalculation'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
 
+const roundFee = (value: number) => Math.ceil(value)
+
+const normalizeOverrideValue = (value?: number | null) => {
+  if (value === null || value === undefined) return value
+  return roundFee(Number(value))
+}
+
+const normalizeRateValue = (value?: number | null) => {
+  if (value === null || value === undefined) return undefined
+  return roundFee(Number(value))
+}
+
 export interface FeeOverride {
   fieldFeeOverride?: number | null
   videoFeeOverride?: number | null
@@ -77,8 +89,8 @@ export class FeeCalculationService {
     
     // Calculate coefficient
     const feeCoefficient = calculateCoefficient(
-      Number(match.fieldFeeTotal),
-      Number(match.waterFeeTotal),
+      Math.ceil(Number(match.fieldFeeTotal)),
+      Math.ceil(Number(match.waterFeeTotal)),
       totalPlayTime
     )
 
@@ -87,8 +99,8 @@ export class FeeCalculationService {
       attendanceData,
       isLateArrival,
       feeCoefficient,
-      lateFeeRate: Number(match.lateFeeRate),
-      videoFeeRate: Number(match.videoFeePerUnit)
+      lateFeeRate: normalizeRateValue(match.lateFeeRate),
+      videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
     })
 
     // Get any existing overrides
@@ -101,10 +113,17 @@ export class FeeCalculationService {
       }
     })
 
+    const normalizedOverride = override ? {
+      fieldFeeOverride: normalizeOverrideValue(override.fieldFeeOverride),
+      videoFeeOverride: normalizeOverrideValue(override.videoFeeOverride),
+      lateFeeOverride: normalizeOverrideValue(override.lateFeeOverride),
+      notes: override.notes || undefined
+    } : null
+
     // Apply overrides to get final fees
-    const finalFieldFee = override?.fieldFeeOverride ?? calculatedFees.fieldFee
-    const finalVideoFee = override?.videoFeeOverride ?? calculatedFees.videoFee
-    const finalLateFee = override?.lateFeeOverride ?? calculatedFees.lateFee
+    const finalFieldFee = normalizedOverride?.fieldFeeOverride ?? calculatedFees.fieldFee
+    const finalVideoFee = normalizedOverride?.videoFeeOverride ?? calculatedFees.videoFee
+    const finalLateFee = normalizedOverride?.lateFeeOverride ?? calculatedFees.lateFee
     const finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee
 
     return {
@@ -113,12 +132,7 @@ export class FeeCalculationService {
       totalTime: calculatedFees.normalPlayerParts,
       isLateArrival,
       calculatedFees,
-      overrides: override ? {
-        fieldFeeOverride: override.fieldFeeOverride ? Number(override.fieldFeeOverride) : null,
-        videoFeeOverride: override.videoFeeOverride ? Number(override.videoFeeOverride) : null,
-        lateFeeOverride: override.lateFeeOverride ? Number(override.lateFeeOverride) : null,
-        notes: override.notes || undefined
-      } : null,
+      overrides: normalizedOverride,
       finalFees: {
         fieldFee: finalFieldFee,
         videoFee: finalVideoFee,
@@ -157,8 +171,8 @@ export class FeeCalculationService {
       
       // Calculate coefficient
       const feeCoefficient = calculateCoefficient(
-        Number(match.fieldFeeTotal),
-        Number(match.waterFeeTotal),
+        Math.ceil(Number(match.fieldFeeTotal)),
+        Math.ceil(Number(match.waterFeeTotal)),
         totalPlayTime
       )
 
@@ -184,16 +198,22 @@ export class FeeCalculationService {
           attendanceData,
           isLateArrival: participation.isLateArrival,
           feeCoefficient,
-          lateFeeRate: Number(match.lateFeeRate),
-          videoFeeRate: Number(match.videoFeePerUnit)
+          lateFeeRate: normalizeRateValue(match.lateFeeRate),
+          videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
         })
 
         const override = overrideMap.get(participation.userId)
+        const normalizedOverride = override ? {
+          fieldFeeOverride: normalizeOverrideValue(override.fieldFeeOverride),
+          videoFeeOverride: normalizeOverrideValue(override.videoFeeOverride),
+          lateFeeOverride: normalizeOverrideValue(override.lateFeeOverride),
+          notes: override.notes
+        } : null
 
         // Apply overrides to get final fees
-        const finalFieldFee = override?.fieldFeeOverride ? Number(override.fieldFeeOverride) : calculatedFees.fieldFee
-        const finalVideoFee = override?.videoFeeOverride ? Number(override.videoFeeOverride) : calculatedFees.videoFee
-        const finalLateFee = override?.lateFeeOverride ? Number(override.lateFeeOverride) : calculatedFees.lateFee
+        const finalFieldFee = normalizedOverride?.fieldFeeOverride ?? calculatedFees.fieldFee
+        const finalVideoFee = normalizedOverride?.videoFeeOverride ?? calculatedFees.videoFee
+        const finalLateFee = normalizedOverride?.lateFeeOverride ?? calculatedFees.lateFee
         const finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee
 
         // Update participation with new calculated fees
@@ -219,12 +239,7 @@ export class FeeCalculationService {
           totalTime: calculatedFees.normalPlayerParts,
           isLateArrival: participation.isLateArrival,
           calculatedFees,
-          overrides: override ? {
-            fieldFeeOverride: override.fieldFeeOverride ? Number(override.fieldFeeOverride) : null,
-            videoFeeOverride: override.videoFeeOverride ? Number(override.videoFeeOverride) : null,
-            lateFeeOverride: override.lateFeeOverride ? Number(override.lateFeeOverride) : null,
-            notes: override.notes
-          } : null,
+          overrides: normalizedOverride,
           finalFees: {
             fieldFee: finalFieldFee,
             videoFee: finalVideoFee,
@@ -289,8 +304,8 @@ export class FeeCalculationService {
       const attendanceData = participation.attendanceData as unknown as AttendanceData
       const totalPlayTime = await this.calculateTotalPlayTime(matchId)
       const feeCoefficient = calculateCoefficient(
-        Number(match.fieldFeeTotal),
-        Number(match.waterFeeTotal),
+        Math.ceil(Number(match.fieldFeeTotal)),
+        Math.ceil(Number(match.waterFeeTotal)),
         totalPlayTime
       )
 
@@ -298,9 +313,16 @@ export class FeeCalculationService {
         attendanceData,
         isLateArrival: participation.isLateArrival,
         feeCoefficient,
-        lateFeeRate: Number(match.lateFeeRate),
-        videoFeeRate: Number(match.videoFeePerUnit)
+        lateFeeRate: normalizeRateValue(match.lateFeeRate),
+        videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
       })
+
+      const normalizedOverride = {
+        fieldFeeOverride: normalizeOverrideValue(override.fieldFeeOverride),
+        videoFeeOverride: normalizeOverrideValue(override.videoFeeOverride),
+        lateFeeOverride: normalizeOverrideValue(override.lateFeeOverride),
+        notes: override.notes
+      }
 
       // Create or update fee override
       const feeOverride = await tx.feeOverride.upsert({
@@ -311,26 +333,26 @@ export class FeeCalculationService {
           }
         },
         update: {
-          fieldFeeOverride: override.fieldFeeOverride,
-          videoFeeOverride: override.videoFeeOverride,
-          lateFeeOverride: override.lateFeeOverride,
-          notes: override.notes,
+          fieldFeeOverride: normalizedOverride.fieldFeeOverride,
+          videoFeeOverride: normalizedOverride.videoFeeOverride,
+          lateFeeOverride: normalizedOverride.lateFeeOverride,
+          notes: normalizedOverride.notes,
           updatedAt: new Date()
         },
         create: {
           matchId,
           playerId,
-          fieldFeeOverride: override.fieldFeeOverride,
-          videoFeeOverride: override.videoFeeOverride,
-          lateFeeOverride: override.lateFeeOverride,
-          notes: override.notes
+          fieldFeeOverride: normalizedOverride.fieldFeeOverride,
+          videoFeeOverride: normalizedOverride.videoFeeOverride,
+          lateFeeOverride: normalizedOverride.lateFeeOverride,
+          notes: normalizedOverride.notes
         }
       })
 
       // Apply overrides to get final fees for return value only
-      const finalFieldFee = override.fieldFeeOverride ?? calculatedFees.fieldFee
-      const finalVideoFee = override.videoFeeOverride ?? calculatedFees.videoFee
-      const finalLateFee = override.lateFeeOverride ?? calculatedFees.lateFee
+      const finalFieldFee = normalizedOverride.fieldFeeOverride ?? calculatedFees.fieldFee
+      const finalVideoFee = normalizedOverride.videoFeeOverride ?? calculatedFees.videoFee
+      const finalLateFee = normalizedOverride.lateFeeOverride ?? calculatedFees.lateFee
       const finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee
 
       // DO NOT UPDATE match_participation table - it should only contain calculated fees!
@@ -344,10 +366,10 @@ export class FeeCalculationService {
         isLateArrival: participation.isLateArrival,
         calculatedFees,
         overrides: {
-          fieldFeeOverride: override.fieldFeeOverride,
-          videoFeeOverride: override.videoFeeOverride,
-          lateFeeOverride: override.lateFeeOverride,
-          notes: override.notes
+          fieldFeeOverride: normalizedOverride.fieldFeeOverride,
+          videoFeeOverride: normalizedOverride.videoFeeOverride,
+          lateFeeOverride: normalizedOverride.lateFeeOverride,
+          notes: normalizedOverride.notes
         },
         finalFees: {
           fieldFee: finalFieldFee,
@@ -403,8 +425,8 @@ export class FeeCalculationService {
       const attendanceData = participation.attendanceData as unknown as AttendanceData
       const totalPlayTime = await this.calculateTotalPlayTime(matchId)
       const feeCoefficient = calculateCoefficient(
-        Number(match.fieldFeeTotal),
-        Number(match.waterFeeTotal),
+        Math.ceil(Number(match.fieldFeeTotal)),
+        Math.ceil(Number(match.waterFeeTotal)),
         totalPlayTime
       )
 
@@ -412,8 +434,8 @@ export class FeeCalculationService {
         attendanceData,
         isLateArrival: participation.isLateArrival,
         feeCoefficient,
-        lateFeeRate: Number(match.lateFeeRate),
-        videoFeeRate: Number(match.videoFeePerUnit)
+        lateFeeRate: normalizeRateValue(match.lateFeeRate),
+        videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
       })
 
       // Update participation with calculated fees
@@ -484,8 +506,8 @@ export class FeeCalculationService {
     // Calculate coefficient
     const totalPlayTime = participations.reduce((sum, p) => sum + Number(p.totalTime), 0)
     const feeCoefficient = calculateCoefficient(
-      Number(match.fieldFeeTotal),
-      Number(match.waterFeeTotal),
+      Math.ceil(Number(match.fieldFeeTotal)),
+      Math.ceil(Number(match.waterFeeTotal)),
       totalPlayTime
     )
 
@@ -501,16 +523,16 @@ export class FeeCalculationService {
         attendanceData,
         isLateArrival: participation.isLateArrival,
         feeCoefficient,
-        lateFeeRate: Number(match.lateFeeRate),
-        videoFeeRate: Number(match.videoFeePerUnit)
+        lateFeeRate: normalizeRateValue(match.lateFeeRate),
+        videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
       })
 
       const override = overrideMap.get(participation.userId)
 
-      const finalFieldFee = Number(participation.fieldFeeCalculated)
-      const finalVideoFee = Number(participation.videoFee)
-      const finalLateFee = Number(participation.lateFee)
-      const finalTotalFee = Number(participation.totalFeeCalculated)
+      const finalFieldFee = roundFee(Number(participation.fieldFeeCalculated))
+      const finalVideoFee = roundFee(Number(participation.videoFee))
+      const finalLateFee = roundFee(Number(participation.lateFee))
+      const finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee
 
       players.push({
         playerId: participation.userId,
@@ -519,9 +541,9 @@ export class FeeCalculationService {
         isLateArrival: participation.isLateArrival,
         calculatedFees,
         overrides: override ? {
-          fieldFeeOverride: override.fieldFeeOverride ? Number(override.fieldFeeOverride) : null,
-          videoFeeOverride: override.videoFeeOverride ? Number(override.videoFeeOverride) : null,
-          lateFeeOverride: override.lateFeeOverride ? Number(override.lateFeeOverride) : null,
+          fieldFeeOverride: normalizeOverrideValue(override.fieldFeeOverride),
+          videoFeeOverride: normalizeOverrideValue(override.videoFeeOverride),
+          lateFeeOverride: normalizeOverrideValue(override.lateFeeOverride),
           notes: override.notes || undefined
         } : null,
         finalFees: {

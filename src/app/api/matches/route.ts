@@ -5,6 +5,7 @@ import { CreateMatchSchema, PaginationSchema, validateRequest } from '@/lib/vali
 import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
+const roundFee = (value: number) => Math.ceil(value)
 
 // GET /api/matches - List all matches with pagination
 export async function GET(request: NextRequest) {
@@ -87,6 +88,15 @@ export async function POST(request: NextRequest) {
     }
 
     const matchData = validation.data
+    const roundedMatchData = {
+      ...matchData,
+      fieldFeeTotal: matchData.fieldFeeTotal !== undefined
+        ? roundFee(matchData.fieldFeeTotal)
+        : matchData.fieldFeeTotal,
+      waterFeeTotal: matchData.waterFeeTotal !== undefined
+        ? roundFee(matchData.waterFeeTotal)
+        : matchData.waterFeeTotal
+    }
 
     // Determine match result if scores are provided
     let matchResult = null
@@ -103,7 +113,7 @@ export async function POST(request: NextRequest) {
     // Create match
     const match = await prisma.match.create({
       data: {
-        ...matchData,
+        ...roundedMatchData,
         matchResult
       },
       select: {

@@ -138,7 +138,7 @@ export default function GamesPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Trophy className="h-4 w-4" />
-                      ¥{Number(match.fieldFeeTotal + match.waterFeeTotal || 0).toFixed(0)}
+                      ¥{Math.ceil(Number(match.fieldFeeTotal || 0)) + Math.ceil(Number(match.waterFeeTotal || 0))}
                     </div>
                   </div>
                   

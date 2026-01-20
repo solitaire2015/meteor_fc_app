@@ -162,8 +162,8 @@ export async function GET(
         match: {
           id: match.id,
           opponentTeam: match.opponentTeam,
-          fieldFeeTotal: match.fieldFeeTotal,
-          waterFeeTotal: match.waterFeeTotal
+          fieldFeeTotal: Math.ceil(Number(match.fieldFeeTotal)),
+          waterFeeTotal: Math.ceil(Number(match.waterFeeTotal))
         },
         feeBreakdown: feeBreakdownData,
         summary: {

@@ -75,8 +75,19 @@ export async function POST(request: NextRequest) {
   if (agentType !== "general" && session.user.userType !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const contextWithUser = {
+    ...context,
+    currentUser: {
+      id: session.user.id,
+      name: session.user.name,
+      userType: session.user.userType,
+      accountStatus: session.user.accountStatus,
+      email: session.user.email ?? undefined,
+    },
+  };
   const cookieHeader = request.headers.get("cookie") ?? "";
-  const agent = getAgentForType(agentType, context, {
+  const agent = getAgentForType(agentType, contextWithUser, {
     headers: cookieHeader ? { cookie: cookieHeader } : undefined,
   });
 

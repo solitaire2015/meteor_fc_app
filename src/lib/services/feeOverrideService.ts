@@ -11,6 +11,11 @@
 import { prisma } from '@/lib/prisma'
 import { feeCalculationService, type FeeOverride, type PlayerFeeBreakdown } from './feeCalculationService'
 
+const roundOverrideValue = (value: number | null) => {
+  if (value === null) return null
+  return Math.ceil(Number(value))
+}
+
 export interface FeeOverrideInput {
   fieldFeeOverride?: number | null
   videoFeeOverride?: number | null
@@ -165,9 +170,9 @@ export class FeeOverrideService {
       id: override.id,
       playerId: override.playerId,
       playerName: override.player.name,
-      fieldFeeOverride: override.fieldFeeOverride ? Number(override.fieldFeeOverride) : null,
-      videoFeeOverride: override.videoFeeOverride ? Number(override.videoFeeOverride) : null,
-      lateFeeOverride: override.lateFeeOverride ? Number(override.lateFeeOverride) : null,
+      fieldFeeOverride: roundOverrideValue(override.fieldFeeOverride),
+      videoFeeOverride: roundOverrideValue(override.videoFeeOverride),
+      lateFeeOverride: roundOverrideValue(override.lateFeeOverride),
       notes: override.notes,
       createdAt: override.createdAt,
       updatedAt: override.updatedAt
@@ -202,9 +207,9 @@ export class FeeOverrideService {
       id: override.id,
       playerId: override.playerId,
       playerName: override.player.name,
-      fieldFeeOverride: override.fieldFeeOverride ? Number(override.fieldFeeOverride) : null,
-      videoFeeOverride: override.videoFeeOverride ? Number(override.videoFeeOverride) : null,
-      lateFeeOverride: override.lateFeeOverride ? Number(override.lateFeeOverride) : null,
+      fieldFeeOverride: roundOverrideValue(override.fieldFeeOverride),
+      videoFeeOverride: roundOverrideValue(override.videoFeeOverride),
+      lateFeeOverride: roundOverrideValue(override.lateFeeOverride),
       notes: override.notes,
       createdAt: override.createdAt,
       updatedAt: override.updatedAt

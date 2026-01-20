@@ -87,12 +87,12 @@ export function calculatePlayerFees(input: FeeCalculationInput): FeeCalculationR
     }
   }
   
-  // Calculate individual fees with 2 decimal precision
-  const fieldFee = Number((normalPlayerParts * feeCoefficient).toFixed(2));
-  const lateFee = isLateArrival ? Number(lateFeeRate) : 0;
+  // Calculate individual fees with integer rounding (ceil)
+  const fieldFee = Math.ceil(normalPlayerParts * feeCoefficient);
+  const lateFee = isLateArrival ? Math.ceil(Number(lateFeeRate)) : 0;
   // Video fee follows Excel formula: ROUNDUP(totalTime/3*videoFeeRate, 0)
-  const videoFee = Number(Math.ceil(normalPlayerParts / 3 * Number(videoFeeRate)));
-  const totalFee = Number((Number(fieldFee) + Number(lateFee) + Number(videoFee)).toFixed(2));
+  const videoFee = Math.ceil(normalPlayerParts / 3 * Number(videoFeeRate));
+  const totalFee = fieldFee + lateFee + videoFee;
   
   return {
     normalPlayerParts,

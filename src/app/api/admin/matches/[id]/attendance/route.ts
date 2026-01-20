@@ -40,10 +40,10 @@ export async function PUT(
 
     // Extract match info from request, ensuring all required fields are present
     const matchInfo = {
-      fieldFeeTotal: validatedData.matchInfo?.fieldFeeTotal ?? match.fieldFeeTotal ?? 0,
-      waterFeeTotal: validatedData.matchInfo?.waterFeeTotal ?? match.waterFeeTotal ?? 0,
-      lateFeeRate: validatedData.matchInfo?.lateFeeRate ?? match.lateFeeRate ?? 10,
-      videoFeePerUnit: validatedData.matchInfo?.videoFeePerUnit ?? match.videoFeePerUnit ?? 2
+      fieldFeeTotal: Math.ceil(validatedData.matchInfo?.fieldFeeTotal ?? match.fieldFeeTotal ?? 0),
+      waterFeeTotal: Math.ceil(validatedData.matchInfo?.waterFeeTotal ?? match.waterFeeTotal ?? 0),
+      lateFeeRate: Math.ceil(validatedData.matchInfo?.lateFeeRate ?? match.lateFeeRate ?? 10),
+      videoFeePerUnit: Math.ceil(validatedData.matchInfo?.videoFeePerUnit ?? match.videoFeePerUnit ?? 2)
     }
 
     // Use selected player IDs from request to completely avoid database query

@@ -5,6 +5,7 @@ import { IdParamSchema, UpdateMatchSchema, validateRequest } from '@/lib/validat
 import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
+const roundFee = (value: number) => Math.ceil(value)
 
 // GET /api/matches/[id] - Get match by ID with related data
 export async function GET(
@@ -97,6 +98,15 @@ export async function PUT(
     }
 
     const updateData = validation.data
+    const roundedUpdateData = {
+      ...updateData,
+      fieldFeeTotal: updateData.fieldFeeTotal !== undefined
+        ? roundFee(updateData.fieldFeeTotal)
+        : updateData.fieldFeeTotal,
+      waterFeeTotal: updateData.waterFeeTotal !== undefined
+        ? roundFee(updateData.waterFeeTotal)
+        : updateData.waterFeeTotal
+    }
 
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
@@ -123,7 +133,7 @@ export async function PUT(
     const updatedMatch = await prisma.match.update({
       where: { id },
       data: {
-        ...updateData,
+        ...roundedUpdateData,
         matchResult
       },
       select: {

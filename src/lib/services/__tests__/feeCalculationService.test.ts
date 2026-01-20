@@ -52,10 +52,10 @@ describe('FeeCalculationService', () => {
     const mockCalculatedFees = {
       normalPlayerParts: 2.5,
       sectionsWithNormalPlay: 1,
-      fieldFee: 5.56,
+      fieldFee: 6,
       lateFee: 10,
       videoFee: 2,
-      totalFee: 17.56
+      totalFee: 18
     }
 
     beforeEach(() => {
@@ -85,18 +85,18 @@ describe('FeeCalculationService', () => {
         calculatedFees: mockCalculatedFees,
         overrides: null,
         finalFees: {
-          fieldFee: 5.56,
+          fieldFee: 6,
           videoFee: 2,
           lateFee: 10,
-          totalFee: 17.56
+          totalFee: 18
         }
       })
 
-      expect(mockCalculatePlayerFees).toHaveBeenCalledWith({
+      expect(mockCalculatePlayerFees).toHaveBeenCalledWith(expect.objectContaining({
         attendanceData: mockAttendanceData,
         isLateArrival: true,
         feeCoefficient: 2.22
-      })
+      }))
     })
 
     it('should apply fee overrides when they exist', async () => {
@@ -192,10 +192,10 @@ describe('FeeCalculationService', () => {
       mockCalculatePlayerFees.mockReturnValue({
         normalPlayerParts: 3,
         sectionsWithNormalPlay: 1,
-        fieldFee: 7.5,
+        fieldFee: 8,
         lateFee: 0,
         videoFee: 2,
-        totalFee: 9.5
+        totalFee: 10
       })
 
       const result = await service.recalculateAllFees('match-1')
@@ -212,7 +212,7 @@ describe('FeeCalculationService', () => {
 
       // Player 2 should have calculated fees
       const player2 = result.players.find(p => p.playerId === 'player-2')
-      expect(player2?.finalFees.fieldFee).toBe(7.5)   // calculated
+      expect(player2?.finalFees.fieldFee).toBe(8)   // calculated
       expect(player2?.overrides).toBeNull()
     })
   })
@@ -409,10 +409,10 @@ describe('FeeCalculationService', () => {
       mockCalculatePlayerFees.mockReturnValue({
         normalPlayerParts: 3,
         sectionsWithNormalPlay: 1,
-        fieldFee: 7.5,
+        fieldFee: 8,
         lateFee: 0,
         videoFee: 2,
-        totalFee: 9.5
+        totalFee: 10
       })
 
       const result = await service.getFeeBreakdown('match-1')
@@ -420,7 +420,7 @@ describe('FeeCalculationService', () => {
       expect(result).toEqual({
         matchId: 'match-1',
         totalParticipants: 1,
-        totalCalculatedFees: 9.5,
+        totalCalculatedFees: 10,
         totalFinalFees: 17.0,
         feeCoefficient: 2.5,
         players: [
@@ -430,8 +430,8 @@ describe('FeeCalculationService', () => {
             totalTime: 3,
             isLateArrival: false,
             calculatedFees: expect.objectContaining({
-              fieldFee: 7.5,
-              totalFee: 9.5
+              fieldFee: 8,
+              totalFee: 10
             }),
             overrides: {
               fieldFeeOverride: 15.0,

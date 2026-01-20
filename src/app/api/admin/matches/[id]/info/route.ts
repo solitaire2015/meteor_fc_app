@@ -5,6 +5,8 @@ import { feeCalculationService } from '@/lib/services/feeCalculationService'
 import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 import { ZodError } from 'zod'
 
+const roundFee = (value: number) => Math.ceil(value)
+
 // PUT /api/admin/matches/[id]/info - Update match basic information
 export async function PUT(
   request: Request,
@@ -16,6 +18,15 @@ export async function PUT(
     
     // Validate request body
     const validatedData = MatchInfoUpdateSchema.parse(body)
+    const roundedData = {
+      ...validatedData,
+      fieldFeeTotal: validatedData.fieldFeeTotal !== undefined
+        ? roundFee(validatedData.fieldFeeTotal)
+        : validatedData.fieldFeeTotal,
+      waterFeeTotal: validatedData.waterFeeTotal !== undefined
+        ? roundFee(validatedData.waterFeeTotal)
+        : validatedData.waterFeeTotal
+    }
     
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
@@ -46,14 +57,14 @@ export async function PUT(
 
     // Check if field or water fees are being updated (requires fee recalculation)
     const needsFeeRecalculation = 
-      validatedData.fieldFeeTotal !== undefined || 
-      validatedData.waterFeeTotal !== undefined
+      roundedData.fieldFeeTotal !== undefined || 
+      roundedData.waterFeeTotal !== undefined
 
     // Update match basic information
     const updatedMatch = await prisma.match.update({
       where: { id: matchId },
       data: {
-        ...validatedData,
+        ...roundedData,
         matchResult,
         updatedAt: new Date()
       }

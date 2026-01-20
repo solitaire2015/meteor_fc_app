@@ -7,9 +7,122 @@ export const assistantMessageSchema = z.object({
 
 export type AssistantMessage = z.infer<typeof assistantMessageSchema>;
 
+const matchListItemSchema = z.object({
+  id: z.string(),
+  matchDate: z.string(),
+  matchTime: z.string().nullable().optional(),
+  opponentTeam: z.string(),
+  ourScore: z.number().nullable().optional(),
+  opponentScore: z.number().nullable().optional(),
+  status: z.string().optional(),
+});
+
+const matchFeeBreakdownSchema = z.object({
+  player: z.object({
+    id: z.string(),
+    name: z.string(),
+    jerseyNumber: z.number().nullable().optional(),
+    position: z.string().nullable().optional(),
+  }),
+  totalTime: z.number(),
+  isLateArrival: z.boolean(),
+  calculatedFees: z.object({
+    fieldFee: z.number(),
+    videoFee: z.number(),
+    lateFee: z.number(),
+    totalFee: z.number(),
+  }),
+  finalFees: z.object({
+    fieldFee: z.number(),
+    videoFee: z.number(),
+    lateFee: z.number(),
+    totalFee: z.number(),
+  }),
+  override: z
+    .object({
+      fieldFeeOverride: z.number().nullable().optional(),
+      videoFeeOverride: z.number().nullable().optional(),
+      lateFeeOverride: z.number().nullable().optional(),
+      notes: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
+const matchFeeSummarySchema = z.object({
+  totalParticipants: z.number(),
+  totalCalculatedFees: z.number(),
+  totalFinalFees: z.number(),
+  feeDifference: z.number(),
+  overrideCount: z.number(),
+  overridePercentage: z.number(),
+  feeCoefficient: z.number(),
+});
+
+const currentMatchSchema = z.object({
+  info: z.object({
+    id: z.string(),
+    matchDate: z.string(),
+    matchTime: z.string().nullable().optional(),
+    opponentTeam: z.string(),
+    ourScore: z.number().nullable().optional(),
+    opponentScore: z.number().nullable().optional(),
+    fieldFeeTotal: z.number().optional(),
+    waterFeeTotal: z.number().optional(),
+    notes: z.string().nullable().optional(),
+    status: z.string().optional(),
+  }),
+  selectedPlayers: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      jerseyNumber: z.number().nullable().optional(),
+      position: z.string().nullable().optional(),
+    })
+  ),
+  attendance: z.array(
+    z.object({
+      userId: z.string(),
+      section: z.number().int().min(1).max(3),
+      part: z.number().int().min(1).max(3),
+      value: z.number().min(0).max(1),
+      isGoalkeeper: z.boolean(),
+      isLateArrival: z.boolean(),
+      goals: z.number().min(0),
+      assists: z.number().min(0),
+      notes: z.string().nullable().optional(),
+    })
+  ),
+  fees: z
+    .object({
+      match: z
+        .object({
+          id: z.string(),
+          opponentTeam: z.string(),
+          fieldFeeTotal: z.number(),
+          waterFeeTotal: z.number(),
+        })
+        .optional(),
+      feeBreakdown: z.array(matchFeeBreakdownSchema).optional(),
+      summary: matchFeeSummarySchema.optional(),
+    })
+    .optional(),
+});
+
 export const assistantContextSchema = z.object({
   page: z.string(),
+  currentUser: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      userType: z.string(),
+      accountStatus: z.string(),
+      email: z.string().optional(),
+    })
+    .optional(),
   matchId: z.string().nullable().optional(),
+  matchList: z.array(matchListItemSchema).optional(),
+  currentMatch: currentMatchSchema.optional(),
   origin: z.string().optional(),
   locale: z.string().optional(),
   timezone: z.string().optional(),

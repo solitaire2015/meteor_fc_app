@@ -32,8 +32,8 @@ export default function MatchInfoTab({
     matchTime: source.matchTime ? new Date(source.matchTime).toTimeString().slice(0, 5) : '',
     ourScore: source.ourScore ?? '',
     opponentScore: source.opponentScore ?? '',
-    fieldFeeTotal: Number(source.fieldFeeTotal),
-    waterFeeTotal: Number(source.waterFeeTotal),
+    fieldFeeTotal: Math.ceil(Number(source.fieldFeeTotal)),
+    waterFeeTotal: Math.ceil(Number(source.waterFeeTotal)),
     notes: source.notes || '',
   }), [])
 
@@ -46,6 +46,7 @@ export default function MatchInfoTab({
   // Handle input changes (optimistic update)
   const handleInputChange = useCallback((field: string, value: string | number) => {
     let processedValue = value
+    let displayValue = value
     
     // Convert fee fields to numbers
     if (field === 'fieldFeeTotal' || field === 'waterFeeTotal') {
@@ -53,7 +54,9 @@ export default function MatchInfoTab({
       if (numValue < 0) {
         return // Don't allow negative values
       }
-      processedValue = numValue
+      const roundedValue = Math.ceil(numValue)
+      processedValue = roundedValue
+      displayValue = roundedValue
     }
     
     // Handle score fields - convert to number or null
@@ -107,7 +110,7 @@ export default function MatchInfoTab({
     
     setFormData(prev => ({
       ...prev,
-      [field]: value // Keep original value for form display
+      [field]: displayValue
     }))
 
     // Update store immediately (optimistic update)
@@ -239,26 +242,26 @@ export default function MatchInfoTab({
                 <DollarSign size={16} />
                 场地费用 (元)
               </Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.fieldFeeTotal}
-                onChange={(e) => handleInputChange('fieldFeeTotal', e.target.value)}
-              />
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.fieldFeeTotal}
+                  onChange={(e) => handleInputChange('fieldFeeTotal', e.target.value)}
+                />
             </div>
             <div className={styles.field}>
               <Label className="flex items-center gap-2">
                 <DollarSign size={16} />
                 水费等杂费 (元)
               </Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.waterFeeTotal}
-                onChange={(e) => handleInputChange('waterFeeTotal', e.target.value)}
-              />
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.waterFeeTotal}
+                  onChange={(e) => handleInputChange('waterFeeTotal', e.target.value)}
+                />
             </div>
           </div>
         </div>

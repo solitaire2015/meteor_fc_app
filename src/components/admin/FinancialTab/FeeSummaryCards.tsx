@@ -111,11 +111,11 @@ export function FeeSummaryCards({ data, match }: FeeSummaryCardsProps) {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">场地费:</span>
-                  <span>¥{Number(match.fieldFeeTotal)}</span>
+                  <span>¥{Math.ceil(Number(match.fieldFeeTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">杂费:</span>
-                  <span>¥{Number(match.waterFeeTotal)}</span>
+                  <span>¥{Math.ceil(Number(match.waterFeeTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between font-medium border-t pt-1">
                   <span>支出总计:</span>
@@ -134,7 +134,9 @@ export function FeeSummaryCards({ data, match }: FeeSummaryCardsProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">人均负担:</span>
-                  <span>¥{(data.totalFieldCosts / data.totalParticipants).toFixed(2)}</span>
+                  <span>
+                    ¥{data.totalParticipants > 0 ? Math.ceil(data.totalFieldCosts / data.totalParticipants) : 0}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">人均收费:</span>

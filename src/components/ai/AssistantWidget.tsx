@@ -103,6 +103,10 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
   const formatName = useCallback((id: string) => {
     return nameById.get(id) || id;
   }, [nameById]);
+  const formatFeeValue = useCallback((value: unknown) => {
+    if (value === undefined || value === null || value === "") return value;
+    return Math.ceil(Number(value));
+  }, []);
 
   const markdownComponents = useMemo(
     () => ({
@@ -173,10 +177,10 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
           lines.push(`对方比分: ${change.data.opponentScore ?? "清空"}`);
         }
         if (change.data.fieldFeeTotal !== undefined) {
-          lines.push(`场地费: ${change.data.fieldFeeTotal}`);
+          lines.push(`场地费: ${formatFeeValue(change.data.fieldFeeTotal)}`);
         }
         if (change.data.waterFeeTotal !== undefined) {
-          lines.push(`水费: ${change.data.waterFeeTotal}`);
+          lines.push(`水费: ${formatFeeValue(change.data.waterFeeTotal)}`);
         }
         if (change.data.notes !== undefined) {
           lines.push(`备注: ${change.data.notes ?? "清空"}`);
@@ -244,9 +248,9 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
         return change.data.overrides.map(override => {
           const player = formatName(override.playerId);
           const details = [
-            override.fieldFee !== undefined ? `场地费 ${override.fieldFee}` : null,
-            override.videoFee !== undefined ? `视频费 ${override.videoFee}` : null,
-            override.lateFee !== undefined ? `迟到费 ${override.lateFee}` : null,
+            override.fieldFee !== undefined ? `场地费 ${formatFeeValue(override.fieldFee)}` : null,
+            override.videoFee !== undefined ? `视频费 ${formatFeeValue(override.videoFee)}` : null,
+            override.lateFee !== undefined ? `迟到费 ${formatFeeValue(override.lateFee)}` : null,
             override.paymentNote ? `备注 ${override.paymentNote}` : null,
           ].filter(Boolean);
           return `${player}: ${details.join("，") || "无变化"}`;

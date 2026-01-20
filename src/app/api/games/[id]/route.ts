@@ -4,6 +4,8 @@ import { calculateCoefficient } from '@/lib/utils/coefficient'
 import { ApiResponse } from '@/lib/apiResponse'
 import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
+const roundFee = (value: number) => Math.ceil(value)
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -77,7 +79,7 @@ export async function GET(
       totalPlayTime
     )
     
-    const totalCalculatedFees = Math.round(
+    const totalCalculatedFees = roundFee(
       match.participations.reduce((sum, p) => sum + Number(p.totalFeeCalculated), 0)
     )
 
@@ -121,13 +123,22 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
+    const roundedBody = {
+      ...body,
+      fieldFeeTotal: body.fieldFeeTotal !== undefined
+        ? roundFee(Number(body.fieldFeeTotal))
+        : body.fieldFeeTotal,
+      waterFeeTotal: body.waterFeeTotal !== undefined
+        ? roundFee(Number(body.waterFeeTotal))
+        : body.waterFeeTotal
+    }
     
     const updatedMatch = await prisma.match.update({
       where: {
         id,
       },
       data: {
-        ...body,
+        ...roundedBody,
         updatedAt: new Date(),
       },
       include: {

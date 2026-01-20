@@ -72,14 +72,14 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                 
                 <TableCell className="text-center">
                   <span className="text-muted-foreground">
-                    ¥{player.calculatedFee.total.toFixed(2)}
+                    ¥{Math.ceil(player.calculatedFee.total)}
                   </span>
                 </TableCell>
                 
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-2">
                     <span className="font-medium">
-                      ¥{player.displayFee.toFixed(2)}
+                      ¥{Math.ceil(player.displayFee)}
                     </span>
                     {player.hasOverride && (
                       <Badge variant="outline" className="text-xs">
@@ -171,13 +171,13 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">计算费用:</span>
-                  <span>¥{player.calculatedFee.total.toFixed(2)}</span>
+                  <span>¥{Math.ceil(player.calculatedFee.total)}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">实际费用:</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">¥{player.displayFee.toFixed(2)}</span>
+                    <span className="font-medium">¥{Math.ceil(player.displayFee)}</span>
                     {player.hasOverride && (
                       <Badge variant="outline" className="text-xs">
                         <Edit2 className="h-3 w-3 mr-1" />

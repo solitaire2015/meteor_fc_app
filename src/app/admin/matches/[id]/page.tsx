@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useCallback, useMemo, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Download, Save } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
@@ -45,6 +45,51 @@ export default function MatchDetailPage() {
   const selectedPlayers = useSelectedPlayers()
   const availablePlayers = useAvailablePlayers()
   const attendanceData = useAttendanceData()
+  const [feeContext, setFeeContext] = useState<{
+    match?: {
+      id: string
+      opponentTeam: string
+      fieldFeeTotal: number
+      waterFeeTotal: number
+    }
+    feeBreakdown?: Array<{
+      player: {
+        id: string
+        name: string
+        jerseyNumber?: number | null
+        position?: string | null
+      }
+      totalTime: number
+      isLateArrival: boolean
+      calculatedFees: {
+        fieldFee: number
+        videoFee: number
+        lateFee: number
+        totalFee: number
+      }
+      finalFees: {
+        fieldFee: number
+        videoFee: number
+        lateFee: number
+        totalFee: number
+      }
+      override?: {
+        fieldFeeOverride?: number | null
+        videoFeeOverride?: number | null
+        lateFeeOverride?: number | null
+        notes?: string | null
+      } | null
+    }>
+    summary?: {
+      totalParticipants: number
+      totalCalculatedFees: number
+      totalFinalFees: number
+      feeDifference: number
+      overrideCount: number
+      overridePercentage: number
+      feeCoefficient: number
+    }
+  } | null>(null)
   const isDirty = useIsDirty()
   const isLoading = useIsLoading()
   const errors = useErrors()
@@ -81,6 +126,44 @@ export default function MatchDetailPage() {
       loadData()
     }
   }, [matchId, loadMatch, loadPlayers, loadAttendance, router])
+
+  useEffect(() => {
+    if (!matchId) return
+
+    const controller = new AbortController()
+    setFeeContext(null)
+
+    const loadFees = async () => {
+      try {
+        const response = await fetch(`/api/admin/matches/${matchId}/fees`, {
+          signal: controller.signal
+        })
+        const data = await response.json()
+        if (data.success) {
+          setFeeContext({
+            match: data.data.match,
+            feeBreakdown: data.data.feeBreakdown,
+            summary: data.data.summary
+          })
+        }
+      } catch (error) {
+        if ((error instanceof DOMException && error.name === 'AbortError') || (error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name === 'AbortError')) {
+          return
+        }
+        console.error('Error loading fee context:', error)
+      }
+    }
+
+    loadFees()
+
+    return () => {
+      try {
+        controller.abort()
+      } catch {
+        // Ignore abort errors to avoid noisy console logs during unmount
+      }
+    }
+  }, [matchId])
 
   // Handle tab change with potential navigation guard
   const handleTabChange = useCallback((newTabId: string, previousTabId: string) => {
@@ -407,6 +490,28 @@ export default function MatchDetailPage() {
           matchId,
           locale: 'zh-CN',
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          currentMatch: {
+            info: {
+              id: matchInfo.id,
+              matchDate: matchInfo.matchDate,
+              matchTime: matchInfo.matchTime ?? null,
+              opponentTeam: matchInfo.opponentTeam,
+              ourScore: matchInfo.ourScore ?? null,
+              opponentScore: matchInfo.opponentScore ?? null,
+              fieldFeeTotal: Number(matchInfo.fieldFeeTotal),
+              waterFeeTotal: Number(matchInfo.waterFeeTotal),
+              notes: matchInfo.notes ?? null,
+              status: matchInfo.status ?? undefined,
+            },
+            selectedPlayers: selectedPlayers.map(player => ({
+              id: player.id,
+              name: player.name,
+              jerseyNumber: player.jerseyNumber,
+              position: player.position
+            })),
+            attendance: attendanceData,
+            fees: feeContext ?? undefined,
+          },
           availablePlayers: availablePlayers.map(player => ({
             id: player.id,
             name: player.name,

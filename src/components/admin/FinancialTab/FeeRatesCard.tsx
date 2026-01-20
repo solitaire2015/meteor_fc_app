@@ -28,25 +28,25 @@ export function FeeRatesCard({ match }: FeeRatesCardProps) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">场地费用</p>
-            <p className="text-2xl font-bold">¥{Number(match.fieldFeeTotal).toFixed(0)}</p>
+            <p className="text-2xl font-bold">¥{Math.ceil(Number(match.fieldFeeTotal || 0))}</p>
             <p className="text-xs text-muted-foreground">总场地费</p>
           </div>
           
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">杂费</p>
-            <p className="text-2xl font-bold">¥{Number(match.waterFeeTotal).toFixed(0)}</p>
+            <p className="text-2xl font-bold">¥{Math.ceil(Number(match.waterFeeTotal || 0))}</p>
             <p className="text-xs text-muted-foreground">水费等其他费用</p>
           </div>
           
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">迟到罚款</p>
-            <p className="text-2xl font-bold">¥{Number(match.lateFeeRate || 0).toFixed(0)}</p>
+            <p className="text-2xl font-bold">¥{Math.ceil(Number(match.lateFeeRate || 0))}</p>
             <p className="text-xs text-muted-foreground">每次迟到罚款</p>
           </div>
           
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">视频费</p>
-            <p className="text-2xl font-bold">¥{Number(match.videoFeePerUnit || 0).toFixed(0)}</p>
+            <p className="text-2xl font-bold">¥{Math.ceil(Number(match.videoFeePerUnit || 0))}</p>
             <p className="text-xs text-muted-foreground">每时段费用</p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export function FeeRatesCard({ match }: FeeRatesCardProps) {
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">基础成本总计</span>
             <span className="text-lg font-semibold">
-              ¥{(Number(match.fieldFeeTotal) + Number(match.waterFeeTotal)).toFixed(0)}
+              ¥{Math.ceil(Number(match.fieldFeeTotal || 0)) + Math.ceil(Number(match.waterFeeTotal || 0))}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">

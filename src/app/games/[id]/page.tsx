@@ -98,6 +98,8 @@ interface VideoRecord {
   extractCode: string;
 }
 
+const roundFee = (value: number) => Math.ceil(value);
+
 export default function GameDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -147,10 +149,12 @@ export default function GameDetailsPage() {
             const playerFeeOverride = feeOverrides.find((override: FeeOverride) => override.playerId === participation.userId);
             
             // Calculate final fees - use override if available, otherwise use calculated
-            let finalFieldFee = Number(participation.fieldFeeCalculated);
-            let finalVideoFee = Number(participation.videoFee);
-            let finalLateFee = participation.isLateArrival && Number(participation.totalTime) > 0 ? 10 : 0;
-            let finalTotalFee = Number(participation.totalFeeCalculated);
+            let finalFieldFee = roundFee(Number(participation.fieldFeeCalculated));
+            let finalVideoFee = roundFee(Number(participation.videoFee));
+            let finalLateFee = participation.isLateArrival && Number(participation.totalTime) > 0
+              ? roundFee(Number(participation.lateFee))
+              : 0;
+            let finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee;
             let playerNotes = '';
             let hasOverride = false;
             
@@ -159,9 +163,9 @@ export default function GameDetailsPage() {
               playerNotes = playerFeeOverride.notes || '';
               
               // Calculate override total from components
-              finalFieldFee = Number(playerFeeOverride.fieldFeeOverride || 0);
-              finalVideoFee = Number(playerFeeOverride.videoFeeOverride || 0);
-              finalLateFee = Number(playerFeeOverride.lateFeeOverride || 0);
+              finalFieldFee = roundFee(Number(playerFeeOverride.fieldFeeOverride || 0));
+              finalVideoFee = roundFee(Number(playerFeeOverride.videoFeeOverride || 0));
+              finalLateFee = roundFee(Number(playerFeeOverride.lateFeeOverride || 0));
               finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee;
             }
             
@@ -378,7 +382,7 @@ export default function GameDetailsPage() {
   }
 
   const matchResult = getMatchResult();
-  const totalFieldCost = Number(match.fieldFeeTotal || 0) + Number(match.waterFeeTotal || 0);
+  const totalFieldCost = roundFee(Number(match.fieldFeeTotal || 0)) + roundFee(Number(match.waterFeeTotal || 0));
   const totalActualCost = gameData.reduce((sum, player) => sum + player.totalCost, 0);
 
   return (
@@ -491,7 +495,7 @@ export default function GameDetailsPage() {
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-center font-medium">
-                                ¥{Number(player.totalCost || 0).toFixed(2)}
+                                ¥{roundFee(Number(player.totalCost || 0))}
                               </TableCell>
                               <TableCell className="text-center">
                                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -509,15 +513,15 @@ export default function GameDetailsPage() {
                                       </div>
                                       <div>
                                         <span className="text-muted-foreground">场地费用:</span>
-                                        <div className="font-medium">¥{Number(player.fieldFee || 0).toFixed(2)}</div>
+                                        <div className="font-medium">¥{roundFee(Number(player.fieldFee || 0))}</div>
                                       </div>
                                       <div>
                                         <span className="text-muted-foreground">录像费用:</span>
-                                        <div className="font-medium">¥{Number(player.videoCost || 0).toFixed(2)}</div>
+                                        <div className="font-medium">¥{roundFee(Number(player.videoCost || 0))}</div>
                                       </div>
                                       <div>
                                         <span className="text-muted-foreground">迟到罚款:</span>
-                                        <div className="font-medium">¥{Number(player.lateFee || 0).toFixed(2)}</div>
+                                        <div className="font-medium">¥{roundFee(Number(player.lateFee || 0))}</div>
                                       </div>
                                     </div>
                                     {player.notes && (
@@ -589,24 +593,24 @@ export default function GameDetailsPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">场地费用:</span>
-                  <span className="font-medium">¥{Number(match.fieldFeeTotal || 0).toFixed(2)}</span>
+                  <span className="font-medium">¥{roundFee(Number(match.fieldFeeTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">水费:</span>
-                  <span className="font-medium">¥{Number(match.waterFeeTotal || 0).toFixed(2)}</span>
+                  <span className="font-medium">¥{roundFee(Number(match.waterFeeTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between border-t pt-3">
                   <span className="text-sm text-muted-foreground">总成本:</span>
-                  <span className="font-bold">¥{totalFieldCost.toFixed(2)}</span>
+                  <span className="font-bold">¥{roundFee(totalFieldCost)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">实收金额:</span>
-                  <span className="font-bold text-green-600">¥{totalActualCost.toFixed(2)}</span>
+                  <span className="font-bold text-green-600">¥{roundFee(totalActualCost)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-3">
                   <span className="text-sm text-muted-foreground">盈亏:</span>
                   <span className={`font-bold ${totalActualCost >= totalFieldCost ? 'text-green-600' : 'text-red-600'}`}>
-                    ¥{(totalActualCost - totalFieldCost).toFixed(2)}
+                    ¥{roundFee(totalActualCost - totalFieldCost)}
                   </span>
                 </div>
               </div>

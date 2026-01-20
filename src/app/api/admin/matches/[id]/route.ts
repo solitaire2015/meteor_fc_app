@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { CACHE_TAGS, invalidateCacheTags } from '@/lib/cache'
 
+const roundFee = (value: number) => Math.ceil(value)
+
 const updateMatchSchema = z.object({
   opponentTeam: z.string().optional(),
   matchDate: z.string().datetime().optional(),
@@ -25,6 +27,15 @@ export async function PATCH(
     
     // Validate request body
     const validatedData = updateMatchSchema.parse(body)
+    const roundedData = {
+      ...validatedData,
+      fieldFeeTotal: validatedData.fieldFeeTotal !== undefined
+        ? roundFee(validatedData.fieldFeeTotal)
+        : validatedData.fieldFeeTotal,
+      waterFeeTotal: validatedData.waterFeeTotal !== undefined
+        ? roundFee(validatedData.waterFeeTotal)
+        : validatedData.waterFeeTotal
+    }
     
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
@@ -49,7 +60,7 @@ export async function PATCH(
     const updatedMatch = await prisma.match.update({
       where: { id: matchId },
       data: {
-        ...validatedData,
+        ...roundedData,
         updatedAt: new Date()
       }
     })

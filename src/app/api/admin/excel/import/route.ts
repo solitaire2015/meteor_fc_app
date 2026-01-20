@@ -103,10 +103,10 @@ export async function POST(request: NextRequest) {
         opponentTeam: excelData.matchTitle.replace(/^\d+月\d+日VS/, '') || 'Unknown Team',
         ourScore: excelData.ourScore,
         opponentScore: excelData.opponentScore,
-        fieldFeeTotal: excelData.fieldFeeTotal,
-        waterFeeTotal: excelData.waterFeeTotal,
-        lateFeeRate: baseLateFeeRate,
-        videoFeePerUnit: baseVideoFeeRate,
+        fieldFeeTotal: Math.ceil(excelData.fieldFeeTotal),
+        waterFeeTotal: Math.ceil(excelData.waterFeeTotal),
+        lateFeeRate: Math.ceil(baseLateFeeRate),
+        videoFeePerUnit: Math.ceil(baseVideoFeeRate),
         notes: JSON.stringify({
           importedFrom: file.name,
           importedAt: new Date().toISOString(),
@@ -132,8 +132,8 @@ export async function POST(request: NextRequest) {
     
     // Calculate coefficient for fee calculations
     const coefficient = calculateCoefficient(
-      Number(excelData.fieldFeeTotal),
-      Number(excelData.waterFeeTotal),
+      Math.ceil(Number(excelData.fieldFeeTotal)),
+      Math.ceil(Number(excelData.waterFeeTotal)),
       90 // Fixed total time units
     )
 
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
           data: {
             matchId: match.id,
             playerId: mapping.userId,
-            fieldFeeOverride: excelPlayer.实收费用, // Use actual fee from Excel as override
+            fieldFeeOverride: Math.ceil(Number(excelPlayer.实收费用 || 0)), // Use actual fee from Excel as override
             notes: excelPlayer.notes.trim()
           }
         })

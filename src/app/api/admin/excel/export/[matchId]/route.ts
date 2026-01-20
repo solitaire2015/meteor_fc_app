@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
 
 const prisma = new PrismaClient()
+const roundFee = (value: number) => Math.ceil(value)
 
 export async function GET(
   request: NextRequest,
@@ -115,17 +116,19 @@ export async function GET(
       const playerOverride = match.feeOverrides.find((override: any) => override.playerId === participation.userId)
       
       // Calculate final fees - use override if available, otherwise use calculated
-      let finalFieldFee = Number(participation.fieldFeeCalculated)
-      let finalVideoFee = Number(participation.videoFee)
-      let finalLateFee = participation.isLateArrival && Number(participation.totalTime) > 0 ? Number(participation.lateFee) : 0
-      let finalActualFee = Number(participation.totalFeeCalculated)
+      let finalFieldFee = roundFee(Number(participation.fieldFeeCalculated))
+      let finalVideoFee = roundFee(Number(participation.videoFee))
+      let finalLateFee = participation.isLateArrival && Number(participation.totalTime) > 0
+        ? roundFee(Number(participation.lateFee))
+        : 0
+      let finalActualFee = finalFieldFee + finalVideoFee + finalLateFee
       let notes = ''
       
       if (playerOverride) {
         // Use override fees and calculate total
-        finalFieldFee = Number(playerOverride.fieldFeeOverride || 0)
-        finalVideoFee = Number(playerOverride.videoFeeOverride || 0)
-        finalLateFee = Number(playerOverride.lateFeeOverride || 0)
+        finalFieldFee = roundFee(Number(playerOverride.fieldFeeOverride || 0))
+        finalVideoFee = roundFee(Number(playerOverride.videoFeeOverride || 0))
+        finalLateFee = roundFee(Number(playerOverride.lateFeeOverride || 0))
         finalActualFee = finalFieldFee + finalVideoFee + finalLateFee
         notes = playerOverride.notes || ''
       }
@@ -159,20 +162,20 @@ export async function GET(
         section2[0], section2[1], section2[2],       // 第二节
         section3[0], section3[1], section3[2],       // 第三节
         participation.isLateArrival ? '迟到' : '',    // 是否迟到
-        Number(finalActualFee.toFixed(2)),           // 实收费用 (override logic)
+        finalActualFee,                             // 实收费用 (override logic)
         Number(participation.totalTime),              // 合计时间单位
         Number(realTimeCoefficient.toFixed(4)),      // 费用系数
-        Number(finalFieldFee.toFixed(2)),            // 场地费用 (override logic)
-        Number(finalLateFee.toFixed(2)),             // 迟到罚款 (override logic)
-        Number(finalVideoFee.toFixed(2)),            // 录像费用 (override logic)
+        finalFieldFee,                              // 场地费用 (override logic)
+        finalLateFee,                               // 迟到罚款 (override logic)
+        finalVideoFee,                              // 录像费用 (override logic)
         notes,                                       // 备注 (from override)
         goalsAssistsStr                              // 进球助攻
       ])
     })
     
     // Totals row using actual fees (override or calculated)
-    const totalFieldFee = Number(match.fieldFeeTotal)
-    const totalWaterFee = Number(match.waterFeeTotal)
+    const totalFieldFee = roundFee(Number(match.fieldFeeTotal))
+    const totalWaterFee = roundFee(Number(match.waterFeeTotal))
     const totalTime = participationsWithFees.reduce((sum, p) => sum + Number(p.totalTime), 0)
     const totalActualFieldFee = participationsWithFees.reduce((sum, p) => sum + p.finalFieldFee, 0)
     const totalActualLateFee = participationsWithFees.reduce((sum, p) => sum + p.finalLateFee, 0)
@@ -187,12 +190,12 @@ export async function GET(
       '', '', '',                             // 第二节 (3 columns) 
       '', '', '',                             // 第三节 (3 columns)
       '',                                      // 是否迟到
-      Number(totalActualFee.toFixed(2)),      // 实收费用
+      totalActualFee,                        // 实收费用
       totalTime,                              // 合计时间单位
       '',                                      // 费用系数
-      Number(totalActualFieldFee.toFixed(2)), // 场地费用
-      Number(totalActualLateFee.toFixed(2)),  // 迟到罚款
-      Number(totalActualVideoFee.toFixed(2)), // 录像费用
+      totalActualFieldFee,                   // 场地费用
+      totalActualLateFee,                    // 迟到罚款
+      totalActualVideoFee,                   // 录像费用
       `场地${totalFieldFee}+水费${totalWaterFee}`, // 备注
       ''                                       // 进球助攻
     ])

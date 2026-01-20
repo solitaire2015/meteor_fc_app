@@ -13,6 +13,8 @@ import { FeeEditDialog } from './FeeEditDialog'
 import { type MatchWithFeeRates, type PlayerFeeDisplay, type FeeSummaryData } from './types'
 import { type Player, type AttendanceGrid } from '@/lib/validations/match'
 
+const roundFee = (value: number) => Math.ceil(value)
+
 interface FinancialTabProps {
   match: MatchWithFeeRates
   users: Player[]
@@ -71,11 +73,14 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
       const player = players.find(p => p.id === breakdown.player.id)
       
       // Extract calculated fees (always from API)
+      const calculatedFieldFee = roundFee(Number(breakdown.calculatedFees.fieldFee))
+      const calculatedVideoFee = roundFee(Number(breakdown.calculatedFees.videoFee))
+      const calculatedLateFee = roundFee(Number(breakdown.calculatedFees.lateFee))
       const calculatedFee = {
-        fieldFee: Number(breakdown.calculatedFees.fieldFee),
-        videoFee: Number(breakdown.calculatedFees.videoFee),
-        lateFee: Number(breakdown.calculatedFees.lateFee),
-        total: Number(breakdown.calculatedFees.totalFee)
+        fieldFee: calculatedFieldFee,
+        videoFee: calculatedVideoFee,
+        lateFee: calculatedLateFee,
+        total: calculatedFieldFee + calculatedVideoFee + calculatedLateFee
       }
 
       // Check if override exists and build override fee
@@ -89,19 +94,19 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
         
         // If fieldFeeOverride exists with notes (from Excel import), it represents total actual fee
         if (override.fieldFeeOverride != null && override.notes) {
-          displayFee = Number(override.fieldFeeOverride)
+          displayFee = roundFee(Number(override.fieldFeeOverride))
           overrideFee = {
-            fieldFee: Number(override.fieldFeeOverride),
+            fieldFee: roundFee(Number(override.fieldFeeOverride)),
             videoFee: 0, // Total fee already includes everything
             lateFee: 0,
-            total: Number(override.fieldFeeOverride)
+            total: roundFee(Number(override.fieldFeeOverride))
           }
         } else {
           // Manual override - build from individual components
           overrideFee = {
-            fieldFee: Number(override.fieldFeeOverride ?? calculatedFee.fieldFee),
-            videoFee: Number(override.videoFeeOverride ?? calculatedFee.videoFee),
-            lateFee: Number(override.lateFeeOverride ?? calculatedFee.lateFee),
+            fieldFee: roundFee(Number(override.fieldFeeOverride ?? calculatedFee.fieldFee)),
+            videoFee: roundFee(Number(override.videoFeeOverride ?? calculatedFee.videoFee)),
+            lateFee: roundFee(Number(override.lateFeeOverride ?? calculatedFee.lateFee)),
             total: 0
           }
           overrideFee.total = overrideFee.fieldFee + overrideFee.videoFee + overrideFee.lateFee
@@ -109,7 +114,7 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
         }
       } else {
         // Use final fees if no explicit override (handles the display logic on backend)
-        displayFee = Number(breakdown.finalFees.totalFee)
+        displayFee = roundFee(Number(breakdown.finalFees.totalFee))
       }
 
       return {
@@ -131,17 +136,17 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
     matchData: MatchWithFeeRates
   ): FeeSummaryData => {
     const totalParticipants = fees.length
-    const totalFieldCosts = Number(matchData.fieldFeeTotal) + Number(matchData.waterFeeTotal)
+    const totalFieldCosts = roundFee(Number(matchData.fieldFeeTotal || 0)) + roundFee(Number(matchData.waterFeeTotal || 0))
     const totalCollectedFees = fees.reduce((sum, fee) => sum + fee.displayFee, 0)
-    const averageFeePerPlayer = totalParticipants > 0 ? totalCollectedFees / totalParticipants : 0
+    const averageFeePerPlayer = totalParticipants > 0 ? roundFee(totalCollectedFees / totalParticipants) : 0
     const profitLoss = totalCollectedFees - totalFieldCosts
 
     return {
       totalParticipants,
       totalFieldCosts,
-      totalCollectedFees: Number(totalCollectedFees.toFixed(2)),
-      averageFeePerPlayer: Number(averageFeePerPlayer.toFixed(2)),
-      profitLoss: Number(profitLoss.toFixed(2))
+      totalCollectedFees,
+      averageFeePerPlayer,
+      profitLoss
     }
   }
 

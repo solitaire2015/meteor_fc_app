@@ -8,6 +8,8 @@ import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getC
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+const roundFee = (value: number) => Math.ceil(value)
+
 // Validation schemas
 const createMatchSchema = z.object({
   matchDate: z.string().datetime(),
@@ -149,7 +151,7 @@ export async function GET(request: Request) {
       const assistEvents = match.events.filter(e => e.eventType === 'ASSIST')
       
       // Calculate total fees
-      const totalCalculatedFees = match.participations.reduce((sum, p) => 
+      const totalCalculatedFees = match.participations.reduce((sum, p) =>
         sum + Number(p.totalFeeCalculated), 0
       )
 
@@ -161,8 +163,8 @@ export async function GET(request: Request) {
         ourScore: match.ourScore,
         opponentScore: match.opponentScore,
         matchResult: match.matchResult,
-        fieldFeeTotal: Number(match.fieldFeeTotal),
-        waterFeeTotal: Number(match.waterFeeTotal),
+        fieldFeeTotal: roundFee(Number(match.fieldFeeTotal)),
+        waterFeeTotal: roundFee(Number(match.waterFeeTotal)),
         notes: match.notes,
         createdAt: match.createdAt,
         updatedAt: match.updatedAt,
@@ -172,7 +174,7 @@ export async function GET(request: Request) {
         totalParticipants,
         totalGoals: goalEvents.length,
         totalAssists: assistEvents.length,
-        totalCalculatedFees: Number(totalCalculatedFees.toFixed(2)),
+        totalCalculatedFees: roundFee(totalCalculatedFees),
         // Related data counts
         participationsCount: match.participations.length,
         eventsCount: match.events.length,
@@ -243,9 +245,13 @@ export async function POST(request: Request) {
     const { participations, events, ...matchData } = body
     
     const validatedMatchData = createMatchSchema.parse(matchData)
+    const roundedFieldFeeTotal = roundFee(validatedMatchData.fieldFeeTotal)
+    const roundedWaterFeeTotal = roundFee(validatedMatchData.waterFeeTotal)
 
     // Read global base fee rates before creating match (outside transaction)
     const { baseVideoFeeRate, baseLateFeeRate } = await globalSettingsService.getBaseFeeRates()
+    const roundedLateFeeRate = roundFee(baseLateFeeRate)
+    const roundedVideoFeeRate = roundFee(baseVideoFeeRate)
 
     // Create match with participations in a transaction with timeout
     const match = await prisma.$transaction(async (tx) => {
@@ -258,10 +264,10 @@ export async function POST(request: Request) {
           ourScore: validatedMatchData.ourScore,
           opponentScore: validatedMatchData.opponentScore,
           matchResult: validatedMatchData.matchResult,
-          fieldFeeTotal: validatedMatchData.fieldFeeTotal,
-          waterFeeTotal: validatedMatchData.waterFeeTotal,
-          lateFeeRate: baseLateFeeRate,
-          videoFeePerUnit: baseVideoFeeRate,
+          fieldFeeTotal: roundedFieldFeeTotal,
+          waterFeeTotal: roundedWaterFeeTotal,
+          lateFeeRate: roundedLateFeeRate,
+          videoFeePerUnit: roundedVideoFeeRate,
           notes: validatedMatchData.notes,
           createdBy: creatorId
         }
@@ -278,8 +284,10 @@ export async function POST(request: Request) {
             validatedParticipation.section2Part1 + validatedParticipation.section2Part2 + validatedParticipation.section2Part3 +
             validatedParticipation.section3Part1 + validatedParticipation.section3Part2 + validatedParticipation.section3Part3
 
-          const fieldFeeCalculated = validatedParticipation.isGoalkeeper ? 0 : totalTime * Number(validatedMatchData.feeCoefficient)
-          const lateFee = validatedParticipation.isLate ? baseLateFeeRate : 0
+          const fieldFeeCalculated = validatedParticipation.isGoalkeeper
+            ? 0
+            : roundFee(totalTime * Number(validatedMatchData.feeCoefficient))
+          const lateFee = validatedParticipation.isLate ? roundedLateFeeRate : 0
           const videoFee = 0 // Will be set later when video is added
           const totalFeeCalculated = fieldFeeCalculated + lateFee + videoFee
 

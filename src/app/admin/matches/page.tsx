@@ -109,11 +109,11 @@ export default function MatchesAdminPage() {
               : prev.opponentScore,
         fieldFeeTotal:
           change.data.fieldFeeTotal !== undefined
-            ? String(change.data.fieldFeeTotal)
+            ? String(Math.ceil(change.data.fieldFeeTotal))
             : prev.fieldFeeTotal,
         waterFeeTotal:
           change.data.waterFeeTotal !== undefined
-            ? String(change.data.waterFeeTotal)
+            ? String(Math.ceil(change.data.waterFeeTotal))
             : prev.waterFeeTotal,
         notes:
           change.data.notes === null
@@ -177,8 +177,8 @@ export default function MatchesAdminPage() {
       opponentTeam: data.opponentTeam,
       ourScore: data.ourScore ? parseInt(data.ourScore) : undefined,
       opponentScore: data.opponentScore ? parseInt(data.opponentScore) : undefined,
-      fieldFeeTotal: parseFloat(data.fieldFeeTotal),
-      waterFeeTotal: parseFloat(data.waterFeeTotal),
+      fieldFeeTotal: Math.ceil(parseFloat(data.fieldFeeTotal)),
+      waterFeeTotal: Math.ceil(parseFloat(data.waterFeeTotal)),
       createdBy: adminUser.id
     }
 
@@ -301,6 +301,15 @@ export default function MatchesAdminPage() {
           matchId: null,
           locale: 'zh-CN',
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          matchList: matches.map(match => ({
+            id: match.id,
+            matchDate: match.matchDate,
+            matchTime: match.matchTime,
+            opponentTeam: match.opponentTeam,
+            ourScore: match.ourScore,
+            opponentScore: match.opponentScore,
+            status: match.status,
+          })),
           availablePlayers: users.map(user => ({
             id: user.id,
             name: user.name,
@@ -426,9 +435,15 @@ export default function MatchesAdminPage() {
                 <Label>场地费用 (元)</Label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="1"
                   value={formData.fieldFeeTotal}
-                  onChange={(e) => setFormData({...formData, fieldFeeTotal: e.target.value})}
+                  onChange={(e) => {
+                    const nextValue = e.target.value
+                    setFormData({
+                      ...formData,
+                      fieldFeeTotal: nextValue === '' ? '' : String(Math.ceil(Number(nextValue)))
+                    })
+                  }}
                   required
                 />
               </div>
@@ -437,9 +452,15 @@ export default function MatchesAdminPage() {
                 <Label>水费等杂费 (元)</Label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="1"
                   value={formData.waterFeeTotal}
-                  onChange={(e) => setFormData({...formData, waterFeeTotal: e.target.value})}
+                  onChange={(e) => {
+                    const nextValue = e.target.value
+                    setFormData({
+                      ...formData,
+                      waterFeeTotal: nextValue === '' ? '' : String(Math.ceil(Number(nextValue)))
+                    })
+                  }}
                   required
                 />
               </div>
@@ -540,7 +561,7 @@ export default function MatchesAdminPage() {
                   </div>
                   <div className={styles.stat}>
                     <DollarSign size={16} className={styles.statIcon} />
-                    <span className={styles.statValue}>{match.totalCalculatedFees}</span>
+                    <span className={styles.statValue}>{Math.ceil(match.totalCalculatedFees)}</span>
                     <span className={styles.statLabel}>总费用</span>
                   </div>
                 </div>

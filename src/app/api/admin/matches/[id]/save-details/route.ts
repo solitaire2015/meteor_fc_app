@@ -124,8 +124,8 @@ export async function POST(
         .reduce((sum, player) => sum + player.totalTime, 0)
       
       const realTimeCoefficient = calculateCoefficient(
-        Number(match.fieldFeeTotal),
-        Number(match.waterFeeTotal),
+        Math.ceil(Number(match.fieldFeeTotal)),
+        Math.ceil(Number(match.waterFeeTotal)),
         totalPlayTime
       )
 
