@@ -4,7 +4,7 @@ import { calculateCoefficient } from '@/lib/utils/coefficient'
 import { ApiResponse } from '@/lib/apiResponse'
 import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
-const roundFee = (value: number) => Math.ceil(value)
+const roundFee = (value: number) => Math.round(value)
 
 export async function GET(
   request: NextRequest,
@@ -78,7 +78,7 @@ export async function GET(
       Number(match.waterFeeTotal),
       totalPlayTime
     )
-    
+
     const totalCalculatedFees = roundFee(
       match.participations.reduce((sum, p) => sum + Number(p.totalFeeCalculated), 0)
     )
@@ -132,7 +132,7 @@ export async function PUT(
         ? roundFee(Number(body.waterFeeTotal))
         : body.waterFeeTotal
     }
-    
+
     const updatedMatch = await prisma.match.update({
       where: {
         id,

@@ -34,7 +34,7 @@ export default function GamesPage() {
     try {
       const response = await fetch('/api/games');
       const data = await response.json();
-      
+
       if (data.success) {
         setMatches(data.data);
       }
@@ -57,13 +57,13 @@ export default function GamesPage() {
 
   const getMatchResult = (match: MatchData) => {
     if (match.ourScore !== null && match.opponentScore !== null) {
-      const result = match.ourScore > match.opponentScore ? '胜利' : 
-                    match.ourScore < match.opponentScore ? '失败' : '平局';
+      const result = match.ourScore > match.opponentScore ? '胜利' :
+        match.ourScore < match.opponentScore ? '失败' : '平局';
       return {
         score: `${match.ourScore} : ${match.opponentScore}`,
         result,
         color: match.ourScore > match.opponentScore ? 'text-green-600' :
-               match.ourScore < match.opponentScore ? 'text-red-600' : 'text-yellow-600'
+          match.ourScore < match.opponentScore ? 'text-red-600' : 'text-yellow-600'
       };
     }
     return { score: '即将开始', result: '未开始', color: 'text-gray-600' };
@@ -109,7 +109,7 @@ export default function GamesPage() {
         ) : (
           matches.map((match) => {
             const matchResult = getMatchResult(match);
-            
+
             return (
               <Card key={match.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
@@ -130,7 +130,7 @@ export default function GamesPage() {
                       {matchResult.score}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
@@ -138,12 +138,12 @@ export default function GamesPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Trophy className="h-4 w-4" />
-                      ¥{Math.ceil(Number(match.fieldFeeTotal || 0)) + Math.ceil(Number(match.waterFeeTotal || 0))}
+                      ¥{Math.round(Number(match.fieldFeeTotal || 0)) + Math.round(Number(match.waterFeeTotal || 0))}
                     </div>
                   </div>
-                  
-                  <Button 
-                    className="w-full" 
+
+                  <Button
+                    className="w-full"
                     onClick={() => router.push(`/games/${match.id}`)}
                   >
                     <Eye className="mr-2 h-4 w-4" />

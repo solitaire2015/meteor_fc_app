@@ -8,7 +8,7 @@ import { buildCacheKey, CACHE_TAGS, deleteCacheByPrefixes, deleteCacheKeys, getC
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-const roundFee = (value: number) => Math.ceil(value)
+const roundFee = (value: number) => Math.round(value)
 
 // Validation schemas
 const createMatchSchema = z.object({
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     }
 
     const where: WhereClause = {}
-    
+
     if (year) {
       const startDate = new Date(`${year}-01-01`)
       const endDate = new Date(`${year}-12-31`)
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
         gte: startDate,
         lte: endDate
       }
-      
+
       if (month) {
         const monthStart = new Date(`${year}-${month.padStart(2, '0')}-01`)
         const monthEnd = new Date(parseInt(year), parseInt(month), 0) // Last day of month
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
       const totalParticipants = match.participations.length
       const goalEvents = match.events.filter(e => e.eventType === 'GOAL' || e.eventType === 'PENALTY_GOAL')
       const assistEvents = match.events.filter(e => e.eventType === 'ASSIST')
-      
+
       // Calculate total fees
       const totalCalculatedFees = match.participations.reduce((sum, p) =>
         sum + Number(p.totalFeeCalculated), 0
@@ -243,15 +243,15 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const { participations, events, ...matchData } = body
-    
+
     const validatedMatchData = createMatchSchema.parse(matchData)
-    const roundedFieldFeeTotal = roundFee(validatedMatchData.fieldFeeTotal)
-    const roundedWaterFeeTotal = roundFee(validatedMatchData.waterFeeTotal)
+    const roundedFieldFeeTotal = validatedMatchData.fieldFeeTotal
+    const roundedWaterFeeTotal = validatedMatchData.waterFeeTotal
 
     // Read global base fee rates before creating match (outside transaction)
     const { baseVideoFeeRate, baseLateFeeRate } = await globalSettingsService.getBaseFeeRates()
-    const roundedLateFeeRate = roundFee(baseLateFeeRate)
-    const roundedVideoFeeRate = roundFee(baseVideoFeeRate)
+    const roundedLateFeeRate = baseLateFeeRate
+    const roundedVideoFeeRate = baseVideoFeeRate
 
     // Create match with participations in a transaction with timeout
     const match = await prisma.$transaction(async (tx) => {
@@ -277,9 +277,9 @@ export async function POST(request: Request) {
       if (participations && Array.isArray(participations)) {
         const participationData = participations.map(participation => {
           const validatedParticipation = participationSchema.parse(participation)
-          
+
           // Calculate totals
-          const totalTime = 
+          const totalTime =
             validatedParticipation.section1Part1 + validatedParticipation.section1Part2 + validatedParticipation.section1Part3 +
             validatedParticipation.section2Part1 + validatedParticipation.section2Part2 + validatedParticipation.section2Part3 +
             validatedParticipation.section3Part1 + validatedParticipation.section3Part2 + validatedParticipation.section3Part3

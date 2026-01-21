@@ -10,7 +10,7 @@
  * - Goalkeepers are charged 0 yuan for time played as goalkeeper
  * - Goalkeepers are charged normal rates for time played as regular player
  * - Field fee is based on normal player time only
- * - Video fee follows Excel formula: ROUNDUP(totalTime/3*videoFeeRate, 0)
+ * - Video fee follows Excel formula: ROUND(totalTime/3*videoFeeRate, 0)
  * - Late fee uses configurable rate (default 10 yuan) if any late arrival
  */
 
@@ -51,49 +51,49 @@ export interface FeeCalculationInput {
  * @returns Detailed fee breakdown
  */
 export function calculatePlayerFees(input: FeeCalculationInput): FeeCalculationResult {
-  const { 
-    attendanceData, 
-    isLateArrival, 
+  const {
+    attendanceData,
+    isLateArrival,
     feeCoefficient,
     lateFeeRate = 10,      // Default fallback value
     videoFeeRate = 2       // Default fallback value
   } = input;
-  
+
   // Count total parts played as normal player (not as goalkeeper)
   let normalPlayerParts = 0;
   const sectionsWithNormalPlay = new Set<number>();
-  
+
   // Process each section (1-3) and part (1-3)
   for (let section = 1; section <= 3; section++) {
     let playedAsNormalInSection = false;
-    
+
     for (let part = 1; part <= 3; part++) {
       const sectionStr = section.toString();
       const partStr = part.toString();
-      
+
       const attendance = attendanceData.attendance[sectionStr]?.[partStr] || 0;
       const isGoalkeeper = attendanceData.goalkeeper[sectionStr]?.[partStr] || false;
-      
+
       // Only count as normal player time if played AND not goalkeeper
       if (attendance > 0 && !isGoalkeeper) {
         normalPlayerParts += attendance;
         playedAsNormalInSection = true;
       }
     }
-    
+
     // Track which sections had normal (non-GK) play for video fee
     if (playedAsNormalInSection) {
       sectionsWithNormalPlay.add(section);
     }
   }
-  
-  // Calculate individual fees with integer rounding (ceil)
-  const fieldFee = Math.ceil(normalPlayerParts * feeCoefficient);
-  const lateFee = isLateArrival ? Math.ceil(Number(lateFeeRate)) : 0;
-  // Video fee follows Excel formula: ROUNDUP(totalTime/3*videoFeeRate, 0)
-  const videoFee = Math.ceil(normalPlayerParts / 3 * Number(videoFeeRate));
+
+  // Calculate individual fees with integer rounding (round)
+  const fieldFee = Math.round(normalPlayerParts * feeCoefficient);
+  const lateFee = isLateArrival ? Math.round(Number(lateFeeRate)) : 0;
+  // Video fee follows Excel formula: ROUND(totalTime/3*videoFeeRate, 0)
+  const videoFee = Math.round(normalPlayerParts / 3 * Number(videoFeeRate));
   const totalFee = fieldFee + lateFee + videoFee;
-  
+
   return {
     normalPlayerParts,
     sectionsWithNormalPlay: sectionsWithNormalPlay.size,
@@ -131,7 +131,7 @@ export function convertLegacyParticipationToAttendanceData(participation: Record
       }
     }
   }
-  
+
   // Handle goalkeeper status - if the old format has a single isGoalkeeper flag,
   // we need additional context to know which sections/parts were goalkeeper
   // This is a limitation of the legacy format
@@ -140,7 +140,7 @@ export function convertLegacyParticipationToAttendanceData(participation: Record
     // This function should be used carefully with legacy data
     console.warn('Legacy participation data with isGoalkeeper flag detected. Cannot determine specific goalkeeper sections/parts.');
   }
-  
+
   return attendanceData;
 }
 
@@ -151,28 +151,28 @@ export function validateAttendanceData(attendanceData: unknown): attendanceData 
   if (!attendanceData || typeof attendanceData !== 'object') {
     return false;
   }
-  
+
   if (!attendanceData.attendance || !attendanceData.goalkeeper) {
     return false;
   }
-  
+
   // Check structure for sections 1-3 and parts 1-3
   for (let section = 1; section <= 3; section++) {
     const sectionStr = section.toString();
-    
+
     if (!attendanceData.attendance[sectionStr] || !attendanceData.goalkeeper[sectionStr]) {
       return false;
     }
-    
+
     for (let part = 1; part <= 3; part++) {
       const partStr = part.toString();
-      
+
       if (typeof attendanceData.attendance[sectionStr][partStr] !== 'number' ||
-          typeof attendanceData.goalkeeper[sectionStr][partStr] !== 'boolean') {
+        typeof attendanceData.goalkeeper[sectionStr][partStr] !== 'boolean') {
         return false;
       }
     }
   }
-  
+
   return true;
 }

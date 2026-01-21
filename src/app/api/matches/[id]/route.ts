@@ -5,7 +5,7 @@ import { IdParamSchema, UpdateMatchSchema, validateRequest } from '@/lib/validat
 import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
 
 const prisma = new PrismaClient()
-const roundFee = (value: number) => Math.ceil(value)
+const roundFee = (value: number) => Math.round(value)
 
 // GET /api/matches/[id] - Get match by ID with related data
 export async function GET(

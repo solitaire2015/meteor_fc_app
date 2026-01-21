@@ -105,7 +105,7 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
   }, [nameById]);
   const formatFeeValue = useCallback((value: unknown) => {
     if (value === undefined || value === null || value === "") return value;
-    return Math.ceil(Number(value));
+    return Math.round(Number(value));
   }, []);
 
   const markdownComponents = useMemo(

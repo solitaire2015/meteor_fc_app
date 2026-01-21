@@ -13,7 +13,7 @@ import { feeCalculationService, type FeeOverride, type PlayerFeeBreakdown } from
 
 const roundOverrideValue = (value: number | null) => {
   if (value === null) return null
-  return Math.ceil(Number(value))
+  return Math.round(Number(value))
 }
 
 export interface FeeOverrideInput {
@@ -332,9 +332,9 @@ export class FeeOverrideService {
     }
   }> {
     const feeBreakdown = await feeCalculationService.getFeeBreakdown(matchId)
-    
+
     const playersWithOverrides = feeBreakdown.players.filter(p => p.overrides !== null).length
-    const overridePercentage = feeBreakdown.totalParticipants > 0 ? 
+    const overridePercentage = feeBreakdown.totalParticipants > 0 ?
       (playersWithOverrides / feeBreakdown.totalParticipants) * 100 : 0
 
     const feeDifference = feeBreakdown.totalFinalFees - feeBreakdown.totalCalculatedFees

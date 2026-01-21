@@ -1,12 +1,12 @@
 'use client'
 
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -47,7 +47,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
           </TableHeader>
           <TableBody>
             {playerFees.map((player) => (
-              <TableRow 
+              <TableRow
                 key={player.playerId}
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => onEditPlayer(player)}
@@ -63,23 +63,23 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                     )}
                   </div>
                 </TableCell>
-                
+
                 <TableCell className="text-center">
                   <Badge variant="outline">
                     {player.totalTime} 时段
                   </Badge>
                 </TableCell>
-                
+
                 <TableCell className="text-center">
                   <span className="text-muted-foreground">
-                    ¥{Math.ceil(player.calculatedFee.total)}
+                    ¥{Math.round(player.calculatedFee.total)}
                   </span>
                 </TableCell>
-                
+
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-2">
                     <span className="font-medium">
-                      ¥{Math.ceil(player.displayFee)}
+                      ¥{Math.round(player.displayFee)}
                     </span>
                     {player.hasOverride && (
                       <Badge variant="outline" className="text-xs">
@@ -89,7 +89,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                     )}
                   </div>
                 </TableCell>
-                
+
                 <TableCell className="text-center">
                   {player.hasOverride && (
                     <Badge variant="secondary" className="text-xs">
@@ -103,7 +103,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                     </Badge>
                   )}
                 </TableCell>
-                
+
                 <TableCell className="text-center">
                   {player.paymentNote && (
                     <span className="text-xs text-muted-foreground truncate max-w-[100px] block">
@@ -111,7 +111,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                     </span>
                   )}
                 </TableCell>
-                
+
                 <TableCell className="text-center">
                   <Button
                     variant="ghost"
@@ -133,7 +133,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
       {/* Mobile Cards */}
       <div className="md:hidden space-y-4">
         {playerFees.map((player) => (
-          <Card 
+          <Card
             key={player.playerId}
             className="cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => onEditPlayer(player)}
@@ -160,7 +160,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                   <Edit2 className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">参与时长:</span>
@@ -168,16 +168,16 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                     {player.totalTime} 时段
                   </Badge>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">计算费用:</span>
-                  <span>¥{Math.ceil(player.calculatedFee.total)}</span>
+                  <span>¥{Math.round(player.calculatedFee.total)}</span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">实际费用:</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">¥{Math.ceil(player.displayFee)}</span>
+                    <span className="font-medium">¥{Math.round(player.displayFee)}</span>
                     {player.hasOverride && (
                       <Badge variant="outline" className="text-xs">
                         <Edit2 className="h-3 w-3 mr-1" />
@@ -186,7 +186,7 @@ export function FeeTable({ playerFees, onEditPlayer }: FeeTableProps) {
                     )}
                   </div>
                 </div>
-                
+
                 {player.paymentNote && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">备注:</span>

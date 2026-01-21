@@ -12,16 +12,16 @@ import { prisma } from '@/lib/prisma'
 import { calculatePlayerFees, type AttendanceData, type FeeCalculationResult } from '@/lib/feeCalculation'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
 
-const roundFee = (value: number) => Math.ceil(value)
+const roundFee = (value: number) => Math.round(value)
 
-const normalizeOverrideValue = (value?: number | null) => {
+const normalizeOverrideValue = (value?: any | null) => {
   if (value === null || value === undefined) return value
   return roundFee(Number(value))
 }
 
-const normalizeRateValue = (value?: number | null) => {
+const normalizeRateValue = (value?: any | null) => {
   if (value === null || value === undefined) return undefined
-  return roundFee(Number(value))
+  return Number(value)
 }
 
 export interface FeeOverride {
@@ -60,9 +60,9 @@ export class FeeCalculationService {
    * Calculate fees for a specific player in a match
    */
   async calculatePlayerFees(
-    matchId: string, 
-    playerId: string, 
-    attendanceData: AttendanceData, 
+    matchId: string,
+    playerId: string,
+    attendanceData: AttendanceData,
     isLateArrival: boolean
   ): Promise<PlayerFeeBreakdown> {
     // Get match info for coefficient calculation
@@ -86,11 +86,11 @@ export class FeeCalculationService {
 
     // Calculate total play time for coefficient
     const totalPlayTime = await this.calculateTotalPlayTime(matchId)
-    
+
     // Calculate coefficient
     const feeCoefficient = calculateCoefficient(
-      Math.ceil(Number(match.fieldFeeTotal)),
-      Math.ceil(Number(match.waterFeeTotal)),
+      Number(match.fieldFeeTotal),
+      Number(match.waterFeeTotal),
       totalPlayTime
     )
 
@@ -168,11 +168,11 @@ export class FeeCalculationService {
 
       // Calculate total play time for coefficient
       const totalPlayTime = participations.reduce((sum, p) => sum + Number(p.totalTime), 0)
-      
+
       // Calculate coefficient
       const feeCoefficient = calculateCoefficient(
-        Math.ceil(Number(match.fieldFeeTotal)),
-        Math.ceil(Number(match.waterFeeTotal)),
+        Number(match.fieldFeeTotal),
+        Number(match.waterFeeTotal),
         totalPlayTime
       )
 
@@ -192,7 +192,7 @@ export class FeeCalculationService {
 
       for (const participation of participations) {
         const attendanceData = participation.attendanceData as unknown as AttendanceData
-        
+
         // Calculate base fees using match-specific rates
         const calculatedFees = calculatePlayerFees({
           attendanceData,
@@ -207,7 +207,7 @@ export class FeeCalculationService {
           fieldFeeOverride: normalizeOverrideValue(override.fieldFeeOverride),
           videoFeeOverride: normalizeOverrideValue(override.videoFeeOverride),
           lateFeeOverride: normalizeOverrideValue(override.lateFeeOverride),
-          notes: override.notes
+          notes: override.notes || undefined
         } : null
 
         // Apply overrides to get final fees
@@ -267,8 +267,8 @@ export class FeeCalculationService {
    * Apply manual override to a player's fees
    */
   async applyManualOverride(
-    matchId: string, 
-    playerId: string, 
+    matchId: string,
+    playerId: string,
     override: FeeOverride
   ): Promise<PlayerFeeBreakdown> {
     return await prisma.$transaction(async (tx) => {
@@ -304,8 +304,8 @@ export class FeeCalculationService {
       const attendanceData = participation.attendanceData as unknown as AttendanceData
       const totalPlayTime = await this.calculateTotalPlayTime(matchId)
       const feeCoefficient = calculateCoefficient(
-        Math.ceil(Number(match.fieldFeeTotal)),
-        Math.ceil(Number(match.waterFeeTotal)),
+        Number(match.fieldFeeTotal),
+        Number(match.waterFeeTotal),
         totalPlayTime
       )
 
@@ -425,8 +425,8 @@ export class FeeCalculationService {
       const attendanceData = participation.attendanceData as unknown as AttendanceData
       const totalPlayTime = await this.calculateTotalPlayTime(matchId)
       const feeCoefficient = calculateCoefficient(
-        Math.ceil(Number(match.fieldFeeTotal)),
-        Math.ceil(Number(match.waterFeeTotal)),
+        Number(match.fieldFeeTotal),
+        Number(match.waterFeeTotal),
         totalPlayTime
       )
 
@@ -506,8 +506,8 @@ export class FeeCalculationService {
     // Calculate coefficient
     const totalPlayTime = participations.reduce((sum, p) => sum + Number(p.totalTime), 0)
     const feeCoefficient = calculateCoefficient(
-      Math.ceil(Number(match.fieldFeeTotal)),
-      Math.ceil(Number(match.waterFeeTotal)),
+      Number(match.fieldFeeTotal),
+      Number(match.waterFeeTotal),
       totalPlayTime
     )
 
@@ -518,7 +518,7 @@ export class FeeCalculationService {
 
     for (const participation of participations) {
       const attendanceData = participation.attendanceData as unknown as AttendanceData
-      
+
       const calculatedFees = calculatePlayerFees({
         attendanceData,
         isLateArrival: participation.isLateArrival,

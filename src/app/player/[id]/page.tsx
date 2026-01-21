@@ -11,13 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPositionColor, getPositionLabel } from "@/lib/utils/position";
 import { Position } from "@prisma/client";
-import { 
-  ArrowLeft, 
-  Trophy, 
-  Target, 
-  Calendar, 
-  Mail, 
-  Phone, 
+import {
+  ArrowLeft,
+  Trophy,
+  Target,
+  Calendar,
+  Mail,
+  Phone,
   Clock,
   ChevronUp,
   Eye
@@ -78,17 +78,17 @@ export default function PlayerPage() {
   const params = useParams();
   const router = useRouter();
   const playerId = params.id as string;
-  
+
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [allTimeStats, setAllTimeStats] = useState<AllTimeStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Year selector state
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  
+
   // Pagination states
   const [showAllMatches, setShowAllMatches] = useState(false);
   const [matchPage, setMatchPage] = useState(1);
@@ -110,7 +110,7 @@ export default function PlayerPage() {
       } else {
         setLoading(true);
       }
-      
+
       const response = await fetch(`/api/player/${playerId}?year=${selectedYear}`);
       const data = await response.json();
 
@@ -133,7 +133,7 @@ export default function PlayerPage() {
     try {
       const response = await fetch(`/api/players`);
       const data = await response.json();
-      
+
       if (data.success) {
         const currentPlayer = data.data.find((p: any) => p.id === playerId);
         if (currentPlayer) {
@@ -191,7 +191,7 @@ export default function PlayerPage() {
     return resultMap[result] || '已结束';
   };
 
-  const paginatedMatches = showAllMatches 
+  const paginatedMatches = showAllMatches
     ? playerData?.attendanceHistory.slice((matchPage - 1) * ITEMS_PER_PAGE, matchPage * ITEMS_PER_PAGE) || []
     : playerData?.attendanceHistory.slice(0, 5) || [];
 
@@ -231,7 +231,7 @@ export default function PlayerPage() {
             返回排行榜
           </Link>
         </Button>
-        
+
         <div className="flex items-center gap-4">
           <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
             <SelectTrigger className="w-32">
@@ -258,7 +258,7 @@ export default function PlayerPage() {
                 {playerData.abbreviation}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1 space-y-4">
               <div>
                 <h1 className="text-3xl font-bold">{playerData.name}</h1>
@@ -275,7 +275,7 @@ export default function PlayerPage() {
                   )}
                 </div>
               </div>
-              
+
               {/* Contact Info */}
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {playerData.email && (
@@ -422,7 +422,7 @@ export default function PlayerPage() {
                     vs {playerData.latestMatch.opponent}
                   </div>
                 </div>
-                
+
                 <div className="text-center">
                   <div className="text-2xl font-bold">
                     {playerData.latestMatch.ourScore}-{playerData.latestMatch.opponentScore}
@@ -431,11 +431,11 @@ export default function PlayerPage() {
                     {getMatchResult(playerData.latestMatch.result)}
                   </div>
                 </div>
-                
+
                 <div className="text-center pt-2 border-t">
                   <div className="text-sm text-muted-foreground">个人费用</div>
                   <div className="text-lg font-semibold">
-                    ¥{Math.ceil(Number(playerData.latestMatch.totalFee || 0))}
+                    ¥{Math.round(Number(playerData.latestMatch.totalFee || 0))}
                   </div>
                 </div>
               </CardContent>
@@ -455,8 +455,8 @@ export default function PlayerPage() {
               </CardDescription>
             </div>
             {playerData.attendanceHistory.length > 5 && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowAllMatches(!showAllMatches)}
               >
                 {showAllMatches ? (
@@ -502,15 +502,15 @@ export default function PlayerPage() {
                       </TableCell>
                       <TableCell className="font-medium">{match.opponent}</TableCell>
                       <TableCell>{Number(match.totalTime || 0).toFixed(1)} 个时间单位</TableCell>
-                      <TableCell>¥{Math.ceil(Number(match.totalFee || 0))}</TableCell>
+                      <TableCell>¥{Math.round(Number(match.totalFee || 0))}</TableCell>
                       <TableCell>
                         <Badge variant={match.isLateArrival ? "destructive" : "default"}>
                           {match.isLateArrival ? "迟到" : "准时到场"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleViewMatch(match.matchId)}
                         >
@@ -523,7 +523,7 @@ export default function PlayerPage() {
               </TableBody>
             </Table>
           </div>
-          
+
           {/* Pagination for all matches */}
           {showAllMatches && totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
@@ -532,8 +532,8 @@ export default function PlayerPage() {
                 共 {playerData.attendanceHistory.length} 条记录
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   disabled={matchPage === 1}
                   onClick={() => setMatchPage(matchPage - 1)}
@@ -543,8 +543,8 @@ export default function PlayerPage() {
                 <div className="text-sm">
                   {matchPage} / {totalPages}
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   disabled={matchPage === totalPages}
                   onClick={() => setMatchPage(matchPage + 1)}
