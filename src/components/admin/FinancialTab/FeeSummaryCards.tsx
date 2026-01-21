@@ -69,7 +69,7 @@ export function FeeSummaryCards({ data, match }: FeeSummaryCardsProps) {
             <div className="text-2xl font-bold">
               {isProfitable ? '+' : ''}¥{Math.abs(data.profitLoss)}
             </div>
-            <Badge 
+            <Badge
               variant={isProfitable ? "default" : isBreakEven ? "secondary" : "destructive"}
               className="text-xs"
             >
@@ -111,11 +111,11 @@ export function FeeSummaryCards({ data, match }: FeeSummaryCardsProps) {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">场地费:</span>
-                  <span>¥{Math.ceil(Number(match.fieldFeeTotal || 0))}</span>
+                  <span>¥{Math.round(Number(match.fieldFeeTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">杂费:</span>
-                  <span>¥{Math.ceil(Number(match.waterFeeTotal || 0))}</span>
+                  <span>¥{Math.round(Number(match.waterFeeTotal || 0))}</span>
                 </div>
                 <div className="flex justify-between font-medium border-t pt-1">
                   <span>支出总计:</span>
@@ -135,16 +135,15 @@ export function FeeSummaryCards({ data, match }: FeeSummaryCardsProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">人均负担:</span>
                   <span>
-                    ¥{data.totalParticipants > 0 ? Math.ceil(data.totalFieldCosts / data.totalParticipants) : 0}
+                    ¥{data.totalParticipants > 0 ? Math.round(data.totalFieldCosts / data.totalParticipants) : 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">人均收费:</span>
                   <span>¥{data.averageFeePerPlayer}</span>
                 </div>
-                <div className={`flex justify-between font-medium border-t pt-1 ${
-                  isProfitable ? 'text-green-700' : isBreakEven ? 'text-gray-700' : 'text-red-700'
-                }`}>
+                <div className={`flex justify-between font-medium border-t pt-1 ${isProfitable ? 'text-green-700' : isBreakEven ? 'text-gray-700' : 'text-red-700'
+                  }`}>
                   <span>净结果:</span>
                   <span>
                     {isProfitable ? '+' : ''}¥{data.profitLoss}

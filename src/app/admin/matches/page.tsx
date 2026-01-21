@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  Calendar, 
-  Clock, 
-  Users, 
-  Target, 
-  Award, 
-  DollarSign, 
-  Plus, 
+import {
+  Calendar,
+  Clock,
+  Users,
+  Target,
+  Award,
+  DollarSign,
+  Plus,
   ArrowLeft,
   Trophy,
   Medal,
@@ -69,6 +69,7 @@ export default function MatchesAdminPage() {
   const [showExcelImport, setShowExcelImport] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [matchToDelete, setMatchToDelete] = useState<{ id: string; team: string } | null>(null)
+  const [globalSettings, setGlobalSettings] = useState<{ key: string; value: string }[]>([])
   const [formData, setFormData] = useState({
     matchDate: '',
     matchTime: '',
@@ -81,7 +82,7 @@ export default function MatchesAdminPage() {
   })
 
   const formDataRef = useRef(formData)
-  
+
   const router = useRouter()
 
   const applyMatchCreatePatch = useCallback((patch: PatchEnvelope) => {
@@ -109,11 +110,11 @@ export default function MatchesAdminPage() {
               : prev.opponentScore,
         fieldFeeTotal:
           change.data.fieldFeeTotal !== undefined
-            ? String(Math.ceil(change.data.fieldFeeTotal))
+            ? String(Math.round(change.data.fieldFeeTotal))
             : prev.fieldFeeTotal,
         waterFeeTotal:
           change.data.waterFeeTotal !== undefined
-            ? String(Math.ceil(change.data.waterFeeTotal))
+            ? String(Math.round(change.data.waterFeeTotal))
             : prev.waterFeeTotal,
         notes:
           change.data.notes === null
@@ -128,6 +129,7 @@ export default function MatchesAdminPage() {
   useEffect(() => {
     fetchMatches()
     fetchUsers()
+    fetchSettings()
   }, [])
 
   useEffect(() => {
@@ -145,6 +147,29 @@ export default function MatchesAdminPage() {
       }
     } catch (error) {
       console.error('Error fetching matches:', error)
+    }
+  }
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings')
+      const data = await response.json()
+      if (data.success) {
+        const settings = data.data as { key: string; value: string }[]
+        setGlobalSettings(settings)
+        const fieldFee = settings.find(s => s.key === 'DEFAULT_FIELD_FEE')?.value
+        const waterFee = settings.find(s => s.key === 'DEFAULT_WATER_FEE')?.value
+
+        if (fieldFee || waterFee) {
+          setFormData(prev => ({
+            ...prev,
+            fieldFeeTotal: fieldFee ?? prev.fieldFeeTotal,
+            waterFeeTotal: waterFee ?? prev.waterFeeTotal
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error)
     }
   }
 
@@ -177,8 +202,8 @@ export default function MatchesAdminPage() {
       opponentTeam: data.opponentTeam,
       ourScore: data.ourScore ? parseInt(data.ourScore) : undefined,
       opponentScore: data.opponentScore ? parseInt(data.opponentScore) : undefined,
-      fieldFeeTotal: Math.ceil(parseFloat(data.fieldFeeTotal)),
-      waterFeeTotal: Math.ceil(parseFloat(data.waterFeeTotal)),
+      fieldFeeTotal: Math.round(parseFloat(data.fieldFeeTotal)),
+      waterFeeTotal: Math.round(parseFloat(data.waterFeeTotal)),
       createdBy: adminUser.id
     }
 
@@ -197,17 +222,20 @@ export default function MatchesAdminPage() {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         await fetchMatches() // Refresh the list
+        const fieldFee = globalSettings.find(s => s.key === 'DEFAULT_FIELD_FEE')?.value || '1100'
+        const waterFee = globalSettings.find(s => s.key === 'DEFAULT_WATER_FEE')?.value || '50'
+
         setFormData({
           matchDate: '',
           matchTime: '',
           opponentTeam: '',
           ourScore: '',
           opponentScore: '',
-          fieldFeeTotal: '1100',
-          waterFeeTotal: '50',
+          fieldFeeTotal: fieldFee,
+          waterFeeTotal: waterFee,
           notes: ''
         })
         setShowCreateForm(false)
@@ -254,7 +282,7 @@ export default function MatchesAdminPage() {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         await fetchMatches() // Refresh the list
         toast.success('比赛删除成功')
@@ -278,7 +306,7 @@ export default function MatchesAdminPage() {
   // Auto-calculate match result based on scores
   const getMatchResult = (ourScore?: number, opponentScore?: number): 'WIN' | 'LOSE' | 'DRAW' | undefined => {
     if (ourScore === undefined || opponentScore === undefined) return undefined
-    
+
     if (ourScore > opponentScore) return 'WIN'
     if (ourScore < opponentScore) return 'LOSE'
     return 'DRAW'
@@ -325,7 +353,7 @@ export default function MatchesAdminPage() {
       />
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <Button 
+          <Button
             variant="ghost"
             onClick={() => router.push('/admin')}
             className="gap-2"
@@ -336,7 +364,7 @@ export default function MatchesAdminPage() {
           <h1>比赛管理</h1>
         </div>
         <div className="flex gap-2">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => {
               setShowExcelImport(!showExcelImport)
@@ -348,7 +376,7 @@ export default function MatchesAdminPage() {
             <Upload size={16} />
             Excel导入
           </Button>
-          <Button 
+          <Button
             onClick={() => {
               setShowCreateForm(!showCreateForm)
               // Close excel import if it's open
@@ -363,7 +391,7 @@ export default function MatchesAdminPage() {
       </header>
 
       {/* Excel Import Section */}
-      <ExcelImportSection 
+      <ExcelImportSection
         isOpen={showExcelImport}
         onClose={() => setShowExcelImport(false)}
         onImportSuccess={fetchMatches}
@@ -379,7 +407,7 @@ export default function MatchesAdminPage() {
                 <Input
                   type="date"
                   value={formData.matchDate}
-                  onChange={(e) => setFormData({...formData, matchDate: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, matchDate: e.target.value })}
                   required
                 />
               </div>
@@ -389,7 +417,7 @@ export default function MatchesAdminPage() {
                 <Input
                   type="time"
                   value={formData.matchTime}
-                  onChange={(e) => setFormData({...formData, matchTime: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, matchTime: e.target.value })}
                 />
               </div>
             </div>
@@ -399,7 +427,7 @@ export default function MatchesAdminPage() {
               <Input
                 type="text"
                 value={formData.opponentTeam}
-                onChange={(e) => setFormData({...formData, opponentTeam: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, opponentTeam: e.target.value })}
                 placeholder="输入对手球队名称"
                 required
               />
@@ -411,7 +439,7 @@ export default function MatchesAdminPage() {
                 <Input
                   type="number"
                   value={formData.ourScore}
-                  onChange={(e) => setFormData({...formData, ourScore: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, ourScore: e.target.value })}
                   min="0"
                   placeholder="比赛结束后填写"
                 />
@@ -422,7 +450,7 @@ export default function MatchesAdminPage() {
                 <Input
                   type="number"
                   value={formData.opponentScore}
-                  onChange={(e) => setFormData({...formData, opponentScore: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, opponentScore: e.target.value })}
                   min="0"
                   placeholder="比赛结束后填写"
                 />
@@ -441,7 +469,7 @@ export default function MatchesAdminPage() {
                     const nextValue = e.target.value
                     setFormData({
                       ...formData,
-                      fieldFeeTotal: nextValue === '' ? '' : String(Math.ceil(Number(nextValue)))
+                      fieldFeeTotal: nextValue === '' ? '' : String(Math.round(Number(nextValue)))
                     })
                   }}
                   required
@@ -458,7 +486,7 @@ export default function MatchesAdminPage() {
                     const nextValue = e.target.value
                     setFormData({
                       ...formData,
-                      waterFeeTotal: nextValue === '' ? '' : String(Math.ceil(Number(nextValue)))
+                      waterFeeTotal: nextValue === '' ? '' : String(Math.round(Number(nextValue)))
                     })
                   }}
                   required
@@ -470,7 +498,7 @@ export default function MatchesAdminPage() {
               <Label>备注</Label>
               <Textarea
                 value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="比赛相关备注信息"
                 rows={3}
               />
@@ -487,7 +515,7 @@ export default function MatchesAdminPage() {
 
       <div className={styles.matchesList}>
         <h2>比赛列表 ({matches.length})</h2>
-        
+
         {matches.length === 0 ? (
           <div className={styles.emptyState}>
             <p>暂无比赛记录</p>
@@ -496,8 +524,8 @@ export default function MatchesAdminPage() {
         ) : (
           <div className={styles.matchesGrid}>
             {matches.map((match) => (
-              <div 
-                key={match.id} 
+              <div
+                key={match.id}
                 className={styles.matchCard}
                 onClick={() => handleMatchClick(match.id)}
               >
@@ -520,7 +548,7 @@ export default function MatchesAdminPage() {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className={styles.matchTeams}>
                   <div className={styles.teamScore}>
                     <span className={styles.teamName}>流星</span>
@@ -537,8 +565,8 @@ export default function MatchesAdminPage() {
                   const result = getMatchResult(match.ourScore, match.opponentScore)
                   return result && (
                     <div className={`${styles.matchResult} ${styles[result.toLowerCase()]}`}>
-                      {result === 'WIN' ? '胜利' : 
-                       result === 'LOSE' ? '失败' : '平局'}
+                      {result === 'WIN' ? '胜利' :
+                        result === 'LOSE' ? '失败' : '平局'}
                     </div>
                   )
                 })()}
@@ -561,7 +589,7 @@ export default function MatchesAdminPage() {
                   </div>
                   <div className={styles.stat}>
                     <DollarSign size={16} className={styles.statIcon} />
-                    <span className={styles.statValue}>{Math.ceil(match.totalCalculatedFees)}</span>
+                    <span className={styles.statValue}>                    ¥{Math.round(match.totalCalculatedFees)}</span>
                     <span className={styles.statLabel}>总费用</span>
                   </div>
                 </div>

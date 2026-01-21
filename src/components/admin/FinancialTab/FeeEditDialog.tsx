@@ -41,13 +41,13 @@ interface FeeEditDialogProps {
   onReset: (playerId: string) => Promise<void>
 }
 
-export function FeeEditDialog({ 
-  isOpen, 
-  onOpenChange, 
-  player, 
+export function FeeEditDialog({
+  isOpen,
+  onOpenChange,
+  player,
   matchId,
-  onSave, 
-  onReset 
+  onSave,
+  onReset
 }: FeeEditDialogProps) {
   const [formData, setFormData] = useState<FeeEditFormData>({
     fieldFee: 0,
@@ -64,11 +64,11 @@ export function FeeEditDialog({
     if (player) {
       const override = player.overrideFee
       const calculated = player.calculatedFee
-      
+
       setFormData({
-        fieldFee: Math.ceil(override?.fieldFee ?? calculated.fieldFee),
-        videoFee: Math.ceil(override?.videoFee ?? calculated.videoFee),
-        lateFee: Math.ceil(override?.lateFee ?? calculated.lateFee),
+        fieldFee: Math.round(override?.fieldFee ?? calculated.fieldFee),
+        videoFee: Math.round(override?.videoFee ?? calculated.videoFee),
+        lateFee: Math.round(override?.lateFee ?? calculated.lateFee),
         paymentNote: player.paymentNote || ''
       })
       setErrors({})
@@ -180,9 +180,9 @@ export function FeeEditDialog({
   const calculatedTotal = player?.calculatedFee.total || 0
   const overrideTotal = formData.fieldFee + formData.videoFee + formData.lateFee
   const hasChanges = player && (
-    formData.fieldFee !== Math.ceil(player.overrideFee?.fieldFee ?? player.calculatedFee.fieldFee) ||
-    formData.videoFee !== Math.ceil(player.overrideFee?.videoFee ?? player.calculatedFee.videoFee) ||
-    formData.lateFee !== Math.ceil(player.overrideFee?.lateFee ?? player.calculatedFee.lateFee) ||
+    formData.fieldFee !== Math.round(player.overrideFee?.fieldFee ?? player.calculatedFee.fieldFee) ||
+    formData.videoFee !== Math.round(player.overrideFee?.videoFee ?? player.calculatedFee.videoFee) ||
+    formData.lateFee !== Math.round(player.overrideFee?.lateFee ?? player.calculatedFee.lateFee) ||
     formData.paymentNote !== (player.paymentNote || '')
   )
 
@@ -217,25 +217,25 @@ export function FeeEditDialog({
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label className="text-sm text-muted-foreground">场地费:</Label>
-                  <span className="font-mono">¥{Math.ceil(player.calculatedFee.fieldFee)}</span>
+                  <span className="font-mono">¥{Math.round(player.calculatedFee.fieldFee)}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <Label className="text-sm text-muted-foreground">视频费:</Label>
-                  <span className="font-mono">¥{Math.ceil(player.calculatedFee.videoFee)}</span>
+                  <span className="font-mono">¥{Math.round(player.calculatedFee.videoFee)}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <Label className="text-sm text-muted-foreground">迟到罚款:</Label>
-                  <span className="font-mono">¥{Math.ceil(player.calculatedFee.lateFee)}</span>
+                  <span className="font-mono">¥{Math.round(player.calculatedFee.lateFee)}</span>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex justify-between items-center">
                   <Label className="font-medium">计算总计:</Label>
                   <span className="font-mono font-bold text-lg">
-                    ¥{Math.ceil(calculatedTotal)}
+                    ¥{Math.round(calculatedTotal)}
                   </span>
                 </div>
               </div>
@@ -278,9 +278,9 @@ export function FeeEditDialog({
                     step="1"
                     min="0"
                     value={formData.fieldFee}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      fieldFee: Math.ceil(Number(e.target.value) || 0)
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      fieldFee: Math.round(Number(e.target.value) || 0)
                     }))}
                     className={errors.fieldFee ? 'border-red-500' : ''}
                   />
@@ -297,9 +297,9 @@ export function FeeEditDialog({
                     step="1"
                     min="0"
                     value={formData.videoFee}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      videoFee: Math.ceil(Number(e.target.value) || 0)
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      videoFee: Math.round(Number(e.target.value) || 0)
                     }))}
                     className={errors.videoFee ? 'border-red-500' : ''}
                   />
@@ -316,9 +316,9 @@ export function FeeEditDialog({
                     step="1"
                     min="0"
                     value={formData.lateFee}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      lateFee: Math.ceil(Number(e.target.value) || 0)
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      lateFee: Math.round(Number(e.target.value) || 0)
                     }))}
                     className={errors.lateFee ? 'border-red-500' : ''}
                   />
@@ -332,7 +332,7 @@ export function FeeEditDialog({
                 <div className="flex justify-between items-center">
                   <Label className="font-medium">调整后总计:</Label>
                   <span className="font-mono font-bold text-lg">
-                    ¥{Math.ceil(overrideTotal)}
+                    ¥{Math.round(overrideTotal)}
                   </span>
                 </div>
 
@@ -352,9 +352,9 @@ export function FeeEditDialog({
                   id="paymentNote"
                   placeholder="代付人姓名或其他备注信息..."
                   value={formData.paymentNote}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    paymentNote: e.target.value 
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    paymentNote: e.target.value
                   }))}
                   rows={3}
                 />
@@ -368,8 +368,8 @@ export function FeeEditDialog({
             {player.hasOverride && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     disabled={isResetting || isSaving}
                     className="text-red-600 hover:text-red-700"
                   >
@@ -386,7 +386,7 @@ export function FeeEditDialog({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>取消</AlertDialogCancel>
-                    <AlertDialogAction 
+                    <AlertDialogAction
                       onClick={handleReset}
                       className="bg-red-600 hover:bg-red-700"
                     >
@@ -399,14 +399,14 @@ export function FeeEditDialog({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSaving || isResetting}
             >
               取消
             </Button>
-            <Button 
+            <Button
               onClick={handleSave}
               disabled={!hasChanges || isSaving || isResetting}
             >

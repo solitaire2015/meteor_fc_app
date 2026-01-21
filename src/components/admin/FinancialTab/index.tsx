@@ -13,7 +13,7 @@ import { FeeEditDialog } from './FeeEditDialog'
 import { type MatchWithFeeRates, type PlayerFeeDisplay, type FeeSummaryData } from './types'
 import { type Player, type AttendanceGrid } from '@/lib/validations/match'
 
-const roundFee = (value: number) => Math.ceil(value)
+const roundFee = (value: number) => Math.round(value)
 
 interface FinancialTabProps {
   match: MatchWithFeeRates
@@ -71,7 +71,7 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
   ): PlayerFeeDisplay[] => {
     return feeBreakdown.map(breakdown => {
       const player = players.find(p => p.id === breakdown.player.id)
-      
+
       // Extract calculated fees (always from API)
       const calculatedFieldFee = roundFee(Number(breakdown.calculatedFees.fieldFee))
       const calculatedVideoFee = roundFee(Number(breakdown.calculatedFees.videoFee))
@@ -91,7 +91,7 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
       if (breakdown.override) {
         const override = breakdown.override
         hasOverride = true
-        
+
         // If fieldFeeOverride exists with notes (from Excel import), it represents total actual fee
         if (override.fieldFeeOverride != null && override.notes) {
           displayFee = roundFee(Number(override.fieldFeeOverride))
@@ -178,13 +178,13 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
       }))
 
       // Recalculate summary
-      const updatedFees = playerFees.map(p => 
-        p.playerId === playerId 
-          ? { 
-              ...p, 
-              displayFee: overrideData.fieldFee + overrideData.videoFee + overrideData.lateFee,
-              hasOverride: true 
-            }
+      const updatedFees = playerFees.map(p =>
+        p.playerId === playerId
+          ? {
+            ...p,
+            displayFee: overrideData.fieldFee + overrideData.videoFee + overrideData.lateFee,
+            hasOverride: true
+          }
           : p
       )
       setSummaryData(calculateSummaryData(updatedFees, match))
@@ -215,8 +215,8 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
       }))
 
       // Recalculate summary
-      const updatedFees = playerFees.map(p => 
-        p.playerId === playerId 
+      const updatedFees = playerFees.map(p =>
+        p.playerId === playerId
           ? { ...p, displayFee: p.calculatedFee.total, hasOverride: false }
           : p
       )
@@ -306,7 +306,7 @@ export default function FinancialTab({ match, users, attendance }: FinancialTabP
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FeeTable 
+          <FeeTable
             playerFees={playerFees}
             onEditPlayer={handleEditPlayer}
           />

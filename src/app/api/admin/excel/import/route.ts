@@ -12,58 +12,58 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    
+
     if (!file) {
       return NextResponse.json(
         { success: false, error: 'No file provided' },
         { status: 400 }
       )
     }
-    
+
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       return NextResponse.json(
         { success: false, error: 'File must be an Excel file (.xlsx or .xls)' },
         { status: 400 }
       )
     }
-    
+
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer())
-    
+
     // Parse Excel file
     const excelData = parseExcelFile(buffer)
-    
+
     // Get existing users and their short IDs
     const existingUsers = await prisma.user.findMany({
       select: { id: true, name: true, shortId: true }
     })
-    
+
     // Get first admin user for createdBy field
     const adminUser = await prisma.user.findFirst({
       where: { userType: 'ADMIN' },
       select: { id: true }
     })
-    
+
     if (!adminUser) {
       return NextResponse.json({
         success: false,
         error: 'No admin user found. Please create an admin user first.'
       }, { status: 400 })
     }
-    
+
     // Map Excel players to existing users and identify unknown players
     const playerMappings: Array<{
       excelPlayer: ExcelPlayerData
       userId?: string
       isUnknown: boolean
     }> = []
-    
+
     const unmatchedPlayers: string[] = []
-    
+
     for (const excelPlayer of excelData.players) {
       // Try to find existing user by shortId from Excel
       const existingUser = existingUsers.find(u => u.shortId === excelPlayer.shortId)
-      
+
       if (existingUser) {
         playerMappings.push({
           excelPlayer,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         unmatchedPlayers.push(excelPlayer.shortId || excelPlayer.姓名)
       }
     }
-    
+
     // Check if we have any matched players to proceed
     const matchedMappings = playerMappings.filter(p => !p.isUnknown)
     if (matchedMappings.length === 0) {
@@ -92,10 +92,10 @@ export async function POST(request: NextRequest) {
         }
       }, { status: 400 })
     }
-    
+
     // Read global base fee rates before creating match
     const { baseVideoFeeRate, baseLateFeeRate } = await globalSettingsService.getBaseFeeRates()
-    
+
     // Create match record
     const match = await prisma.match.create({
       data: {
@@ -103,10 +103,10 @@ export async function POST(request: NextRequest) {
         opponentTeam: excelData.matchTitle.replace(/^\d+月\d+日VS/, '') || 'Unknown Team',
         ourScore: excelData.ourScore,
         opponentScore: excelData.opponentScore,
-        fieldFeeTotal: Math.ceil(excelData.fieldFeeTotal),
-        waterFeeTotal: Math.ceil(excelData.waterFeeTotal),
-        lateFeeRate: Math.ceil(baseLateFeeRate),
-        videoFeePerUnit: Math.ceil(baseVideoFeeRate),
+        fieldFeeTotal: Math.round(excelData.fieldFeeTotal),
+        waterFeeTotal: Math.round(excelData.waterFeeTotal),
+        lateFeeRate: Math.round(baseLateFeeRate),
+        videoFeePerUnit: Math.round(baseVideoFeeRate),
         notes: JSON.stringify({
           importedFrom: file.name,
           importedAt: new Date().toISOString(),
@@ -129,23 +129,23 @@ export async function POST(request: NextRequest) {
         data: matchPlayerData
       })
     }
-    
+
     // Calculate coefficient for fee calculations
     const coefficient = calculateCoefficient(
-      Math.ceil(Number(excelData.fieldFeeTotal)),
-      Math.ceil(Number(excelData.waterFeeTotal)),
+      Math.round(Number(excelData.fieldFeeTotal)),
+      Math.round(Number(excelData.waterFeeTotal)),
       90 // Fixed total time units
     )
 
     // Create participation records and events using new attendance structure
     const participations = []
     const events = []
-    
+
     for (const mapping of matchedMappings) {
       if (!mapping.userId) continue; // Skip if no userId
-      
+
       const { excelPlayer } = mapping
-      
+
       // Build attendance data in the new format expected by state store
       const attendanceData = {
         attendance: {
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
         lateFeeRate: baseLateFeeRate,
         videoFeeRate: baseVideoFeeRate
       })
-      
+
       // Create participation record (without notes)
       const participation = await prisma.matchParticipation.create({
         data: {
@@ -215,14 +215,14 @@ export async function POST(request: NextRequest) {
           data: {
             matchId: match.id,
             playerId: mapping.userId,
-            fieldFeeOverride: Math.ceil(Number(excelPlayer.实收费用 || 0)), // Use actual fee from Excel as override
+            fieldFeeOverride: Math.round(Number(excelPlayer.实收费用 || 0)), // Use actual fee from Excel as override
             notes: excelPlayer.notes.trim()
           }
         })
       }
-      
+
       participations.push(participation)
-      
+
       // Create goal events
       for (let i = 0; i < excelPlayer.goals; i++) {
         events.push({
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
           createdBy: adminUser.id
         })
       }
-      
+
       // Create assist events
       for (let i = 0; i < excelPlayer.assists; i++) {
         events.push({
@@ -243,14 +243,14 @@ export async function POST(request: NextRequest) {
         })
       }
     }
-    
+
     // Bulk create events
     if (events.length > 0) {
       await prisma.matchEvent.createMany({
         data: events
       })
     }
-    
+
     await invalidateCacheTags([
       CACHE_TAGS.MATCHES,
       CACHE_TAGS.GAMES,
@@ -289,13 +289,13 @@ export async function POST(request: NextRequest) {
         ] : []
       }
     })
-    
+
   } catch (error) {
     console.error('Excel import error:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       },
       { status: 500 }
     )

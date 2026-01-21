@@ -14,8 +14,8 @@ interface MatchInfoTabProps {
   match: MatchInfo
 }
 
-export default function MatchInfoTab({ 
-  match 
+export default function MatchInfoTab({
+  match
 }: MatchInfoTabProps) {
   // Store state
   const isDirty = useIsDirty()
@@ -32,8 +32,8 @@ export default function MatchInfoTab({
     matchTime: source.matchTime ? new Date(source.matchTime).toTimeString().slice(0, 5) : '',
     ourScore: source.ourScore ?? '',
     opponentScore: source.opponentScore ?? '',
-    fieldFeeTotal: Math.ceil(Number(source.fieldFeeTotal)),
-    waterFeeTotal: Math.ceil(Number(source.waterFeeTotal)),
+    fieldFeeTotal: Math.round(Number(source.fieldFeeTotal)),
+    waterFeeTotal: Math.round(Number(source.waterFeeTotal)),
     notes: source.notes || '',
   }), [])
 
@@ -47,18 +47,18 @@ export default function MatchInfoTab({
   const handleInputChange = useCallback((field: string, value: string | number) => {
     let processedValue = value
     let displayValue = value
-    
+
     // Convert fee fields to numbers
     if (field === 'fieldFeeTotal' || field === 'waterFeeTotal') {
       const numValue = value === '' ? 0 : Number(value)
       if (numValue < 0) {
         return // Don't allow negative values
       }
-      const roundedValue = Math.ceil(numValue)
+      const roundedValue = Math.round(numValue)
       processedValue = roundedValue
       displayValue = roundedValue
     }
-    
+
     // Handle score fields - convert to number or null
     if (field === 'ourScore' || field === 'opponentScore') {
       if (value === '' || value === null || value === undefined) {
@@ -71,14 +71,14 @@ export default function MatchInfoTab({
         processedValue = numValue
       }
     }
-    
+
     // Handle date/time fields - convert to proper datetime strings
     if (field === 'matchDate') {
       // Convert date to datetime string for matchDate field
       const dateStr = value as string
       // matchDate should always be ISO datetime - use start of day
       processedValue = new Date(`${dateStr}T00:00:00.000Z`).toISOString()
-      
+
       // Also update matchTime if it exists, to keep them in sync
       const timeStr = formData.matchTime
       if (timeStr) {
@@ -90,12 +90,12 @@ export default function MatchInfoTab({
         return // Skip the regular update below since we already updated the store
       }
     }
-    
+
     if (field === 'matchTime') {
       // Convert time to datetime string (combine with existing date)
       const timeStr = value as string
       const dateStr = formData.matchDate
-      
+
       if (timeStr === '') {
         // Empty time should be null
         processedValue = null
@@ -107,7 +107,7 @@ export default function MatchInfoTab({
         processedValue = timeStr
       }
     }
-    
+
     setFormData(prev => ({
       ...prev,
       [field]: displayValue
@@ -132,9 +132,9 @@ export default function MatchInfoTab({
   const getMatchResult = () => {
     const our = formData.ourScore === '' ? null : Number(formData.ourScore)
     const opponent = formData.opponentScore === '' ? null : Number(formData.opponentScore)
-    
+
     if (our === null || opponent === null) return null
-    
+
     if (our > opponent) return { text: '胜利', className: 'win' }
     if (our < opponent) return { text: '失败', className: 'lose' }
     return { text: '平局', className: 'draw' }
@@ -146,7 +146,7 @@ export default function MatchInfoTab({
     <div className={styles.container}>
       <div className={styles.header}>
         <h3>比赛基本信息</h3>
-        <Button 
+        <Button
           onClick={handleSave}
           disabled={isLoading.saving || !isDirty.info}
           className="flex items-center gap-2"
@@ -242,26 +242,26 @@ export default function MatchInfoTab({
                 <DollarSign size={16} />
                 场地费用 (元)
               </Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={formData.fieldFeeTotal}
-                  onChange={(e) => handleInputChange('fieldFeeTotal', e.target.value)}
-                />
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={formData.fieldFeeTotal}
+                onChange={(e) => handleInputChange('fieldFeeTotal', e.target.value)}
+              />
             </div>
             <div className={styles.field}>
               <Label className="flex items-center gap-2">
                 <DollarSign size={16} />
                 水费等杂费 (元)
               </Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={formData.waterFeeTotal}
-                  onChange={(e) => handleInputChange('waterFeeTotal', e.target.value)}
-                />
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={formData.waterFeeTotal}
+                onChange={(e) => handleInputChange('waterFeeTotal', e.target.value)}
+              />
             </div>
           </div>
         </div>
