@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       limit: searchParams.get('limit') || undefined
     })
 
-    const cacheKey = buildCacheKey(new URL(request.url))
+    const cacheKey = buildCacheKey(new URL(request.url), 'v2')
     const cached = await getCachedJson<ApiResponse>(cacheKey)
     if (cached) {
       return NextResponse.json(cached)
@@ -50,13 +50,13 @@ export async function GET(request: Request) {
       }
     }
 
+    const eventTypes = ['GOAL', 'PENALTY_GOAL', 'ASSIST'] as const
+
     // Get all events for the period with player info (exclude deleted users)
     const events = await prisma.matchEvent.findMany({
       where: {
         match: dateFilter,
-        eventType: query.type === 'goals' 
-          ? { in: ['GOAL', 'PENALTY_GOAL'] }
-          : 'ASSIST',
+        eventType: { in: eventTypes },
         player: {
           deletedAt: null // Only include events from active players
         }
@@ -114,16 +114,70 @@ export async function GET(request: Request) {
         playerStats[playerId].assists++
       }
 
-      playerStats[playerId].matches.add(event.matchId)
-      
       if (!playerStats[playerId].lastMatchDate || 
           event.match.matchDate > playerStats[playerId].lastMatchDate) {
         playerStats[playerId].lastMatchDate = event.match.matchDate
       }
     })
 
+    const playerIds = Object.keys(playerStats)
+    if (playerIds.length === 0) {
+      const payload: ApiResponse = {
+        success: true,
+        data: {
+          type: query.type,
+          period: query.month ? `${targetYear}-${query.month.padStart(2, '0')}` : targetYear.toString(),
+          players: [],
+          totalPlayers: 0
+        }
+      }
+
+      await setCachedJson({
+        key: cacheKey,
+        value: payload,
+        tags: [CACHE_TAGS.LEADERBOARD]
+      })
+
+      return NextResponse.json(payload)
+    }
+
+    // Get participation data for appearances and last match date
+    const participations = await prisma.matchParticipation.findMany({
+      where: {
+        userId: { in: playerIds },
+        match: dateFilter,
+        user: {
+          deletedAt: null
+        }
+      },
+      include: {
+        match: {
+          select: {
+            id: true,
+            matchDate: true
+          }
+        }
+      },
+      orderBy: {
+        match: {
+          matchDate: 'desc'
+        }
+      }
+    })
+
+    participations.forEach(participation => {
+      const stats = playerStats[participation.userId]
+      if (!stats) return
+
+      stats.matches.add(participation.matchId)
+      if (!stats.lastMatchDate || participation.match.matchDate > stats.lastMatchDate) {
+        stats.lastMatchDate = participation.match.matchDate
+      }
+    })
+
     // Convert to array and sort
     const sortedPlayers = Object.values(playerStats)
+      .filter(player => query.type === 'goals' ? player.goals > 0 : player.assists > 0)
       .map((player: LeaderboardPlayerStats) => ({
         ...player,
         matchesPlayed: player.matches.size,
