@@ -54,9 +54,9 @@ export function HeaderNavigation() {
           <Image
             src="/meteor_fc.png"
             alt="Meteor FC"
-            width={32}
+            width={27}
             height={32}
-            className="h-8 w-8"
+            className="h-8 w-auto"
           />
           <span className="hidden font-bold sm:inline-block">
             Meteor FC
@@ -71,11 +71,10 @@ export function HeaderNavigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center space-x-2 transition-colors hover:text-foreground/80 ${
-                  isActivePage(item.href)
+                className={`flex items-center space-x-2 transition-colors hover:text-foreground/80 ${isActivePage(item.href)
                     ? "text-foreground"
                     : "text-foreground/60"
-                }`}
+                  }`}
               >
                 <Icon className="h-4 w-4" />
                 <span>{item.name}</span>
@@ -116,9 +115,9 @@ export function HeaderNavigation() {
                   <Image
                     src="/meteor_fc.png"
                     alt="Meteor FC"
-                    width={24}
+                    width={20}
                     height={24}
-                    className="mr-2 h-6 w-6"
+                    className="mr-2 h-6 w-auto"
                   />
                   <span className="font-bold">Meteor FC</span>
                 </Link>
@@ -132,11 +131,10 @@ export function HeaderNavigation() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center space-x-3 text-sm font-medium transition-colors hover:text-foreground/80 ${
-                          isActivePage(item.href)
+                        className={`flex items-center space-x-3 text-sm font-medium transition-colors hover:text-foreground/80 ${isActivePage(item.href)
                             ? "text-foreground"
                             : "text-foreground/60"
-                        }`}
+                          }`}
                       >
                         <Icon className="h-5 w-5" />
                         <span>{item.name}</span>

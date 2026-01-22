@@ -91,8 +91,8 @@ interface HomeProps {
   monthlyStatsList?: MonthlyStats[];
 }
 
-export default function Home({ 
-  title = "流星足球俱乐部", 
+export default function Home({
+  title = "流星足球俱乐部",
   subtitle = "METEOR FC",
   games: initialGames = [],
   monthlyStatsList: initialMonthlyStatsList = []
@@ -105,7 +105,7 @@ export default function Home({
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null)
   const [showAllGames, setShowAllGames] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  
+
   const GAMES_PER_PAGE = 5
   const initialDisplayCount = 3
 
@@ -134,14 +134,14 @@ export default function Home({
     try {
       const response = await fetch('/api/games')
       const data: APIResponse<MatchData[]> = await response.json()
-      
+
       if (data.success) {
         const transformedGames = data.data.map(match => ({
           id: match.id,
           date: match.matchDate,
           opponent: match.opponentTeam,
           result: match.matchResult || '',
-          status: (match.ourScore !== null && match.opponentScore !== null) ? "已结束" : "即将开始" as const,
+          status: (match.ourScore !== null && match.opponentScore !== null) ? "已结束" as const : "即将开始" as const,
           ourScore: match.ourScore,
           opponentScore: match.opponentScore,
           matchDate: match.matchDate
@@ -161,10 +161,10 @@ export default function Home({
       if (statsType === 'monthly') {
         url += `&month=${selectedMonth}`
       }
-      
+
       const response = await fetch(url)
       const data: APIResponse<TeamStats> = await response.json()
-      
+
       if (data.success) {
         setTeamStats(data.data)
       }
@@ -187,7 +187,7 @@ export default function Home({
     if (!showAllGames) {
       return games.slice(0, initialDisplayCount)
     }
-    
+
     const startIndex = (currentPage - 1) * GAMES_PER_PAGE
     const endIndex = startIndex + GAMES_PER_PAGE
     return games.slice(startIndex, endIndex)
@@ -222,10 +222,10 @@ export default function Home({
       <div className="relative z-10 p-6 space-y-6">
         {/* Header */}
         <header className="text-center space-y-2">
-          <img 
-            src="/meteor_fc.png" 
-            alt="METEOR CLUB Logo" 
-            className="h-20 w-20 mx-auto mb-4 rounded-[15px] object-contain border-2 border-white/30 shadow-lg bg-white/10 p-1"
+          <img
+            src="/meteor_fc.png"
+            alt="METEOR CLUB Logo"
+            className="h-20 mx-auto mb-4 rounded-[15px] object-contain border-2 border-white/30 shadow-lg bg-white/10 p-1"
           />
           <h1 className="text-2xl font-bold text-white">{title}</h1>
           <p className="text-white/75 font-medium">{subtitle}</p>
@@ -278,22 +278,21 @@ export default function Home({
                           </div>
                         )}
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        game.status === "已结束" 
-                          ? "bg-green-500/20 text-green-100 border border-green-400/30"
-                          : "bg-orange-500/20 text-orange-100 border border-orange-400/30"
-                      }`}>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${game.status === "已结束"
+                        ? "bg-green-500/20 text-green-100 border border-green-400/30"
+                        : "bg-orange-500/20 text-orange-100 border border-orange-400/30"
+                        }`}>
                         {game.status}
                       </div>
                     </div>
                   </div>
                 </Link>
               ))}
-              
+
               {/* Show more/less controls */}
               {!showAllGames && games.length > initialDisplayCount && (
                 <div className="text-center pt-2">
-                  <button 
+                  <button
                     onClick={handleShowMoreGames}
                     className="text-white/75 hover:text-white text-sm font-medium transition-colors"
                   >
@@ -301,45 +300,43 @@ export default function Home({
                   </button>
                 </div>
               )}
-              
+
               {showAllGames && (
                 <div className="space-y-3">
                   {/* Pagination controls */}
                   {getTotalPages() > 1 && (
                     <div className="flex items-center justify-between text-sm">
-                      <button 
+                      <button
                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
-                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${
-                          currentPage === 1 
-                            ? 'text-white/50 cursor-not-allowed' 
-                            : 'text-white/75 hover:text-white hover:bg-white/10'
-                        }`}
+                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === 1
+                          ? 'text-white/50 cursor-not-allowed'
+                          : 'text-white/75 hover:text-white hover:bg-white/10'
+                          }`}
                       >
                         上一页
                       </button>
-                      
+
                       <span className="text-white/75">
                         第 {currentPage} 页，共 {getTotalPages()} 页
                       </span>
-                      
-                      <button 
+
+                      <button
                         onClick={() => setCurrentPage(Math.min(getTotalPages(), currentPage + 1))}
                         disabled={currentPage === getTotalPages()}
-                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${
-                          currentPage === getTotalPages() 
-                            ? 'text-white/50 cursor-not-allowed' 
-                            : 'text-white/75 hover:text-white hover:bg-white/10'
-                        }`}
+                        className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === getTotalPages()
+                          ? 'text-white/50 cursor-not-allowed'
+                          : 'text-white/75 hover:text-white hover:bg-white/10'
+                          }`}
                       >
                         下一页
                       </button>
                     </div>
                   )}
-                  
+
                   {/* Show less button */}
                   <div className="text-center pt-2">
-                    <button 
+                    <button
                       onClick={handleShowLessGames}
                       className="text-white/75 hover:text-white text-sm font-medium transition-colors"
                     >
@@ -361,21 +358,19 @@ export default function Home({
               <div className="flex gap-2">
                 <button
                   onClick={() => setStatsType('monthly')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    statsType === 'monthly'
-                      ? 'bg-white/20 text-white'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${statsType === 'monthly'
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/75 hover:text-white hover:bg-white/10'
+                    }`}
                 >
                   月度
                 </button>
                 <button
                   onClick={() => setStatsType('yearly')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    statsType === 'yearly'
-                      ? 'bg-white/20 text-white'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${statsType === 'yearly'
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/75 hover:text-white hover:bg-white/10'
+                    }`}
                 >
                   年度
                 </button>
@@ -398,7 +393,7 @@ export default function Home({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {statsType === 'monthly' && (
                 <div className="flex-1">
                   <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
