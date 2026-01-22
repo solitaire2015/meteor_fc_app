@@ -12,11 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPositionColor, getPositionLabel } from "@/lib/utils/position";
 import { Position } from "@prisma/client";
-import { 
-  ArrowLeft, 
-  Trophy, 
-  Target, 
-  Medal, 
+import {
+  ArrowLeft,
+  Trophy,
+  Target,
+  Medal,
   Award,
   Crown,
   Calendar,
@@ -62,7 +62,7 @@ export default function Leaderboard() {
   const [showAllTime, setShowAllTime] = useState(false);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Year selector state
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -82,7 +82,7 @@ export default function Leaderboard() {
       setLoading(true);
       const response = await fetch(`/api/leaderboard?type=${type}&year=${selectedYear}`);
       const data: ApiResponse = await response.json();
-      
+
       if (data.success) {
         setPlayers(data.data.players);
       } else {
@@ -102,7 +102,7 @@ export default function Leaderboard() {
       setAllTimeLoading(true);
       const response = await fetch('/api/players?public=true');
       const data = await response.json();
-      
+
       if (data.success) {
         // Sort by the current active stat for all-time view
         const sortedPlayers = data.data
@@ -121,7 +121,7 @@ export default function Leaderboard() {
             ...player,
             rank: index + 1
           }));
-        
+
         setAllTimePlayers(sortedPlayers);
       }
     } catch (error) {
@@ -131,8 +131,12 @@ export default function Leaderboard() {
     }
   };
 
-  const handlePlayerClick = (playerId: string) => {
-    router.push(`/player/${playerId}`);
+  const handlePlayerClick = (player: Player) => {
+    if ((player as any).playerStatus === 'TRIAL') {
+      toast.error('试训球员信息暂时不可见');
+      return;
+    }
+    router.push(`/player/${player.id}`);
   };
 
   const handleYearChange = (year: string) => {
@@ -167,12 +171,12 @@ export default function Leaderboard() {
 
   const currentPlayers = showAllTime ? allTimePlayers : players;
   const isLoading = showAllTime ? allTimeLoading : loading;
-  
+
   const podiumPlayers = currentPlayers.slice(0, PODIUM_COUNT);
-  const listPlayers = showAllPlayers 
+  const listPlayers = showAllPlayers
     ? currentPlayers.slice(PODIUM_COUNT)
     : currentPlayers.slice(PODIUM_COUNT, PODIUM_COUNT + 10);
-    
+
   const totalPages = Math.ceil((currentPlayers.length - PODIUM_COUNT) / ITEMS_PER_PAGE);
   const paginatedPlayers = showAllPlayers
     ? currentPlayers.slice(PODIUM_COUNT + (currentPage - 1) * ITEMS_PER_PAGE, PODIUM_COUNT + currentPage * ITEMS_PER_PAGE)
@@ -200,16 +204,16 @@ export default function Leaderboard() {
             返回主页
           </Link>
         </Button>
-        
+
         <div className="flex items-center gap-4">
-          <Button 
+          <Button
             variant={showAllTime ? "default" : "outline"}
             onClick={() => setShowAllTime(!showAllTime)}
           >
             <Clock className="mr-2 h-4 w-4" />
             {showAllTime ? "显示本赛季" : "历史统计"}
           </Button>
-          
+
           {!showAllTime && (
             <Select value={selectedYear.toString()} onValueChange={handleYearChange}>
               <SelectTrigger className="w-32">
@@ -274,19 +278,19 @@ export default function Leaderboard() {
                         <div
                           key={player.id}
                           className="text-center space-y-4 p-6 rounded-lg border cursor-pointer hover:shadow-lg transition-shadow"
-                          onClick={() => handlePlayerClick(player.id)}
+                          onClick={() => handlePlayerClick(player)}
                         >
                           <div className="flex justify-center">
                             {getRankIcon(player.rank)}
                           </div>
-                          
+
                           <Avatar className="h-20 w-20 mx-auto">
                             <AvatarImage src={player.avatarUrl || ""} />
                             <AvatarFallback className="text-lg">
                               {player.abbreviation}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div>
                             <h3 className="text-xl font-bold">{player.name}</h3>
                             {player.position && (
@@ -295,7 +299,7 @@ export default function Leaderboard() {
                               </Badge>
                             )}
                           </div>
-                          
+
                           <div className="space-y-2">
                             <div className="text-3xl font-bold text-primary">
                               {getCurrentStat(player)}
@@ -321,14 +325,14 @@ export default function Leaderboard() {
                     <div>
                       <CardTitle>完整排行榜</CardTitle>
                       <CardDescription>
-                        {showAllTime ? "历史" : `${selectedYear}年`}{getStatLabel()}榜单 
+                        {showAllTime ? "历史" : `${selectedYear}年`}{getStatLabel()}榜单
                         ({currentPlayers.length} 名球员)
                       </CardDescription>
                     </div>
-                    
+
                     {currentPlayers.length > PODIUM_COUNT + 10 && (
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => setShowAllPlayers(!showAllPlayers)}
                       >
                         {showAllPlayers ? (
@@ -366,14 +370,14 @@ export default function Leaderboard() {
                           </TableRow>
                         ) : (
                           paginatedPlayers.map((player) => (
-                            <TableRow 
-                              key={player.id} 
+                            <TableRow
+                              key={player.id}
                               className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => handlePlayerClick(player.id)}
+                              onClick={() => handlePlayerClick(player)}
                             >
                               <TableCell>
-                                <Badge 
-                                  variant="outline" 
+                                <Badge
+                                  variant="outline"
                                   className={getRankBadgeColor(player.rank)}
                                 >
                                   {player.rank}
@@ -430,8 +434,8 @@ export default function Leaderboard() {
                         共 {currentPlayers.length - PODIUM_COUNT} 条记录
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           disabled={currentPage === 1}
                           onClick={() => setCurrentPage(currentPage - 1)}
@@ -441,8 +445,8 @@ export default function Leaderboard() {
                         <div className="text-sm">
                           {currentPage} / {totalPages}
                         </div>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           disabled={currentPage === totalPages}
                           onClick={() => setCurrentPage(currentPage + 1)}

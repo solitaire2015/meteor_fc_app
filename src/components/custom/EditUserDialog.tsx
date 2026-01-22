@@ -19,6 +19,7 @@ interface User {
   phone: string | null;
   userType: 'ADMIN' | 'PLAYER';
   accountStatus: 'GHOST' | 'CLAIMED';
+  playerStatus: 'REGULAR' | 'TRIAL' | 'VACATION';
   jerseyNumber: number | null;
   position: Position | null;
   dominantFoot: 'LEFT' | 'RIGHT' | 'BOTH' | null;
@@ -39,6 +40,7 @@ interface FormData {
   phone: string;
   userType: 'ADMIN' | 'PLAYER';
   accountStatus: 'GHOST' | 'CLAIMED';
+  playerStatus: 'REGULAR' | 'TRIAL' | 'VACATION';
   jerseyNumber: string;
   position: Position | '';
   dominantFoot: 'LEFT' | 'RIGHT' | 'BOTH' | 'NONE';
@@ -58,6 +60,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
     phone: '',
     userType: 'PLAYER',
     accountStatus: 'GHOST',
+    playerStatus: 'REGULAR',
     jerseyNumber: '',
     position: '',
     dominantFoot: 'NONE',
@@ -76,6 +79,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
         phone: user.phone || '',
         userType: user.userType,
         accountStatus: user.accountStatus,
+        playerStatus: user.playerStatus,
         jerseyNumber: user.jerseyNumber ? user.jerseyNumber.toString() : '',
         position: user.position || '',
         dominantFoot: user.dominantFoot || 'NONE',
@@ -87,9 +91,9 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    
+
     setLoading(true);
-    
+
     const updateData = {
       name: formData.name,
       shortId: formData.shortId || undefined,
@@ -97,6 +101,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
       phone: formData.phone || undefined,
       userType: formData.userType,
       accountStatus: formData.accountStatus,
+      playerStatus: formData.playerStatus,
       jerseyNumber: formData.jerseyNumber ? parseInt(formData.jerseyNumber) : undefined,
       position: formData.position || undefined,
       dominantFoot: formData.dominantFoot === 'NONE' ? undefined : formData.dominantFoot,
@@ -111,7 +116,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success('用户信息更新成功');
         onSuccess();
@@ -137,12 +142,12 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
             修改 {user.name} 的详细信息
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">基本信息</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">姓名 *</Label>
@@ -153,7 +158,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="shortId">短ID</Label>
                 <Input
@@ -176,7 +181,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="phone">手机号</Label>
                 <Input
@@ -191,7 +196,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
           {/* Account Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">账户信息</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>用户类型</Label>
@@ -205,7 +210,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>账户状态</Label>
                 <Select value={formData.accountStatus} onValueChange={(value: 'GHOST' | 'CLAIMED') => setFormData({ ...formData, accountStatus: value })}>
@@ -219,12 +224,28 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
                 </Select>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>球员身份</Label>
+                <Select value={formData.playerStatus} onValueChange={(value: 'REGULAR' | 'TRIAL' | 'VACATION') => setFormData({ ...formData, playerStatus: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="REGULAR">正式球员</SelectItem>
+                    <SelectItem value="TRIAL">试训球员</SelectItem>
+                    <SelectItem value="VACATION">长假球员</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {/* Football Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">足球信息</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="jerseyNumber">球衣号码</Label>
@@ -237,7 +258,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
                   max="99"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label>惯用脚</Label>
                 <Select value={formData.dominantFoot} onValueChange={(value: 'LEFT' | 'RIGHT' | 'BOTH' | 'NONE') => setFormData({ ...formData, dominantFoot: value })}>
@@ -263,7 +284,7 @@ export const EditUserDialog: React.FC<EditUserDialogProps> = ({
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">个人信息</h3>
-            
+
             <div className="space-y-2">
               <Label htmlFor="introduction">个人简介</Label>
               <Textarea
