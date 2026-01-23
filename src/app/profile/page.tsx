@@ -13,7 +13,7 @@ import AvatarUpload from "@/components/custom/AvatarUpload";
 import { getPositionColor, getPositionLabel } from "@/lib/utils/position";
 import { Position } from "@prisma/client";
 import { User, Mail, Phone, Trophy, Calendar, Save, Key } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface UserProfile {
   id: string;
