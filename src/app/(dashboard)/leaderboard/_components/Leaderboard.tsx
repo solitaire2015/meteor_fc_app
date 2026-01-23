@@ -32,7 +32,8 @@ interface Player {
   name: string;
   goals: number;
   assists: number;
-  appearances: number;
+  appearances?: number;
+  matchesPlayed?: number;
   position?: Position;
   avatarUrl?: string;
   abbreviation: string;
@@ -84,7 +85,11 @@ export default function Leaderboard() {
       const data: ApiResponse = await response.json();
 
       if (data.success) {
-        setPlayers(data.data.players);
+        const normalizedPlayers = data.data.players.map((player) => ({
+          ...player,
+          appearances: player.appearances ?? player.matchesPlayed ?? 0
+        }));
+        setPlayers(normalizedPlayers);
       } else {
         toast.error('获取排行榜数据失败');
         console.error('Failed to fetch leaderboard:', data.error);
@@ -188,6 +193,10 @@ export default function Leaderboard() {
 
   const getStatLabel = () => {
     return activeTab === 'goals' ? '进球' : '助攻';
+  };
+
+  const getAppearances = (player: Player) => {
+    return player.appearances ?? player.matchesPlayed ?? 0;
   };
 
   return (
@@ -308,7 +317,7 @@ export default function Leaderboard() {
                               {getStatLabel()}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {player.appearances} 场出场
+                              {getAppearances(player)} 场出场
                             </div>
                           </div>
                         </div>
@@ -411,7 +420,7 @@ export default function Leaderboard() {
                                 </div>
                               </TableCell>
                               <TableCell className="text-center">
-                                {player.appearances || 0}
+                                {getAppearances(player)}
                               </TableCell>
                               <TableCell className="text-center">
                                 {player.goals || 0}

@@ -10,7 +10,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validate input
-    const validatedData = adminSetPasswordSchema.parse(body);
+    const validation = adminSetPasswordSchema.safeParse(body);
+    if (!validation.success) {
+      const message = validation.error.issues[0]?.message || "Invalid password";
+      return NextResponse.json(
+        { error: message },
+        { status: 400 }
+      );
+    }
+    const validatedData = validation.data;
     
     // Find user
     const user = await prisma.user.findUnique({
