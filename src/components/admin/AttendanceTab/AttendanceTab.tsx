@@ -6,18 +6,18 @@ import { Button } from '@/components/ui/button'
 import EnhancedAttendanceGrid from '@/components/custom/EnhancedAttendanceGrid'
 import EventSummary from '@/components/custom/EventSummary'
 import SimplePlayerSelector from '@/components/custom/SimplePlayerSelector'
-import { 
-  useUpdateAttendance, 
+import {
+  useUpdateAttendance,
   useSaveAttendance,
   useGetAttendanceStats,
-  useAttendanceData, 
+  useAttendanceData,
   useSelectedPlayers,
   useAvailablePlayers,
   useSetSelectedPlayers,
   useSaveSelectedPlayers,
   useLoadPlayers,
-  useIsDirty, 
-  useIsLoading 
+  useIsDirty,
+  useIsLoading
 } from '@/stores/useMatchStore'
 import { type MatchInfo, type Player, type AttendanceGrid as AttendanceGridType } from '@/lib/validations/match'
 import styles from './AttendanceTab.module.css'
@@ -28,14 +28,15 @@ interface AttendanceTabProps {
   initialAttendance: AttendanceGridType
 }
 
-export default function AttendanceTab({ 
-  match, 
-  users, 
-  initialAttendance 
+export default function AttendanceTab({
+  match,
+  users,
+  initialAttendance
 }: AttendanceTabProps) {
   // Store state
   const attendanceData = useAttendanceData()
-  const selectedPlayers = useSelectedPlayers()
+  const selectedPlayersRaw = useSelectedPlayers()
+  const selectedPlayers = selectedPlayersRaw.filter(p => p.playerStatus !== 'VACATION')
   const availablePlayers = useAvailablePlayers()
   const isDirty = useIsDirty()
   const isLoading = useIsLoading()
@@ -103,7 +104,7 @@ export default function AttendanceTab({
           )}
         </div>
         <div className={styles.headerRight}>
-          <Button 
+          <Button
             onClick={handleSave}
             disabled={isLoading.saving || !isDirty.attendance}
             className="gap-2"

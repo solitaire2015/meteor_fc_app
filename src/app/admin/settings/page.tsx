@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import toast, { Toaster } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 interface SystemSetting {
     key: string
@@ -96,7 +96,6 @@ export default function SystemSettingsPage() {
 
     return (
         <div className="container mx-auto py-8 space-y-8 font-geist">
-            <Toaster position="top-center" />
 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import toast, { Toaster } from 'react-hot-toast'
+import { toast } from 'sonner'
 import ExcelImportSection from '@/components/admin/ExcelImport/ExcelImportSection'
 import AssistantWidget from '@/components/ai/AssistantWidget'
 import { type PatchEnvelope } from '@/lib/ai/schema'
@@ -322,7 +322,6 @@ export default function MatchesAdminPage() {
 
   return (
     <div className={styles.container}>
-      <Toaster position="top-center" />
       <AssistantWidget
         context={{
           page: 'admin/matches',

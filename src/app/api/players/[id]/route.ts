@@ -11,9 +11,10 @@ const updateUserSchema = z.object({
   phone: z.string().optional(),
   userType: z.enum(['ADMIN', 'PLAYER']).optional(),
   accountStatus: z.enum(['GHOST', 'CLAIMED']).optional(),
+  playerStatus: z.enum(['REGULAR', 'TRIAL', 'VACATION']).optional(),
   jerseyNumber: z.number().int().positive().optional().or(z.null()),
   position: z.enum([
-    'GK', 
+    'GK',
     'CB', 'LB', 'RB', 'LWB', 'RWB',
     'DMF', 'CMF', 'AMF', 'LMF', 'RMF',
     'CF', 'ST', 'SS', 'LWF', 'RWF'
@@ -31,12 +32,12 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    
+
     // Clean up empty string emails
     if (body.email === '') {
       body.email = null
     }
-    
+
     const validatedData = updateUserSchema.parse(body)
 
     // Check if user exists
@@ -64,6 +65,7 @@ export async function PUT(
         ...(validatedData.phone !== undefined && { phone: validatedData.phone }),
         ...(validatedData.userType && { userType: validatedData.userType }),
         ...(validatedData.accountStatus && { accountStatus: validatedData.accountStatus }),
+        ...(validatedData.playerStatus && { playerStatus: validatedData.playerStatus as any }),
         ...(validatedData.jerseyNumber !== undefined && { jerseyNumber: validatedData.jerseyNumber }),
         ...(validatedData.position !== undefined && { position: validatedData.position }),
         ...(validatedData.dominantFoot && { dominantFoot: validatedData.dominantFoot }),

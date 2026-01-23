@@ -103,7 +103,7 @@ export default function PlayerSelector({
     } else {
       if (selectedPlayers.length >= maxPlayers) {
         // Show toast notification about max players limit
-        import('react-hot-toast').then(({ default: toast }) => {
+        import('sonner').then(({ toast }) => {
           toast.error(`最多只能选择 ${maxPlayers} 名球员`)
         })
         return
@@ -120,7 +120,7 @@ export default function PlayerSelector({
     const canAdd = Math.min(unselectedFiltered.length, maxPlayers - selectedPlayers.length)
     
     if (canAdd === 0) {
-      import('react-hot-toast').then(({ default: toast }) => {
+      import('sonner').then(({ toast }) => {
         toast.error('已达到最大选择数量限制')
       })
       return
@@ -130,7 +130,7 @@ export default function PlayerSelector({
     onSelectionChange([...selectedPlayers, ...toAdd])
     
     if (canAdd < unselectedFiltered.length) {
-      import('react-hot-toast').then(({ default: toast }) => {
+      import('sonner').then(({ toast }) => {
         toast.warning(`只能再选择 ${canAdd} 名球员，已达到上限`)
       })
     }
@@ -150,7 +150,7 @@ export default function PlayerSelector({
     )
     
     if (positionPlayers.length === 0) {
-      import('react-hot-toast').then(({ default: toast }) => {
+      import('sonner').then(({ toast }) => {
         const positionLabels: Record<string, string> = {
           'GK': '门将',
           'DF': '后卫', 
@@ -165,7 +165,7 @@ export default function PlayerSelector({
     const canAdd = Math.min(positionPlayers.length, maxPlayers - selectedPlayers.length)
     
     if (canAdd === 0) {
-      import('react-hot-toast').then(({ default: toast }) => {
+      import('sonner').then(({ toast }) => {
         toast.error('已达到最大选择数量限制')
       })
       return
@@ -175,7 +175,7 @@ export default function PlayerSelector({
     onSelectionChange([...selectedPlayers, ...toAdd])
     
     if (canAdd < positionPlayers.length) {
-      import('react-hot-toast').then(({ default: toast }) => {
+      import('sonner').then(({ toast }) => {
         const positionLabels: Record<string, string> = {
           'GK': '门将',
           'DF': '后卫', 

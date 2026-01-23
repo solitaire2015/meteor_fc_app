@@ -58,7 +58,8 @@ export async function GET(request: Request) {
         match: dateFilter,
         eventType: { in: eventTypes },
         player: {
-          deletedAt: null // Only include events from active players
+          deletedAt: null, // Only include events from active players
+          playerStatus: { not: 'TRIAL' } // Exclude trial players from rankings
         }
       },
       include: {
@@ -92,15 +93,18 @@ export async function GET(request: Request) {
 
     events.forEach(event => {
       const playerId = event.playerId
-      
+      const player = (event as any).player;
+      if (!player) return;
+
       if (!playerStats[playerId]) {
         playerStats[playerId] = {
           id: playerId,
-          name: event.player.name,
-          email: event.player.email,
-          avatarUrl: event.player.avatarUrl,
-          position: event.player.position,
-          jerseyNumber: event.player.jerseyNumber,
+          name: player.name,
+          email: player.email,
+          avatarUrl: player.avatarUrl,
+          position: player.position,
+          jerseyNumber: player.jerseyNumber,
+          playerStatus: player.playerStatus,
           goals: 0,
           assists: 0,
           matches: new Set(),
@@ -114,9 +118,11 @@ export async function GET(request: Request) {
         playerStats[playerId].assists++
       }
 
-      if (!playerStats[playerId].lastMatchDate || 
-          event.match.matchDate > playerStats[playerId].lastMatchDate) {
-        playerStats[playerId].lastMatchDate = event.match.matchDate
+      playerStats[playerId].matches.add(event.matchId)
+
+      if (!playerStats[playerId].lastMatchDate ||
+        (event as any).match.matchDate > playerStats[playerId].lastMatchDate) {
+        playerStats[playerId].lastMatchDate = (event as any).match.matchDate
       }
     })
 
@@ -186,12 +192,12 @@ export async function GET(request: Request) {
       .sort((a: Omit<LeaderboardPlayerStats, 'matches'> & { matchesPlayed: number }, b: Omit<LeaderboardPlayerStats, 'matches'> & { matchesPlayed: number }) => {
         const aValue = query.type === 'goals' ? a.goals : a.assists
         const bValue = query.type === 'goals' ? b.goals : b.assists
-        
+
         if (bValue === aValue) {
           // If tied, sort by other stat as tiebreaker
           const aTiebreaker = query.type === 'goals' ? a.assists : a.goals
           const bTiebreaker = query.type === 'goals' ? b.assists : b.goals
-          
+
           if (bTiebreaker === aTiebreaker) {
             // If still tied, sort by matches played
             return b.matchesPlayed - a.matchesPlayed
@@ -242,7 +248,7 @@ export async function GET(request: Request) {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid query parameters',
-          details: error.errors
+          details: error.issues
         }
       }, { status: 400 })
     }
@@ -261,17 +267,17 @@ export async function GET(request: Request) {
 // Helper function to generate player abbreviations
 function generateAbbreviation(name: string): string {
   if (!name) return 'UK'
-  
+
   // For Chinese names, take first character and last character
   if (name.length >= 2) {
     return (name.charAt(0) + name.charAt(name.length - 1)).toUpperCase()
   }
-  
+
   // For single character names, repeat it
   if (name.length === 1) {
     return (name + name).toUpperCase()
   }
-  
+
   // For English names, take first two characters
   return name.substring(0, 2).toUpperCase()
 }

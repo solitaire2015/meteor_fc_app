@@ -29,7 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Save, RotateCcw, Calculator, Edit2, AlertTriangle } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { type PlayerFeeDisplay, type FeeEditFormData } from './types'
 
 interface FeeEditDialogProps {

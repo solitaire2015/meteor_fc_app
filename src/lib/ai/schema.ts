@@ -148,6 +148,7 @@ export const assistantContextSchema = z.object({
         phone: z.string().nullable().optional(),
         userType: z.enum(["ADMIN", "PLAYER"]).optional(),
         accountStatus: z.enum(["GHOST", "CLAIMED"]).optional(),
+        playerStatus: z.enum(["REGULAR", "TRIAL", "VACATION"]).optional(),
       })
     )
     .optional(),
@@ -235,6 +236,7 @@ export const userActionSchema = z.object({
       phone: z.string().optional(),
       userType: z.enum(["ADMIN", "PLAYER"]).optional(),
       accountStatus: z.enum(["GHOST", "CLAIMED"]).optional(),
+      playerStatus: z.enum(["REGULAR", "TRIAL", "VACATION"]).optional(),
       jerseyNumber: z.number().optional(),
       position: z.string().optional(),
       dominantFoot: z.enum(["LEFT", "RIGHT", "BOTH"]).optional(),

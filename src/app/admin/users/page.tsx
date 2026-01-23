@@ -18,7 +18,7 @@ import { getPositionColor, getPositionLabel } from "@/lib/utils/position";
 import { type PatchEnvelope } from "@/lib/ai/schema";
 import { Position } from "@prisma/client";
 import { Plus, Key, Mail, Phone, Edit, Target, Award, BarChart3, Trash2, RotateCcw, Eye, EyeOff } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -28,6 +28,7 @@ interface User {
   phone: string | null;
   userType: 'ADMIN' | 'PLAYER';
   accountStatus: 'GHOST' | 'CLAIMED';
+  playerStatus: 'REGULAR' | 'TRIAL' | 'VACATION';
   jerseyNumber: number | null;
   position: Position | null;
   dominantFoot: 'LEFT' | 'RIGHT' | 'BOTH' | null;
@@ -51,6 +52,7 @@ interface CreateUserForm {
   phone: string;
   userType: 'ADMIN' | 'PLAYER';
   accountStatus: 'GHOST' | 'CLAIMED';
+  playerStatus: 'REGULAR' | 'TRIAL' | 'VACATION';
   jerseyNumber: string;
   position: Position | '';
 }
@@ -68,6 +70,7 @@ const buildUserPayload = (data?: UserActionData) => {
     "phone",
     "userType",
     "accountStatus",
+    "playerStatus",
     "jerseyNumber",
     "position",
     "dominantFoot",
@@ -95,7 +98,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
-  
+
   const [formData, setFormData] = useState<CreateUserForm>({
     name: '',
     shortId: '',
@@ -103,6 +106,7 @@ export default function UsersPage() {
     phone: '',
     userType: 'PLAYER',
     accountStatus: 'GHOST',
+    playerStatus: 'REGULAR',
     jerseyNumber: '',
     position: ''
   });
@@ -141,9 +145,9 @@ export default function UsersPage() {
       if (!response.ok) {
         throw new Error(
           data?.error?.message ||
-            data?.error ||
-            data?.message ||
-            "请求失败"
+          data?.error ||
+          data?.message ||
+          "请求失败"
         );
       }
 
@@ -236,7 +240,7 @@ export default function UsersPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const userData = {
       name: formData.name,
       shortId: formData.shortId || undefined,
@@ -244,6 +248,7 @@ export default function UsersPage() {
       phone: formData.phone || undefined,
       userType: formData.userType,
       accountStatus: formData.accountStatus,
+      playerStatus: formData.playerStatus,
       jerseyNumber: formData.jerseyNumber ? parseInt(formData.jerseyNumber) : undefined,
       position: formData.position || undefined
     };
@@ -256,7 +261,7 @@ export default function UsersPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setUsers([...users, { ...data.data, goals: 0, assists: 0, appearances: 0 }]);
         setFormData({
@@ -266,6 +271,7 @@ export default function UsersPage() {
           phone: '',
           userType: 'PLAYER',
           accountStatus: 'GHOST',
+          playerStatus: 'REGULAR',
           jerseyNumber: '',
           position: ''
         });
@@ -315,7 +321,7 @@ export default function UsersPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success('用户删除成功');
         fetchUsers(); // Refresh user list
@@ -339,7 +345,7 @@ export default function UsersPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success('用户恢复成功');
         fetchUsers(); // Refresh user list
@@ -375,6 +381,7 @@ export default function UsersPage() {
             phone: user.phone,
             userType: user.userType,
             accountStatus: user.accountStatus,
+            playerStatus: user.playerStatus,
           })),
           formState: {
             showDeleted,
@@ -387,7 +394,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold">用户管理</h1>
           <p className="text-muted-foreground">管理球员和管理员账户</p>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           <Button
             variant="outline"
@@ -397,7 +404,7 @@ export default function UsersPage() {
             {showDeleted ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             <span>{showDeleted ? '隐藏已删除' : '显示已删除'}</span>
           </Button>
-          
+
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button>
@@ -406,114 +413,127 @@ export default function UsersPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>创建新用户</DialogTitle>
-              <DialogDescription>
-                创建新的球员或管理员账户
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">姓名 *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="shortId">短ID</Label>
-                  <Input
-                    id="shortId"
-                    value={formData.shortId}
-                    onChange={(e) => setFormData({ ...formData, shortId: e.target.value })}
-                    placeholder="例如: dh, qc"
-                    maxLength={4}
-                  />
-                </div>
-              </div>
+              <DialogHeader>
+                <DialogTitle>创建新用户</DialogTitle>
+                <DialogDescription>
+                  创建新的球员或管理员账户
+                </DialogDescription>
+              </DialogHeader>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">邮箱</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">手机号</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-              </div>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">姓名 *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>用户类型</Label>
-                  <Select value={formData.userType} onValueChange={(value: 'ADMIN' | 'PLAYER') => setFormData({ ...formData, userType: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PLAYER">球员</SelectItem>
-                      <SelectItem value="ADMIN">管理员</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label htmlFor="shortId">短ID</Label>
+                    <Input
+                      id="shortId"
+                      value={formData.shortId}
+                      onChange={(e) => setFormData({ ...formData, shortId: e.target.value })}
+                      placeholder="例如: dh, qc"
+                      maxLength={4}
+                    />
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label>账户状态</Label>
-                  <Select value={formData.accountStatus} onValueChange={(value: 'GHOST' | 'CLAIMED') => setFormData({ ...formData, accountStatus: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GHOST">幽灵账户</SelectItem>
-                      <SelectItem value="CLAIMED">已认领</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="jerseyNumber">球衣号码</Label>
-                  <Input
-                    id="jerseyNumber"
-                    type="number"
-                    value={formData.jerseyNumber}
-                    onChange={(e) => setFormData({ ...formData, jerseyNumber: e.target.value })}
-                    min="1"
-                    max="99"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">邮箱</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">手机号</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                  </div>
                 </div>
-                
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>用户类型</Label>
+                    <Select value={formData.userType} onValueChange={(value: 'ADMIN' | 'PLAYER') => setFormData({ ...formData, userType: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PLAYER">球员</SelectItem>
+                        <SelectItem value="ADMIN">管理员</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>账户状态</Label>
+                    <Select value={formData.accountStatus} onValueChange={(value: 'GHOST' | 'CLAIMED') => setFormData({ ...formData, accountStatus: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GHOST">幽灵账户</SelectItem>
+                        <SelectItem value="CLAIMED">已认领</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>球员身份</Label>
+                    <Select value={formData.playerStatus} onValueChange={(value: 'REGULAR' | 'TRIAL' | 'VACATION') => setFormData({ ...formData, playerStatus: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="REGULAR">正式球员</SelectItem>
+                        <SelectItem value="TRIAL">试训球员</SelectItem>
+                        <SelectItem value="VACATION">长假球员</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="jerseyNumber">球衣号码</Label>
+                    <Input
+                      id="jerseyNumber"
+                      type="number"
+                      value={formData.jerseyNumber}
+                      onChange={(e) => setFormData({ ...formData, jerseyNumber: e.target.value })}
+                      min="1"
+                      max="99"
+                    />
+                  </div>
+                </div>
+
                 <PositionSelector
                   value={formData.position}
                   onValueChange={(position) => setFormData({ ...formData, position })}
                 />
-              </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                  取消
-                </Button>
-                <Button type="submit">
-                  创建用户
-                </Button>
-              </div>
-            </form>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                    取消
+                  </Button>
+                  <Button type="submit">
+                    创建用户
+                  </Button>
+                </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -576,9 +596,14 @@ export default function UsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.accountStatus === 'CLAIMED' ? 'default' : 'outline'}>
-                          {user.accountStatus === 'GHOST' ? '幽灵' : '已认领'}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant={user.accountStatus === 'CLAIMED' ? 'default' : 'outline'}>
+                            {user.accountStatus === 'GHOST' ? '幽灵' : '已认领'}
+                          </Badge>
+                          <Badge variant={user.playerStatus === 'REGULAR' ? 'secondary' : user.playerStatus === 'TRIAL' ? 'outline' : 'destructive'}>
+                            {user.playerStatus === 'REGULAR' ? '正式' : user.playerStatus === 'TRIAL' ? '试训' : '长假'}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>{user.jerseyNumber || '-'}</TableCell>
                       <TableCell>
@@ -639,8 +664,8 @@ export default function UsersPage() {
                               >
                                 <Key className="h-3 w-3" />
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleEditUser(user)}
                               >
@@ -676,15 +701,17 @@ export default function UsersPage() {
         </CardContent>
       </Card>
 
-      {selectedUser && (
-        <SetPasswordDialog
-          open={showPasswordDialog}
-          onOpenChange={setShowPasswordDialog}
-          userId={selectedUser.id}
-          userName={selectedUser.name}
-          onSuccess={handlePasswordSuccess}
-        />
-      )}
+      {
+        selectedUser && (
+          <SetPasswordDialog
+            open={showPasswordDialog}
+            onOpenChange={setShowPasswordDialog}
+            userId={selectedUser.id}
+            userName={selectedUser.name}
+            onSuccess={handlePasswordSuccess}
+          />
+        )
+      }
 
       <EditUserDialog
         open={showEditDialog}
@@ -699,6 +726,6 @@ export default function UsersPage() {
         user={deletingUser}
         onConfirm={confirmDeleteUser}
       />
-    </div>
+    </div >
   );
 }
