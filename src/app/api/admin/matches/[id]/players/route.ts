@@ -12,15 +12,15 @@ export async function PUT(
   try {
     const { id: matchId } = await params
     const body = await request.json()
-    
+
     // Validate request body
     const validatedData = SelectedPlayersSchema.parse(body)
-    
+
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
       where: { id: matchId }
     })
-    
+
     if (!existingMatch) {
       return NextResponse.json({
         success: false,
@@ -42,7 +42,7 @@ export async function PUT(
     if (players.length !== validatedData.playerIds.length) {
       const foundIds = players.map(p => p.id)
       const missingIds = validatedData.playerIds.filter(id => !foundIds.includes(id))
-      
+
       return NextResponse.json({
         success: false,
         error: {
@@ -79,8 +79,9 @@ export async function PUT(
               id: true,
               name: true,
               jerseyNumber: true,
-              position: true
-            }
+              position: true,
+              playerStatus: true
+            } as any
           }
         }
       })
@@ -103,7 +104,7 @@ export async function PUT(
       success: true,
       data: {
         message: 'Selected players updated successfully',
-        selectedPlayers: result.map(mp => mp.player),
+        selectedPlayers: result.map(mp => (mp as any).player),
         count: result.length
       }
     })
@@ -138,12 +139,12 @@ export async function GET(
 ) {
   try {
     const { id: matchId } = await params
-    
+
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
       where: { id: matchId }
     })
-    
+
     if (!existingMatch) {
       return NextResponse.json({
         success: false,
@@ -167,8 +168,9 @@ export async function GET(
             name: true,
             jerseyNumber: true,
             position: true,
-            avatarUrl: true
-          }
+            avatarUrl: true,
+            playerStatus: true
+          } as any
         }
       },
       orderBy: {
@@ -191,8 +193,9 @@ export async function GET(
         jerseyNumber: true,
         position: true,
         avatarUrl: true,
-        accountStatus: true // Include status for debugging
-      },
+        accountStatus: true,
+        playerStatus: true
+      } as any,
       orderBy: {
         name: 'asc'
       }
@@ -201,7 +204,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        selectedPlayers: selectedPlayers.map(mp => mp.player),
+        selectedPlayers: selectedPlayers.map(mp => (mp as any).player),
         allPlayers,
         selectedCount: selectedPlayers.length,
         totalAvailable: allPlayers.length

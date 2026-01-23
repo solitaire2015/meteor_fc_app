@@ -29,6 +29,9 @@ export default function SimplePlayerSelector({
 }: SimplePlayerSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
+  // Filter out players who are on vacation
+  const filteredAvailablePlayers = availablePlayers.filter(p => p.playerStatus !== 'VACATION');
+
   // Get selected player IDs for quick lookup
   const selectedPlayerIds = new Set(selectedPlayers.map(p => p.id))
 
@@ -62,12 +65,12 @@ export default function SimplePlayerSelector({
             <Users className="h-5 w-5" />
             <span className="font-semibold">选择球员</span>
             <Badge variant="secondary" className="ml-2">
-              {selectedPlayers.length}/{availablePlayers.length}
+              {selectedPlayers.length}/{filteredAvailablePlayers.length}
             </Badge>
           </button>
-          
+
           {onSave && (
-            <Button 
+            <Button
               onClick={onSave}
               disabled={!isDirty || isSaving}
               size="sm"
@@ -83,14 +86,14 @@ export default function SimplePlayerSelector({
       {isExpanded && (
         <CardContent className="pt-0">
           <div className="space-y-2">
-            {availablePlayers.length === 0 ? (
+            {filteredAvailablePlayers.length === 0 ? (
               <div className="text-center text-muted-foreground py-4">
                 没有可选择的球员
               </div>
             ) : (
-              availablePlayers.map(player => {
+              filteredAvailablePlayers.map(player => {
                 const isSelected = selectedPlayerIds.has(player.id)
-                
+
                 return (
                   <div
                     key={player.id}

@@ -31,6 +31,7 @@ export const playerSchema = z.object({
   phone: z.string().optional(),
   userType: z.enum(['ADMIN', 'PLAYER']),
   accountStatus: z.enum(['ACTIVE', 'INACTIVE', 'PENDING']),
+  playerStatus: z.enum(['REGULAR', 'TRIAL', 'VACATION']),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
