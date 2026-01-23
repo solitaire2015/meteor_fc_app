@@ -23,7 +23,7 @@ import {
   MapPin,
   AlertCircle
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface MatchData {
   id: string;

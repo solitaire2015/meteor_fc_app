@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Camera, Upload, X, User } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null

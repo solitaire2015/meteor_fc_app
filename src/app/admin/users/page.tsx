@@ -18,7 +18,7 @@ import { getPositionColor, getPositionLabel } from "@/lib/utils/position";
 import { type PatchEnvelope } from "@/lib/ai/schema";
 import { Position } from "@prisma/client";
 import { Plus, Key, Mail, Phone, Edit, Target, Award, BarChart3, Trash2, RotateCcw, Eye, EyeOff } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface User {
   id: string;

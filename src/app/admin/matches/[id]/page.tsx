@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useMemo, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Download, Save } from 'lucide-react'
-import toast, { Toaster } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import TabContainer from '@/components/shared/TabContainer'
@@ -483,7 +483,6 @@ export default function MatchDetailPage() {
 
   return (
     <div className={styles.container}>
-      <Toaster position="top-center" />
       <AssistantWidget
         context={{
           page: 'admin/matches/[id]',

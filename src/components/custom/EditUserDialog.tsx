@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { PositionSelector } from "./PositionSelector";
 import { Position } from "@prisma/client";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface User {
   id: string;

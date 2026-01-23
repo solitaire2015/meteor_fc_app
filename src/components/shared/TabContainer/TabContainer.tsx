@@ -2,7 +2,7 @@
 
 import { useState, ReactNode, useCallback, useEffect } from 'react'
 import { AlertTriangle, Loader2 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { useMatchStore } from '@/stores/useMatchStore'
 import styles from './TabContainer.module.css'
 

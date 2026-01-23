@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { HeaderNavigation } from "@/components/custom/HeaderNavigation";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "@/components/ui/sonner";
 import GeneralAssistant from "@/components/ai/GeneralAssistant";
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ export default function RootLayout({
             {children}
           </main>
           <GeneralAssistant />
-          <Toaster position="top-right" />
+          <Toaster position="top-right" richColors closeButton />
         </SessionProvider>
       </body>
     </html>
