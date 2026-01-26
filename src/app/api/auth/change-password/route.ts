@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { PrismaClient } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { z } from "zod";
+import { CACHE_TAGS, invalidateCacheTags } from "@/lib/cache";
 
 const prisma = new PrismaClient();
 
@@ -66,6 +67,14 @@ export async function POST(request: NextRequest) {
         accountStatus: 'CLAIMED' // Mark as claimed after password change
       }
     });
+
+    await invalidateCacheTags([
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ]);
     
     return NextResponse.json({ 
       message: "Password changed successfully" 

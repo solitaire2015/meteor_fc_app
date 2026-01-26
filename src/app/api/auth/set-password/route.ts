@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { adminSetPasswordSchema } from "@/lib/validations/auth";
+import { CACHE_TAGS, invalidateCacheTags } from "@/lib/cache";
 
 const prisma = new PrismaClient();
 
@@ -39,11 +40,19 @@ export async function POST(request: NextRequest) {
     // Update user password
     await prisma.user.update({
       where: { id: validatedData.userId },
-      data: { 
+      data: {
         passwordHash: hashedPassword,
-        accountStatus: 'GHOST' // Keep as ghost until first login
+        accountStatus: 'CLAIMED'
       }
     });
+
+    await invalidateCacheTags([
+      CACHE_TAGS.PLAYERS,
+      CACHE_TAGS.USERS,
+      CACHE_TAGS.LEADERBOARD,
+      CACHE_TAGS.STATS,
+      CACHE_TAGS.STATISTICS
+    ]);
     
     return NextResponse.json({ 
       message: "Password set successfully",
