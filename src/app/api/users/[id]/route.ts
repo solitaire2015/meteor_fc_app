@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { ApiResponse, successResponse, errorResponse, validationError, notFoundError } from '@/lib/apiResponse'
 import { IdParamSchema, UpdateUserSchema, DeleteUserSchema, RestoreUserSchema, validateRequest } from '@/lib/validationSchemas'
 import { buildCacheKey, CACHE_TAGS, getCachedJson, invalidateCacheTags, setCachedJson } from '@/lib/cache'
@@ -96,18 +96,44 @@ export async function PUT(
     // Check for unique jersey number if being updated
     if (updateData.jerseyNumber && updateData.jerseyNumber !== existingUser.jerseyNumber) {
       const conflictUser = await prisma.user.findFirst({
-        where: { 
+        where: {
           jerseyNumber: updateData.jerseyNumber,
           id: { not: id }
         }
       })
-      
+
       if (conflictUser) {
-        return validationError('Jersey number already exists', {
+        return errorResponse('Jersey number already exists', 'DUPLICATE_ERROR', 409, {
           field: 'jerseyNumber',
           value: updateData.jerseyNumber
         })
       }
+    }
+
+    // Check for unique shortId if being updated
+    if (updateData.shortId !== undefined && updateData.shortId !== existingUser.shortId) {
+      // Note: shortId is optional+unique in schema, so allow null/empty values.
+      // If client sends empty string, treat it as "clear".
+      const normalizedShortId = updateData.shortId?.trim() || null
+
+      if (normalizedShortId) {
+        const conflictUser = await prisma.user.findFirst({
+          where: {
+            shortId: normalizedShortId,
+            id: { not: id }
+          }
+        })
+
+        if (conflictUser) {
+          return errorResponse(`短ID "${normalizedShortId}" 已被使用，请选择其他值`, 'DUPLICATE_ERROR', 409, {
+            field: 'shortId',
+            value: normalizedShortId
+          })
+        }
+      }
+
+      // Mutate updateData to keep DB consistent with normalization
+      ;(updateData as any).shortId = normalizedShortId
     }
 
     // Update user
@@ -139,6 +165,18 @@ export async function PUT(
 
     return successResponse(updatedUser)
   } catch (error) {
+    // Handle Prisma unique constraint violations (e.g., shortId)
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        const target = error.meta?.target as string[] | undefined
+        const fieldName = target?.[0] || 'field'
+
+        return errorResponse(`Duplicate value for ${fieldName}`, 'DUPLICATE_ERROR', 409, {
+          field: fieldName
+        })
+      }
+    }
+
     console.error('Error updating user:', error)
     return errorResponse('Failed to update user')
   }
