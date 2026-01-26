@@ -81,8 +81,34 @@ export class AttendanceService {
       }
     }
     
-    // Use filtered data for all subsequent validation
-    const playerIds = Object.keys(filteredAttendanceData)
+    // Normalize data to ensure goalkeeper is unset when attendance is zero
+    const normalizedAttendanceData: AttendancePlayerData = {}
+    for (const [playerId, data] of Object.entries(filteredAttendanceData)) {
+      const normalizedAttendance: AttendanceUpdate = {
+        attendance: {},
+        goalkeeper: {},
+        isLateArrival: data.isLateArrival
+      }
+
+      for (let section = 1; section <= 3; section++) {
+        const sectionStr = section.toString()
+        normalizedAttendance.attendance[sectionStr] = {}
+        normalizedAttendance.goalkeeper[sectionStr] = {}
+
+        for (let part = 1; part <= 3; part++) {
+          const partStr = part.toString()
+          const attendance = data.attendance[sectionStr]?.[partStr] ?? 0
+          const isGoalkeeper = data.goalkeeper[sectionStr]?.[partStr] ?? false
+          normalizedAttendance.attendance[sectionStr][partStr] = attendance
+          normalizedAttendance.goalkeeper[sectionStr][partStr] = attendance > 0 && isGoalkeeper
+        }
+      }
+
+      normalizedAttendanceData[playerId] = normalizedAttendance
+    }
+
+    // Use normalized data for all subsequent validation
+    const playerIds = Object.keys(normalizedAttendanceData)
 
     // Create a simple map for conflict resolution (we don't need full player data for validation)
     const selectedPlayerMap = new Map(
@@ -90,7 +116,7 @@ export class AttendanceService {
     )
 
     // 2. Validate attendance data structure
-    for (const [playerId, data] of Object.entries(filteredAttendanceData)) {
+    for (const [playerId, data] of Object.entries(normalizedAttendanceData)) {
       if (!this.validateAttendanceStructure(data)) {
         errors.push(`Invalid attendance data structure for player ${playerId}`)
       }
@@ -99,7 +125,7 @@ export class AttendanceService {
     // 3. Check for goalkeeper conflicts
     const goalkeeperMap = new Map<string, string>() // key: "section-part", value: playerId
 
-    for (const [playerId, data] of Object.entries(filteredAttendanceData)) {
+    for (const [playerId, data] of Object.entries(normalizedAttendanceData)) {
       for (let section = 1; section <= 3; section++) {
         for (let part = 1; part <= 3; part++) {
           const sectionStr = section.toString()
@@ -143,8 +169,8 @@ export class AttendanceService {
       warnings,
       conflicts,
       resolvedData: conflicts.length > 0 ? 
-        this.autoResolveGoalkeeperConflicts(filteredAttendanceData, conflicts) : 
-        filteredAttendanceData
+        this.autoResolveGoalkeeperConflicts(normalizedAttendanceData, conflicts) : 
+        normalizedAttendanceData
     }
   }
 
