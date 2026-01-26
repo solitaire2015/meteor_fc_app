@@ -39,7 +39,7 @@ The Game Management Module is the core feature of the Football Club Management S
 #### Financial Management
 - **Automated Fee Calculation**:
   - Field fee distribution based on participation time
-  - Video recording fee (ROUNDUP(totalTime/3*2, 0))
+  - Video recording fee (ROUND(totalTime/3*2, 0))
   - Late arrival penalties (10 yuan)
   - Goalkeeper exemption from field fees
 - **Fee Coefficient**: (fieldFeeTotal + waterFeeTotal) / 90 fixed units
@@ -305,7 +305,7 @@ Database → Statistics Aggregation → Display
 // Key principles:
 1. Count normal player parts (excluding goalkeeper time)
 2. Field fee = normalPlayerParts × coefficient
-3. Video fee = ROUNDUP(normalPlayerParts / 3 × 2, 0)
+3. Video fee = ROUND(normalPlayerParts / 3 × 2, 0)
 4. Late fee = isLateArrival ? 10 : 0
 5. Total fee = fieldFee + videoFee + lateFee
 ```
@@ -885,7 +885,7 @@ src/
 Attendance: Section 1 (1, 1, 0.5), Section 2 (1, 1, 1), Section 3 (0.5, 0, 0)
 Total Time: 6 units
 Field Fee: 6 × 12.78 = 76.68
-Video Fee: ROUNDUP(6/3×2) = 4
+Video Fee: ROUND(6/3×2) = 4
 Late Fee: 0
 Total: 80.68
 ```
@@ -895,7 +895,7 @@ Total: 80.68
 Attendance: Section 1 (GK, GK, 0.5), Section 2 (1, 1, 1), Section 3 (0, 0, 0)
 Normal Time: 3.5 units (excluding GK time)
 Field Fee: 3.5 × 12.78 = 44.73
-Video Fee: ROUNDUP(3.5/3×2) = 3
+Video Fee: ROUND(3.5/3×2) = 2
 Late Fee: 10 (if late)
 Total: 57.73
 ```

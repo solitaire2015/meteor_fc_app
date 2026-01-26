@@ -94,18 +94,19 @@ export default function EnhancedAttendanceGrid({
     value: number,
     isGoalkeeper: boolean = false
   ) => {
+    const shouldBeGoalkeeper = value > 0 && isGoalkeeper
     const newAttendanceData = completeAttendanceData.map(item => {
       // Update the specific cell for this player
       if (item.userId === userId && item.section === section && item.part === part) {
         return {
           ...item,
           value,
-          isGoalkeeper
+          isGoalkeeper: shouldBeGoalkeeper
         }
       }
       
       // If setting as goalkeeper, remove goalkeeper status from others in this cell
-      if (isGoalkeeper && value > 0 && item.section === section && item.part === part && item.isGoalkeeper) {
+      if (shouldBeGoalkeeper && item.section === section && item.part === part && item.isGoalkeeper) {
         return {
           ...item,
           isGoalkeeper: false
@@ -268,7 +269,7 @@ export default function EnhancedAttendanceGrid({
                       size="sm"
                       variant={currentValue === value ? "default" : "outline"}
                       className="flex-1 text-xs"
-                      onClick={() => updatePlayerAttendance(player.id, section, part, value, isGoalkeeper)}
+                      onClick={() => updatePlayerAttendance(player.id, section, part, value, value > 0 && isGoalkeeper)}
                     >
                       {value === 0 ? "不参与" : value === 0.5 ? "半程" : "全程"}
                     </Button>
