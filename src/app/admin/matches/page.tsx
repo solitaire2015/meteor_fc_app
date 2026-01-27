@@ -190,9 +190,10 @@ export default function MatchesAdminPage() {
   }
 
   const createMatch = useCallback(async (data: typeof formData) => {
-    const adminUser = users.find(u => u.name === '管理员') || users[0]
-    if (!adminUser) {
-      toast.error('需要管理员用户才能创建比赛')
+    // Creator is determined server-side from the authenticated session.
+    // Do not send `createdBy` from the client.
+    if (!users.length) {
+      toast.error('缺少用户数据，无法创建比赛')
       return
     }
 
@@ -203,8 +204,7 @@ export default function MatchesAdminPage() {
       ourScore: data.ourScore ? parseInt(data.ourScore) : undefined,
       opponentScore: data.opponentScore ? parseInt(data.opponentScore) : undefined,
       fieldFeeTotal: Math.round(parseFloat(data.fieldFeeTotal)),
-      waterFeeTotal: Math.round(parseFloat(data.waterFeeTotal)),
-      createdBy: adminUser.id
+      waterFeeTotal: Math.round(parseFloat(data.waterFeeTotal))
     }
 
     // Only add notes if it's not empty
