@@ -4,13 +4,16 @@ import { useCallback, useEffect } from 'react'
 import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import EnhancedAttendanceGrid from '@/components/custom/EnhancedAttendanceGrid'
-import EventSummary from '@/components/custom/EventSummary'
+import DetailedEventLogger from '@/components/custom/DetailedEventLogger'
 import SimplePlayerSelector from '@/components/custom/SimplePlayerSelector'
 import {
   useUpdateAttendance,
   useSaveAttendance,
   useGetAttendanceStats,
   useAttendanceData,
+  useEvents,
+  useAddEvent,
+  useRemoveEvent,
   useSelectedPlayers,
   useAvailablePlayers,
   useSetSelectedPlayers,
@@ -35,6 +38,7 @@ export default function AttendanceTab({
 }: AttendanceTabProps) {
   // Store state
   const attendanceData = useAttendanceData()
+  const events = useEvents()
   const selectedPlayersRaw = useSelectedPlayers()
   const selectedPlayers = selectedPlayersRaw.filter(p => p.playerStatus !== 'VACATION')
   const availablePlayers = useAvailablePlayers()
@@ -43,6 +47,8 @@ export default function AttendanceTab({
 
   // Store actions
   const updateAttendance = useUpdateAttendance()
+  const addEvent = useAddEvent()
+  const removeEvent = useRemoveEvent()
   const saveAttendance = useSaveAttendance()
   const setSelectedPlayers = useSetSelectedPlayers()
   const saveSelectedPlayers = useSaveSelectedPlayers()
@@ -136,11 +142,13 @@ export default function AttendanceTab({
           className="mb-6"
         />
 
-        {/* Event Summary - Goals and Assists */}
-        <EventSummary
+        {/* Detailed Event Logger */}
+        <DetailedEventLogger
           players={selectedPlayers}
+          events={events}
+          onAddEvent={addEvent}
+          onRemoveEvent={removeEvent}
           attendanceData={attendanceData}
-          onChange={handleAttendanceChange}
           isDirty={isDirty.attendance}
         />
       </div>
@@ -153,7 +161,7 @@ export default function AttendanceTab({
           <li>勾选"门将"可设置该时段的守门员</li>
           <li>每个时段只能有一个守门员</li>
           <li>勾选"迟到"会自动添加10元迟到费</li>
-          <li>可以在"进球"和"助攻"列填写数量</li>
+          <li>使用下方事件记录器添加进球、助攻、红黄牌等详细信息</li>
         </ul>
       </div>
     </div>

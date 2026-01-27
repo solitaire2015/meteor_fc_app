@@ -11,6 +11,7 @@
 import { prisma } from '@/lib/prisma'
 import { type AttendanceData, calculatePlayerFees } from '@/lib/feeCalculation'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
+import { EventType } from '@prisma/client'
 
 export interface AttendanceUpdate {
   attendance: {
@@ -49,8 +50,8 @@ export interface ValidationResult {
 
 export interface AttendanceEvent {
   playerId: string
-  eventType: 'GOAL' | 'ASSIST'
-  count: number
+  eventType: EventType
+  minute?: number
 }
 
 export interface AttendanceUpdateRequest {
@@ -280,24 +281,22 @@ export class AttendanceService {
     const events: {
       matchId: string
       playerId: string
-      eventType: 'GOAL' | 'ASSIST'
-      minute: null
+      eventType: EventType
+      minute: number | null
       description: string
       createdBy: string
     }[] = []
     const defaultCreatorId = Object.keys(finalAttendanceData)[0] || 'system'
     
     for (const event of updateRequest.events) {
-      for (let i = 0; i < event.count; i++) {
-        events.push({
-          matchId,
-          playerId: event.playerId,
-          eventType: event.eventType,
-          minute: null,
-          description: `${event.eventType.toLowerCase()} by player`,
-          createdBy: defaultCreatorId
-        })
-      }
+      events.push({
+        matchId,
+        playerId: event.playerId,
+        eventType: event.eventType,
+        minute: event.minute || null,
+        description: `${event.eventType.toLowerCase()} by player`,
+        createdBy: defaultCreatorId
+      })
     }
 
     // 5. Execute ONLY data persistence in transaction (should be fast)

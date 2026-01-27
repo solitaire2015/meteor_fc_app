@@ -32,6 +32,10 @@ interface Player {
   name: string;
   goals: number;
   assists: number;
+  yellowCards: number;
+  redCards: number;
+  penaltyGoals: number;
+  penaltyMisses: number;
   appearances?: number;
   matchesPlayed?: number;
   position?: Position;
@@ -69,7 +73,7 @@ export default function Leaderboard() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
-    fetchLeaderboard(activeTab as 'goals' | 'assists');
+    fetchLeaderboard(activeTab as 'goals' | 'assists' | 'yellow_cards' | 'red_cards');
   }, [activeTab, selectedYear]);
 
   useEffect(() => {
@@ -78,7 +82,7 @@ export default function Leaderboard() {
     }
   }, [showAllTime]);
 
-  const fetchLeaderboard = async (type: 'goals' | 'assists') => {
+  const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards') => {
     try {
       setLoading(true);
       const response = await fetch(`/api/leaderboard?type=${type}&year=${selectedYear}`);
@@ -116,10 +120,12 @@ export default function Leaderboard() {
             rank: index + 1
           }))
           .sort((a: any, b: any) => {
-            if (activeTab === 'goals') {
-              return (b.goals || 0) - (a.goals || 0);
-            } else {
-              return (b.assists || 0) - (a.assists || 0);
+            switch(activeTab) {
+              case 'goals': return (b.goals || 0) - (a.goals || 0);
+              case 'assists': return (b.assists || 0) - (a.assists || 0);
+              case 'yellow_cards': return (b.yellowCards || 0) - (a.yellowCards || 0);
+              case 'red_cards': return (b.redCards || 0) - (a.redCards || 0);
+              default: return 0;
             }
           })
           .map((player: any, index: number) => ({
@@ -188,11 +194,23 @@ export default function Leaderboard() {
     : listPlayers;
 
   const getCurrentStat = (player: Player) => {
-    return activeTab === 'goals' ? player.goals : player.assists;
+    switch(activeTab) {
+      case 'goals': return player.goals;
+      case 'assists': return player.assists;
+      case 'yellow_cards': return player.yellowCards;
+      case 'red_cards': return player.redCards;
+      default: return 0;
+    }
   };
 
   const getStatLabel = () => {
-    return activeTab === 'goals' ? '进球' : '助攻';
+    switch(activeTab) {
+      case 'goals': return '进球';
+      case 'assists': return '助攻';
+      case 'yellow_cards': return '黄牌';
+      case 'red_cards': return '红牌';
+      default: return '';
+    }
   };
 
   const getAppearances = (player: Player) => {
@@ -253,7 +271,7 @@ export default function Leaderboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
-          <TabsList className="grid w-fit grid-cols-2">
+          <TabsList className="grid w-fit grid-cols-4">
             <TabsTrigger value="goals" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               射手榜
@@ -261,6 +279,14 @@ export default function Leaderboard() {
             <TabsTrigger value="assists" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
               助攻榜
+            </TabsTrigger>
+            <TabsTrigger value="yellow_cards" className="flex items-center gap-2">
+              <div className="h-3 w-3 bg-yellow-500 rounded-sm"></div>
+              黄牌榜
+            </TabsTrigger>
+            <TabsTrigger value="red_cards" className="flex items-center gap-2">
+              <div className="h-3 w-3 bg-red-600 rounded-sm"></div>
+              红牌榜
             </TabsTrigger>
           </TabsList>
         </div>
@@ -368,12 +394,14 @@ export default function Leaderboard() {
                           <TableHead className="text-center">出场</TableHead>
                           <TableHead className="text-center">进球</TableHead>
                           <TableHead className="text-center">助攻</TableHead>
+                          <TableHead className="text-center">黄牌</TableHead>
+                          <TableHead className="text-center">红牌</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {paginatedPlayers.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                               暂无数据
                             </TableCell>
                           </TableRow>
@@ -416,7 +444,7 @@ export default function Leaderboard() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <div className="text-lg font-bold text-primary">
-                                  {getCurrentStat(player)}
+                                  {getCurrentStat(player) || 0}
                                 </div>
                               </TableCell>
                               <TableCell className="text-center">
@@ -427,6 +455,12 @@ export default function Leaderboard() {
                               </TableCell>
                               <TableCell className="text-center">
                                 {player.assists || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.yellowCards || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.redCards || 0}
                               </TableCell>
                             </TableRow>
                           ))

@@ -7,7 +7,7 @@ import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/c
 
 // Validation schema
 const leaderboardQuerySchema = z.object({
-  type: z.enum(['goals', 'assists']).default('goals'),
+  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards']).default('goals'),
   year: z.string().optional(),
   month: z.string().optional(),
   limit: z.string().optional()
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       limit: searchParams.get('limit') || undefined
     })
 
-    const cacheKey = buildCacheKey(new URL(request.url), 'v2')
+    const cacheKey = buildCacheKey(new URL(request.url), 'v2.1') // Bump version
     const cached = await getCachedJson<ApiResponse>(cacheKey)
     if (cached) {
       return NextResponse.json(cached)
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const eventTypes = ['GOAL', 'PENALTY_GOAL', 'ASSIST'] as const
+    const eventTypes = ['GOAL', 'PENALTY_GOAL', 'ASSIST', 'YELLOW_CARD', 'RED_CARD', 'PENALTY_MISS'] as const
 
     // Get all events for the period with player info (exclude deleted users)
     const events = await prisma.matchEvent.findMany({
@@ -70,7 +70,8 @@ export async function GET(request: Request) {
             email: true,
             avatarUrl: true,
             position: true,
-            jerseyNumber: true
+            jerseyNumber: true,
+            playerStatus: true
           }
         },
         match: {
@@ -107,15 +108,36 @@ export async function GET(request: Request) {
           playerStatus: player.playerStatus,
           goals: 0,
           assists: 0,
+          yellowCards: 0,
+          redCards: 0,
+          penaltyGoals: 0,
+          penaltyMisses: 0,
           matches: new Set(),
           lastMatchDate: null
         }
       }
 
-      if (event.eventType === 'GOAL' || event.eventType === 'PENALTY_GOAL') {
-        playerStats[playerId].goals++
-      } else if (event.eventType === 'ASSIST') {
-        playerStats[playerId].assists++
+      // Update stats based on event type
+      switch (event.eventType) {
+        case 'GOAL':
+          playerStats[playerId].goals++
+          break
+        case 'PENALTY_GOAL':
+          playerStats[playerId].goals++
+          playerStats[playerId].penaltyGoals++
+          break
+        case 'ASSIST':
+          playerStats[playerId].assists++
+          break
+        case 'YELLOW_CARD':
+          playerStats[playerId].yellowCards++
+          break
+        case 'RED_CARD':
+          playerStats[playerId].redCards++
+          break
+        case 'PENALTY_MISS':
+          playerStats[playerId].penaltyMisses++
+          break
       }
 
       playerStats[playerId].matches.add(event.matchId)
@@ -183,26 +205,37 @@ export async function GET(request: Request) {
 
     // Convert to array and sort
     const sortedPlayers = Object.values(playerStats)
-      .filter(player => query.type === 'goals' ? player.goals > 0 : player.assists > 0)
+      .filter(player => {
+        if (query.type === 'goals') return player.goals > 0
+        if (query.type === 'assists') return player.assists > 0
+        if (query.type === 'yellow_cards') return player.yellowCards > 0
+        if (query.type === 'red_cards') return player.redCards > 0
+        return false
+      })
       .map((player: LeaderboardPlayerStats) => ({
         ...player,
         matchesPlayed: player.matches.size,
         matches: undefined // Remove Set from response
       }))
-      .sort((a: Omit<LeaderboardPlayerStats, 'matches'> & { matchesPlayed: number }, b: Omit<LeaderboardPlayerStats, 'matches'> & { matchesPlayed: number }) => {
-        const aValue = query.type === 'goals' ? a.goals : a.assists
-        const bValue = query.type === 'goals' ? b.goals : b.assists
+      .sort((a, b) => {
+        let aValue = 0, bValue = 0
+
+        switch (query.type) {
+          case 'goals':
+            aValue = a.goals; bValue = b.goals; break
+          case 'assists':
+            aValue = a.assists; bValue = b.assists; break
+          case 'yellow_cards':
+            aValue = a.yellowCards; bValue = b.yellowCards; break
+          case 'red_cards':
+            aValue = a.redCards; bValue = b.redCards; break
+        }
 
         if (bValue === aValue) {
-          // If tied, sort by other stat as tiebreaker
-          const aTiebreaker = query.type === 'goals' ? a.assists : a.goals
-          const bTiebreaker = query.type === 'goals' ? b.assists : b.goals
-
-          if (bTiebreaker === aTiebreaker) {
-            // If still tied, sort by matches played
-            return b.matchesPlayed - a.matchesPlayed
-          }
-          return bTiebreaker - aTiebreaker
+          // Tiebreakers
+          // For cards, tiebreak by fewer matches played (worse ratio) or maybe just goals?
+          // Let's stick to goals/assists logic or matches played
+          return b.matchesPlayed - a.matchesPlayed
         }
         return bValue - aValue
       })
@@ -219,6 +252,10 @@ export async function GET(request: Request) {
       jerseyNumber: player.jerseyNumber,
       goals: player.goals,
       assists: player.assists,
+      yellowCards: player.yellowCards,
+      redCards: player.redCards,
+      penaltyGoals: player.penaltyGoals,
+      penaltyMisses: player.penaltyMisses,
       matchesPlayed: player.matchesPlayed,
       lastMatchDate: player.lastMatchDate
     }))

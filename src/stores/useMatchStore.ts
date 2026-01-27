@@ -9,6 +9,7 @@ import {
   type FeeOverrides,
   type AttendanceStats,
   type AttendanceDataItem,
+  type MatchEvent,
   matchInfoSchema,
   attendanceGridSchema,
 } from '@/lib/validations/match'
@@ -21,6 +22,7 @@ interface MatchStoreState {
   selectedPlayers: Player[]
   availablePlayers: Player[]
   attendanceData: AttendanceGrid
+  events: MatchEvent[]
   feeData: FeeCalculations
   feeOverrides: FeeOverrides
 
@@ -55,6 +57,13 @@ interface MatchStoreActions {
   setSelectedPlayers: (players: Player[]) => void
   updateAttendance: (data: AttendanceGrid) => void
   updateAttendanceItem: (userId: string, section: number, part: number, updates: Partial<AttendanceDataItem>) => void
+  
+  // Event Actions
+  addEvent: (event: MatchEvent) => void
+  removeEvent: (eventId: string) => void
+  updateEvent: (eventId: string, updates: Partial<MatchEvent>) => void
+  setEvents: (events: MatchEvent[]) => void
+
   setFeeOverride: (userId: string, override: Partial<FeeOverrides[string]>) => void
   removeFeeOverride: (userId: string) => void
 
@@ -85,6 +94,7 @@ const initialState: MatchStoreState = {
   selectedPlayers: [],
   availablePlayers: [],
   attendanceData: [],
+  events: [],
   feeData: [],
   feeOverrides: {},
   
@@ -221,8 +231,8 @@ export const useMatchStore = create<MatchStore>()(
         const data = await response.json()
 
         if (data.success && data.data) {
-          // Transform the new API response format back to our internal format
           const attendanceArray: any[] = []
+          const eventsList: MatchEvent[] = []
           
           // Get selected players for filtering
           const selectedPlayerIds = new Set(data.data.selectedPlayers || [])
@@ -230,46 +240,63 @@ export const useMatchStore = create<MatchStore>()(
           // Check if we have attendance data
           if (data.data.attendanceData && Object.keys(data.data.attendanceData).length > 0) {
             Object.entries(data.data.attendanceData).forEach(([userId, userData]: [string, any]) => {
-              // Skip users not in selected players list
-              if (!selectedPlayerIds.has(userId)) {
-                return
-              }
+              if (!selectedPlayerIds.has(userId)) return
+              
               const { attendance, goalkeeper, isLateArrival } = userData
               
-              // Get events for this user
-              const userEvents = data.data.eventsSummary?.[userId] || { goals: 0, assists: 0 }
-              
-              // Convert back to grid format - include ALL cells for complete data structure
+              // Convert back to grid format
               for (let section = 1; section <= 3; section++) {
                 for (let part = 1; part <= 3; part++) {
                   const sectionStr = section.toString()
                   const partStr = part.toString()
                   
-                  // Access the attendance structure correctly
-                  const value = attendance?.[sectionStr]?.[partStr] || 0
-                  const isGoalkeeper = goalkeeper?.[sectionStr]?.[partStr] || false
-                  
-                  // Include ALL cells to maintain complete data structure
                   attendanceArray.push({
                     userId,
                     section,
                     part,
-                    value,
-                    isGoalkeeper,
+                    value: attendance?.[sectionStr]?.[partStr] || 0,
+                    isGoalkeeper: goalkeeper?.[sectionStr]?.[partStr] || false,
                     isLateArrival: isLateArrival || false,
-                    // Only show goals/assists on first cell to avoid duplication
-                    goals: section === 1 && part === 1 ? userEvents.goals : 0,
-                    assists: section === 1 && part === 1 ? userEvents.assists : 0,
+                    goals: 0, // Legacy field, kept for compatibility but should be ignored
+                    assists: 0, // Legacy field
                   })
                 }
               }
             })
           }
+
+          // Populate events list
+          if (data.data.events) {
+             // If the API returns a list of events directly (new format)
+             data.data.events.forEach((event: any) => {
+               eventsList.push({
+                 id: event.id,
+                 playerId: event.playerId,
+                 eventType: event.eventType,
+                 minute: event.minute,
+                 description: event.description
+               })
+             })
+          } else if (data.data.eventsSummary) {
+            // Fallback for backward compatibility if API returns old summary format
+             Object.entries(data.data.eventsSummary).forEach(([userId, summary]: [string, any]) => {
+               // We can't reconstruct exact events from summary, so we just add generic ones
+               // This is a migration edge case
+               for(let i=0; i<summary.goals; i++) {
+                 eventsList.push({ playerId: userId, eventType: 'GOAL' })
+               }
+               for(let i=0; i<summary.assists; i++) {
+                 eventsList.push({ playerId: userId, eventType: 'ASSIST' })
+               }
+             })
+          }
           
           const validatedAttendance = attendanceGridSchema.parse(attendanceArray)
+          
           set(state => ({
             ...state,
             attendanceData: validatedAttendance,
+            events: eventsList,
             isLoading: { ...state.isLoading, attendance: false },
             isDirty: { ...state.isDirty, attendance: false }
           }))
@@ -277,6 +304,7 @@ export const useMatchStore = create<MatchStore>()(
           set(state => ({
             ...state,
             attendanceData: [],
+            events: [],
             isLoading: { ...state.isLoading, attendance: false },
             isDirty: { ...state.isDirty, attendance: false }
           }))
@@ -348,16 +376,21 @@ export const useMatchStore = create<MatchStore>()(
         const cleanedAttendanceData = state.attendanceData.filter(attendance => 
           newSelectedPlayerIds.has(attendance.userId)
         )
+
+        // Filter out events for players no longer selected
+        const cleanedEvents = state.events.filter(event => 
+          newSelectedPlayerIds.has(event.playerId)
+        )
         
         return {
           ...state,
           selectedPlayers: players,
           attendanceData: cleanedAttendanceData,
+          events: cleanedEvents,
           isDirty: { 
             ...state.isDirty, 
             players: true,
-            // Mark attendance as dirty if we removed any data
-            attendance: cleanedAttendanceData.length !== state.attendanceData.length ? true : state.isDirty.attendance
+            attendance: (cleanedAttendanceData.length !== state.attendanceData.length || cleanedEvents.length !== state.events.length) ? true : state.isDirty.attendance
           }
         }
       })
@@ -404,6 +437,39 @@ export const useMatchStore = create<MatchStore>()(
       })
     },
 
+    // Event Actions
+    addEvent: (event: MatchEvent) => {
+      set(state => ({
+        ...state,
+        events: [...state.events, { ...event, id: event.id || crypto.randomUUID() }],
+        isDirty: { ...state.isDirty, attendance: true }
+      }))
+    },
+
+    removeEvent: (eventId: string) => {
+      set(state => ({
+        ...state,
+        events: state.events.filter(e => e.id !== eventId),
+        isDirty: { ...state.isDirty, attendance: true }
+      }))
+    },
+
+    updateEvent: (eventId: string, updates: Partial<MatchEvent>) => {
+      set(state => ({
+        ...state,
+        events: state.events.map(e => e.id === eventId ? { ...e, ...updates } : e),
+        isDirty: { ...state.isDirty, attendance: true }
+      }))
+    },
+
+    setEvents: (events: MatchEvent[]) => {
+      set(state => ({
+        ...state,
+        events,
+        isDirty: { ...state.isDirty, attendance: true }
+      }))
+    },
+
     // Set fee override
     setFeeOverride: (userId: string, override: Partial<FeeOverrides[string]>) => {
       set(state => ({
@@ -443,8 +509,8 @@ export const useMatchStore = create<MatchStore>()(
         // Transform data to ensure proper types before sending
         const transformedMatchInfo = {
           opponentTeam: matchInfo.opponentTeam,
-          matchDate: matchInfo.matchDate, // Already in ISO format from database
-          matchTime: matchInfo.matchTime || null, // Already transformed to ISO string in component
+          matchDate: matchInfo.matchDate, 
+          matchTime: matchInfo.matchTime || null,
           ourScore: matchInfo.ourScore === '' || matchInfo.ourScore === undefined || matchInfo.ourScore === null ? null : Number(matchInfo.ourScore),
           opponentScore: matchInfo.opponentScore === '' || matchInfo.opponentScore === undefined || matchInfo.opponentScore === null ? null : Number(matchInfo.opponentScore),
           fieldFeeTotal: Number(matchInfo.fieldFeeTotal),
@@ -547,7 +613,7 @@ export const useMatchStore = create<MatchStore>()(
 
     // Save attendance
     saveAttendance: async () => {
-      const { matchInfo, attendanceData, selectedPlayers } = get()
+      const { matchInfo, attendanceData, selectedPlayers, events } = get()
       if (!matchInfo) return
 
       set(state => ({
@@ -558,19 +624,12 @@ export const useMatchStore = create<MatchStore>()(
       try {
         // Transform attendance data to the new API format
         const transformedData: Record<string, any> = {}
-        const events: Array<{ playerId: string, eventType: 'GOAL' | 'ASSIST', count: number }> = []
-
-        // Create a set of selected player IDs for quick lookup
         const selectedPlayerIds = new Set(selectedPlayers.map(p => p.id))
-
-        // Group attendance data by user - ONLY for selected players
         const userAttendanceMap = new Map<string, any>()
 
         attendanceData.forEach(item => {
-          // Skip if player is not selected
-          if (!selectedPlayerIds.has(item.userId)) {
-            return
-          }
+          if (!selectedPlayerIds.has(item.userId)) return
+          
           if (!userAttendanceMap.has(item.userId)) {
             userAttendanceMap.set(item.userId, {
               attendance: {
@@ -583,64 +642,33 @@ export const useMatchStore = create<MatchStore>()(
                 "2": {"1": false, "2": false, "3": false},
                 "3": {"1": false, "2": false, "3": false}
               },
-              isLateArrival: false,
-              goals: 0,
-              assists: 0
+              isLateArrival: false
             })
           }
 
           const userData = userAttendanceMap.get(item.userId)!
-          
-          // Set attendance value
           userData.attendance[item.section.toString()][item.part.toString()] = item.value
-          
-          // Set goalkeeper status
-          if (item.isGoalkeeper) {
-            userData.goalkeeper[item.section.toString()][item.part.toString()] = true
-          }
-          
-          // Set late arrival
-          if (item.isLateArrival) {
-            userData.isLateArrival = true
-          }
-          
-          // Aggregate goals and assists (take max to avoid duplicates)
-          userData.goals = Math.max(userData.goals, item.goals)
-          userData.assists = Math.max(userData.assists, item.assists)
+          if (item.isGoalkeeper) userData.goalkeeper[item.section.toString()][item.part.toString()] = true
+          if (item.isLateArrival) userData.isLateArrival = true
         })
 
-        // Convert to the expected format and collect events
         userAttendanceMap.forEach((userData, userId) => {
           transformedData[userId] = {
             attendance: userData.attendance,
             goalkeeper: userData.goalkeeper,
             isLateArrival: userData.isLateArrival
           }
-
-          // Add events if there are any
-          if (userData.goals > 0) {
-            events.push({
-              playerId: userId,
-              eventType: 'GOAL',
-              count: userData.goals
-            })
-          }
-          
-          if (userData.assists > 0) {
-            events.push({
-              playerId: userId,
-              eventType: 'ASSIST',
-              count: userData.assists
-            })
-          }
         })
+
+        // Filter events for selected players only
+        const filteredEvents = events.filter(e => selectedPlayerIds.has(e.playerId))
 
         const response = await fetch(`/api/admin/matches/${matchInfo.id}/attendance`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             attendanceData: transformedData,
-            events: events,
+            events: filteredEvents,
             matchInfo: {
               fieldFeeTotal: matchInfo.fieldFeeTotal,
               waterFeeTotal: matchInfo.waterFeeTotal
@@ -658,10 +686,9 @@ export const useMatchStore = create<MatchStore>()(
             isLoading: { ...state.isLoading, saving: false }
           }))
           
-          // Reload fees since attendance data changed (affects fee calculations)
           await get().loadFees(matchInfo.id)
           
-          toast.success(`出勤数据保存成功！保存了 ${data.data.participationsCount} 名参与者，${data.data.eventsCount} 个事件，费用已自动更新`)
+          toast.success(`出勤数据保存成功！`)
         } else {
           throw new Error(data.error?.message || 'Failed to save attendance')
         }
@@ -786,12 +813,12 @@ export const useMatchStore = create<MatchStore>()(
 
     // Computed: Get attendance stats
     getAttendanceStats: () => {
-      const { attendanceData } = get()
+      const { attendanceData, events } = get()
       
       const stats: AttendanceStats = {
         totalParticipants: new Set(attendanceData.filter(a => a.value > 0).map(a => a.userId)).size,
-        totalGoals: attendanceData.reduce((sum, a) => sum + a.goals, 0),
-        totalAssists: attendanceData.reduce((sum, a) => sum + a.assists, 0),
+        totalGoals: events.filter(e => e.eventType === 'GOAL' || e.eventType === 'PENALTY_GOAL').length,
+        totalAssists: events.filter(e => e.eventType === 'ASSIST').length,
         averageAttendance: attendanceData.length > 0 ? attendanceData.reduce((sum, a) => sum + a.value, 0) / attendanceData.length : 0,
         goalkeeperCount: attendanceData.filter(a => a.isGoalkeeper).length,
         lateArrivals: new Set(attendanceData.filter(a => a.isLateArrival).map(a => a.userId)).size,
@@ -854,6 +881,7 @@ export const useMatchInfo = () => useMatchStore(state => state.matchInfo)
 export const useSelectedPlayers = () => useMatchStore(state => state.selectedPlayers)
 export const useAvailablePlayers = () => useMatchStore(state => state.availablePlayers)
 export const useAttendanceData = () => useMatchStore(state => state.attendanceData)
+export const useEvents = () => useMatchStore(state => state.events)
 export const useFeeData = () => useMatchStore(state => state.feeData)
 export const useIsDirty = () => useMatchStore(state => state.isDirty)
 export const useIsLoading = () => useMatchStore(state => state.isLoading)
@@ -869,6 +897,10 @@ export const useUpdateMatchInfo = () => useMatchStore(state => state.updateMatch
 export const useSetSelectedPlayers = () => useMatchStore(state => state.setSelectedPlayers)
 export const useUpdateAttendance = () => useMatchStore(state => state.updateAttendance)
 export const useUpdateAttendanceItem = () => useMatchStore(state => state.updateAttendanceItem)
+export const useAddEvent = () => useMatchStore(state => state.addEvent)
+export const useRemoveEvent = () => useMatchStore(state => state.removeEvent)
+export const useUpdateEvent = () => useMatchStore(state => state.updateEvent)
+export const useSetEvents = () => useMatchStore(state => state.setEvents)
 export const useSetFeeOverride = () => useMatchStore(state => state.setFeeOverride)
 export const useRemoveFeeOverride = () => useMatchStore(state => state.removeFeeOverride)
 export const useSaveMatchInfo = () => useMatchStore(state => state.saveMatchInfo)

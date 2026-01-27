@@ -65,7 +65,16 @@ export const StatsQuerySchema = z.object({
 // Match event schema
 export const CreateMatchEventSchema = z.object({
   playerId: z.string().min(1),
-  eventType: z.enum(['GOAL', 'ASSIST', 'YELLOW_CARD', 'RED_CARD', 'PENALTY_GOAL', 'OWN_GOAL']),
+  eventType: z.enum([
+    'GOAL', 
+    'ASSIST', 
+    'YELLOW_CARD', 
+    'RED_CARD', 
+    'PENALTY_GOAL', 
+    'PENALTY_MISS',
+    'OWN_GOAL',
+    'SAVE'
+  ]),
   minute: z.number().int().min(0).max(120).optional(),
   description: z.string().max(255).optional()
 })
@@ -94,12 +103,23 @@ export const AttendanceUpdateSchema = z.object({
   })),
   events: z.array(z.object({
     playerId: z.string().min(1),
-    eventType: z.enum(['GOAL', 'ASSIST']),
-    count: z.number().int().min(0)
+    eventType: z.enum([
+      'GOAL', 
+      'ASSIST', 
+      'YELLOW_CARD', 
+      'RED_CARD', 
+      'PENALTY_GOAL', 
+      'PENALTY_MISS',
+      'OWN_GOAL',
+      'SAVE'
+    ]),
+    minute: z.number().int().min(0).max(120).optional()
   })).optional().default([]),
   matchInfo: z.object({
     fieldFeeTotal: z.number().min(0),
-    waterFeeTotal: z.number().min(0)
+    waterFeeTotal: z.number().min(0),
+    lateFeeRate: z.number().min(0).optional(),
+    videoFeePerUnit: z.number().min(0).optional()
   }).optional(),
   selectedPlayerIds: z.array(z.string()).optional()
 })
