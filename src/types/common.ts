@@ -118,6 +118,7 @@ export interface LeaderboardPlayerStats {
   penaltyGoals: number;
   penaltyMisses: number;
   ownGoals: number;
+  saves: number;
   matches: Set<string>;
   lastMatchDate: Date | null;
   matchesPlayed?: number;
@@ -140,6 +141,7 @@ export interface LeaderboardPlayer {
   penaltyGoals: number;
   penaltyMisses: number;
   ownGoals: number;
+  saves: number;
   matchesPlayed: number;
   lastMatchDate: Date | null;
 }

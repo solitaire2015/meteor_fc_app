@@ -7,7 +7,7 @@ import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/c
 
 // Validation schema
 const leaderboardQuerySchema = z.object({
-  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards', 'penalty_goals', 'own_goals']).default('goals'),
+  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards', 'penalty_goals', 'own_goals', 'saves']).default('goals'),
   year: z.string().optional(),
   month: z.string().optional(),
   limit: z.string().optional()
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const eventTypes = ['GOAL', 'PENALTY_GOAL', 'ASSIST', 'YELLOW_CARD', 'RED_CARD', 'PENALTY_MISS', 'OWN_GOAL'] as const
+    const eventTypes = ['GOAL', 'PENALTY_GOAL', 'ASSIST', 'YELLOW_CARD', 'RED_CARD', 'PENALTY_MISS', 'OWN_GOAL', 'SAVE'] as const
 
     // Get all events for the period with player info (exclude deleted users)
     const events = await prisma.matchEvent.findMany({
@@ -113,6 +113,7 @@ export async function GET(request: Request) {
           penaltyGoals: 0,
           penaltyMisses: 0,
           ownGoals: 0,
+          saves: 0,
           matches: new Set(),
           lastMatchDate: null
         }
@@ -141,6 +142,9 @@ export async function GET(request: Request) {
           break
         case 'OWN_GOAL':
           playerStats[playerId].ownGoals++
+          break
+        case 'SAVE':
+          playerStats[playerId].saves++
           break
       }
 
@@ -216,6 +220,7 @@ export async function GET(request: Request) {
         if (query.type === 'red_cards') return player.redCards > 0
         if (query.type === 'penalty_goals') return player.penaltyGoals > 0 || player.penaltyMisses > 0
         if (query.type === 'own_goals') return player.ownGoals > 0
+        if (query.type === 'saves') return player.saves > 0
         return false
       })
       .map((player: LeaderboardPlayerStats) => ({
@@ -239,6 +244,8 @@ export async function GET(request: Request) {
             aValue = a.penaltyGoals; bValue = b.penaltyGoals; break
           case 'own_goals':
             aValue = a.ownGoals; bValue = b.ownGoals; break
+          case 'saves':
+            aValue = a.saves; bValue = b.saves; break
         }
 
         if (bValue === aValue) {
@@ -267,6 +274,7 @@ export async function GET(request: Request) {
       penaltyGoals: player.penaltyGoals,
       penaltyMisses: player.penaltyMisses,
       ownGoals: player.ownGoals,
+      saves: player.saves,
       matchesPlayed: player.matchesPlayed,
       lastMatchDate: player.lastMatchDate
     }))
