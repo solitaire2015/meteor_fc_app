@@ -56,6 +56,7 @@ export default function DetailedEventLogger({
 }: DetailedEventLoggerProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('')
   const [eventType, setEventType] = useState<string>('GOAL')
+  const [section, setSection] = useState<number>(1)
   const [minute, setMinute] = useState<string>('')
 
   // Filter players who have marked attendance > 0
@@ -64,18 +65,24 @@ export default function DetailedEventLogger({
   )
 
   const handleAddEvent = () => {
-    if (!selectedPlayerId || !eventType) return
+    if (!selectedPlayerId || !eventType || !section || !minute) return
+
+    // Calculate absolute match minute based on section (30 mins per section)
+    // Section 1: 1-30+ (starts at 0 offset)
+    // Section 2: 31-60+ (starts at 30 offset)
+    // Section 3: 61-90+ (starts at 60 offset)
+    const absoluteMinute = (section - 1) * 30 + parseInt(minute)
 
     const newEvent: MatchEvent = {
       id: crypto.randomUUID(),
       playerId: selectedPlayerId,
       eventType: eventType as any,
-      minute: minute ? parseInt(minute) : undefined,
+      minute: absoluteMinute,
     }
 
     onAddEvent(newEvent)
     
-    // Reset form but keep player selected for rapid entry
+    // Reset form but keep player/section selected for rapid entry
     setEventType('GOAL')
     setMinute('')
   }
@@ -170,23 +177,47 @@ export default function DetailedEventLogger({
             </Select>
           </div>
 
-          <div className="w-full md:w-24 space-y-2">
-            <Label>时间(分钟)</Label>
-            <div className="relative">
-              <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                type="number" 
-                min="0" 
-                max="120" 
-                placeholder="--" 
-                className="pl-8"
-                value={minute}
-                onChange={(e) => setMinute(e.target.value)}
-              />
+          <div className="w-full md:w-48 space-y-2">
+            <Label>时间</Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Select 
+                  value={section ? section.toString() : ''} 
+                  onValueChange={(val) => setSection(parseInt(val))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="节数" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">第一节</SelectItem>
+                    <SelectItem value="2">第二节</SelectItem>
+                    <SelectItem value="3">第三节</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="relative flex-1">
+                <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max="45" 
+                  placeholder="分" 
+                  className="pl-8"
+                  value={minute}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value)
+                    if (!isNaN(val) && val >= 0 && val <= 45) {
+                      setMinute(e.target.value)
+                    } else if (e.target.value === '') {
+                      setMinute('')
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
 
-          <Button onClick={handleAddEvent} disabled={!selectedPlayerId}>
+          <Button onClick={handleAddEvent} disabled={!selectedPlayerId || !section || !minute}>
             <Plus className="h-4 w-4 mr-2" />
             添加
           </Button>
@@ -197,7 +228,7 @@ export default function DetailedEventLogger({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">时间</TableHead>
+                <TableHead className="w-[120px]">时间</TableHead>
                 <TableHead>球员</TableHead>
                 <TableHead>事件</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -213,10 +244,33 @@ export default function DetailedEventLogger({
               ) : (
                 sortedEvents.map((event) => {
                   const player = players.find(p => p.id === event.playerId)
+                  
+                  // Calculate display time (Section + Minute)
+                  let displayTime = '-'
+                  if (event.minute !== undefined) {
+                    const sec = Math.ceil(event.minute / 30) || 1
+                    // Logic: 
+                    // 0-30 -> Section 1
+                    // 31-60 -> Section 2
+                    // 61-90 -> Section 3
+                    // But actually we want to reverse the input logic:
+                    // absolute = (section-1)*30 + min
+                    // so section = floor(absolute/30) + 1? No, 30 is end of sec 1.
+                    // Let's assume standard 30min sections as per user request.
+                    // If absolute is 45 (Sec 2, 15th min)
+                    // Section = Math.floor((45-1)/30) + 1 = 2
+                    // Minute = 45 - (2-1)*30 = 15
+                    
+                    const calculatedSection = Math.floor((event.minute - 1) / 30) + 1
+                    const calculatedMinute = event.minute - (calculatedSection - 1) * 30
+                    
+                    displayTime = `第${calculatedSection}节 ${calculatedMinute}'`
+                  }
+
                   return (
                     <TableRow key={event.id}>
                       <TableCell className="font-mono text-muted-foreground">
-                        {event.minute ? `${event.minute}'` : '-'}
+                        {displayTime}
                       </TableCell>
                       <TableCell className="font-medium">
                         {player?.name || '未知球员'}

@@ -129,7 +129,7 @@ export async function GET(
       success: true,
       data: {
         attendanceData: result.attendanceData,
-        eventsSummary: result.eventsSummary,
+        events: result.events, // Use the new events array
         totalParticipants: result.totalParticipants,
         totalEvents: result.totalEvents,
         selectedPlayers: result.selectedPlayers

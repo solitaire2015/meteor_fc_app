@@ -345,6 +345,7 @@ export class AttendanceService {
   async getAttendanceData(matchId: string): Promise<{
     attendanceData: Record<string, any>
     eventsSummary: Record<string, { goals: number; assists: number }>
+    events: any[]
     totalParticipants: number
     totalEvents: number
     selectedPlayers: string[]
@@ -382,6 +383,9 @@ export class AttendanceService {
             name: true
           }
         }
+      },
+      orderBy: {
+        minute: 'asc' // Sort by minute for display
       }
     })
 
@@ -396,7 +400,7 @@ export class AttendanceService {
       }
     }
 
-    // Count events by player and type
+    // Count events by player and type (for summary compatibility)
     const eventsSummary = events.reduce((acc, event) => {
       if (!acc[event.playerId]) {
         acc[event.playerId] = { goals: 0, assists: 0 }
@@ -414,6 +418,7 @@ export class AttendanceService {
     return {
       attendanceData,
       eventsSummary,
+      events, // Return raw events for detailed logger
       totalParticipants: participations.length,
       totalEvents: events.length,
       selectedPlayers
