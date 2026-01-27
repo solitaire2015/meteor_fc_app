@@ -7,7 +7,7 @@ import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/c
 
 // Validation schema
 const leaderboardQuerySchema = z.object({
-  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards', 'penalty_goals', 'own_goals', 'saves']).default('goals'),
+  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards', 'penalty_goals', 'penalty_misses', 'own_goals', 'saves']).default('goals'),
   year: z.string().optional(),
   month: z.string().optional(),
   limit: z.string().optional()
@@ -218,7 +218,8 @@ export async function GET(request: Request) {
         if (query.type === 'assists') return player.assists > 0
         if (query.type === 'yellow_cards') return player.yellowCards > 0
         if (query.type === 'red_cards') return player.redCards > 0
-        if (query.type === 'penalty_goals') return player.penaltyGoals > 0 || player.penaltyMisses > 0
+        if (query.type === 'penalty_goals') return player.penaltyGoals > 0
+        if (query.type === 'penalty_misses') return player.penaltyMisses > 0
         if (query.type === 'own_goals') return player.ownGoals > 0
         if (query.type === 'saves') return player.saves > 0
         return false
@@ -242,6 +243,8 @@ export async function GET(request: Request) {
             aValue = a.redCards; bValue = b.redCards; break
           case 'penalty_goals':
             aValue = a.penaltyGoals; bValue = b.penaltyGoals; break
+          case 'penalty_misses':
+            aValue = a.penaltyMisses; bValue = b.penaltyMisses; break
           case 'own_goals':
             aValue = a.ownGoals; bValue = b.ownGoals; break
           case 'saves':

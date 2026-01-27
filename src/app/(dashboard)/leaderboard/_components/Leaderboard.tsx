@@ -21,7 +21,8 @@ import {
   Crown,
   Calendar,
   Clock,
-  Eye
+  Eye,
+  XCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
@@ -75,7 +76,7 @@ export default function Leaderboard() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
-    fetchLeaderboard(activeTab as 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'own_goals' | 'saves');
+    fetchLeaderboard(activeTab as 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves');
   }, [activeTab, selectedYear]);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function Leaderboard() {
     }
   }, [showAllTime]);
 
-  const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'own_goals' | 'saves') => {
+  const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves') => {
     try {
       setLoading(true);
       const response = await fetch(`/api/leaderboard?type=${type}&year=${selectedYear}`);
@@ -127,7 +128,8 @@ export default function Leaderboard() {
               case 'assists': return (b.assists || 0) - (a.assists || 0);
               case 'yellow_cards': return (b.yellowCards || 0) - (a.yellowCards || 0);
               case 'red_cards': return (b.redCards || 0) - (a.redCards || 0);
-              case 'penalty_goals': return ((b.penaltyGoals || 0) + (b.penaltyMisses || 0)) - ((a.penaltyGoals || 0) + (a.penaltyMisses || 0));
+              case 'penalty_goals': return (b.penaltyGoals || 0) - (a.penaltyGoals || 0);
+              case 'penalty_misses': return (b.penaltyMisses || 0) - (a.penaltyMisses || 0);
               case 'own_goals': return (b.ownGoals || 0) - (a.ownGoals || 0);
               case 'saves': return (b.saves || 0) - (a.saves || 0);
               default: return 0;
@@ -204,7 +206,8 @@ export default function Leaderboard() {
       case 'assists': return player.assists;
       case 'yellow_cards': return player.yellowCards;
       case 'red_cards': return player.redCards;
-      case 'penalty_goals': return (player.penaltyGoals || 0) + (player.penaltyMisses || 0); // Total penalties taken
+      case 'penalty_goals': return player.penaltyGoals;
+      case 'penalty_misses': return player.penaltyMisses;
       case 'own_goals': return player.ownGoals;
       case 'saves': return player.saves;
       default: return 0;
@@ -217,7 +220,8 @@ export default function Leaderboard() {
       case 'assists': return '助攻';
       case 'yellow_cards': return '黄牌';
       case 'red_cards': return '红牌';
-      case 'penalty_goals': return '点球数';
+      case 'penalty_goals': return '点球进球';
+      case 'penalty_misses': return '点球罚失';
       case 'own_goals': return '乌龙球';
       case 'saves': return '扑救';
       default: return '';
@@ -282,7 +286,7 @@ export default function Leaderboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
-          <TabsList className="grid w-fit grid-cols-7 gap-1">
+          <TabsList className="grid w-fit grid-cols-8 gap-1">
             <TabsTrigger value="goals" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               射手榜
@@ -301,7 +305,11 @@ export default function Leaderboard() {
             </TabsTrigger>
             <TabsTrigger value="penalty_goals" className="flex items-center gap-2">
               <Target className="h-4 w-4 text-green-600" />
-              点球榜
+              点球进
+            </TabsTrigger>
+            <TabsTrigger value="penalty_misses" className="flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-red-500" />
+              点球失
             </TabsTrigger>
             <TabsTrigger value="own_goals" className="flex items-center gap-2">
               <Target className="h-4 w-4 text-red-400" />
@@ -419,7 +427,8 @@ export default function Leaderboard() {
                           <TableHead className="text-center">助攻</TableHead>
                           <TableHead className="text-center">黄牌</TableHead>
                           <TableHead className="text-center">红牌</TableHead>
-                          <TableHead className="text-center">点球</TableHead>
+                          <TableHead className="text-center">点球进</TableHead>
+                          <TableHead className="text-center">点球失</TableHead>
                           <TableHead className="text-center">乌龙</TableHead>
                           <TableHead className="text-center">扑救</TableHead>
                         </TableRow>
@@ -489,9 +498,10 @@ export default function Leaderboard() {
                                 {player.redCards || 0}
                               </TableCell>
                               <TableCell className="text-center">
-                                {((player.penaltyGoals || 0) + (player.penaltyMisses || 0)) > 0 ? 
-                                  `${player.penaltyGoals}/${(player.penaltyGoals || 0) + (player.penaltyMisses || 0)}` : 
-                                  '-'}
+                                {player.penaltyGoals || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.penaltyMisses || 0}
                               </TableCell>
                               <TableCell className="text-center">
                                 {player.ownGoals || 0}
