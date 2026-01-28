@@ -420,7 +420,96 @@ export default function Leaderboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-md border">
+                  {/* Mobile list (phone-first) */}
+                  <div className="sm:hidden space-y-3">
+                    {paginatedPlayers.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">暂无数据</div>
+                    ) : (
+                      paginatedPlayers.map((player) => (
+                        <div
+                          key={player.id}
+                          role="button"
+                          tabIndex={0}
+                          className="rounded-lg border bg-background p-3 shadow-sm active:scale-[0.99] transition-transform"
+                          onClick={() => handlePlayerClick(player)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') handlePlayerClick(player)
+                          }}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Badge variant="outline" className={getRankBadgeColor(player.rank)}>
+                                {player.rank}
+                              </Badge>
+                              <Avatar className="h-9 w-9 shrink-0">
+                                <AvatarImage src={player.avatarUrl || ""} />
+                                <AvatarFallback>{player.abbreviation}</AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <div className="font-medium truncate">{player.name}</div>
+                                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                  <span>{getAppearances(player)} 场</span>
+                                  {player.position ? (
+                                    <span className="inline-flex items-center">
+                                      <Badge className={getPositionColor(player.position)}>{player.position}</Badge>
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-xs text-muted-foreground">{getStatLabel()}</div>
+                              <div className="text-xl font-bold text-primary leading-tight">
+                                {getCurrentStat(player) || 0}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                            <div className="rounded-md bg-muted/40 py-2">
+                              <div className="text-[10px] text-muted-foreground">进球</div>
+                              <div className="text-sm font-semibold">{player.goals || 0}</div>
+                            </div>
+                            <div className="rounded-md bg-muted/40 py-2">
+                              <div className="text-[10px] text-muted-foreground">助攻</div>
+                              <div className="text-sm font-semibold">{player.assists || 0}</div>
+                            </div>
+                            <div className="rounded-md bg-muted/40 py-2">
+                              <div className="text-[10px] text-muted-foreground">黄牌</div>
+                              <div className="text-sm font-semibold">{player.yellowCards || 0}</div>
+                            </div>
+                            <div className="rounded-md bg-muted/40 py-2">
+                              <div className="text-[10px] text-muted-foreground">红牌</div>
+                              <div className="text-sm font-semibold">{player.redCards || 0}</div>
+                            </div>
+                          </div>
+
+                          <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+                            <div className="rounded-md bg-muted/20 py-2">
+                              <div className="text-[10px] text-muted-foreground">点球进</div>
+                              <div className="text-sm font-semibold">{player.penaltyGoals || 0}</div>
+                            </div>
+                            <div className="rounded-md bg-muted/20 py-2">
+                              <div className="text-[10px] text-muted-foreground">点球失</div>
+                              <div className="text-sm font-semibold">{player.penaltyMisses || 0}</div>
+                            </div>
+                            <div className="rounded-md bg-muted/20 py-2">
+                              <div className="text-[10px] text-muted-foreground">乌龙</div>
+                              <div className="text-sm font-semibold">{player.ownGoals || 0}</div>
+                            </div>
+                            <div className="rounded-md bg-muted/20 py-2">
+                              <div className="text-[10px] text-muted-foreground">扑救</div>
+                              <div className="text-sm font-semibold">{player.saves || 0}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Desktop/tablet: keep table, but allow horizontal scroll on narrower screens */}
+                  <div className="hidden sm:block rounded-md border overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -442,7 +531,7 @@ export default function Leaderboard() {
                       <TableBody>
                         {paginatedPlayers.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                               暂无数据
                             </TableCell>
                           </TableRow>
@@ -524,12 +613,12 @@ export default function Leaderboard() {
 
                   {/* Pagination */}
                   {showAllPlayers && totalPages > 1 && (
-                    <div className="flex items-center justify-between pt-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
                       <div className="text-sm text-muted-foreground">
                         第 {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, currentPlayers.length - PODIUM_COUNT)} 条，
                         共 {currentPlayers.length - PODIUM_COUNT} 条记录
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-end">
                         <Button
                           variant="outline"
                           size="sm"
