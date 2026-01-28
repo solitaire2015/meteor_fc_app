@@ -238,8 +238,27 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
         return change.data.updates.map(update => {
           const player = formatName(update.playerId);
           const details: string[] = [];
-          if (update.goals !== undefined) details.push(`进球 ${update.goals}`);
-          if (update.assists !== undefined) details.push(`助攻 ${update.assists}`);
+          if (update.eventType) {
+            const eventLabel = {
+              GOAL: "进球",
+              ASSIST: "助攻",
+              YELLOW_CARD: "黄牌",
+              RED_CARD: "红牌",
+              PENALTY_GOAL: "点球进",
+              PENALTY_MISS: "点球失",
+              OWN_GOAL: "乌龙",
+              SAVE: "扑救"
+            }[update.eventType] || update.eventType;
+            
+            let timeInfo = "";
+            if (update.minute !== undefined) {
+              timeInfo = ` (${update.minute}')`;
+            }
+            
+            details.push(`${eventLabel}${timeInfo}`);
+          }
+          if (update.goals !== undefined) details.push(`进球 ${update.goals}`); // Legacy support
+          if (update.assists !== undefined) details.push(`助攻 ${update.assists}`); // Legacy support
           return `${player}: ${details.join("，") || "无变化"}`;
         });
       }
