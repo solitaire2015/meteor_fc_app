@@ -111,6 +111,7 @@ const currentMatchSchema = z.object({
 
 export const assistantContextSchema = z.object({
   page: z.string(),
+  conversationId: z.string().optional(),
   currentUser: z
     .object({
       id: z.string(),

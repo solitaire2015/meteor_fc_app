@@ -39,6 +39,7 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
   const [activeAssistantId, setActiveAssistantId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState(false);
+  const [conversationId] = useState(() => createId());
 
   const { isStreaming, startStream } = useAssistantStream();
   const nameById = useMemo(() => {
@@ -53,12 +54,13 @@ export default function AssistantWidget({ context, onApplyPatch, onAfterApplyAll
   const buildContextPayload = useCallback(
     () => ({
       ...context,
+      conversationId,
       origin:
         context.origin ??
         (typeof window !== "undefined" ? window.location.origin : undefined),
       now: new Date().toISOString(),
     }),
-    [context]
+    [context, conversationId]
   );
 
   const applyAllPatches = useCallback(async () => {

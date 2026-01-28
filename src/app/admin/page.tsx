@@ -38,6 +38,14 @@ export default function AdminPage() {
             <a href="/admin/settings">进入系统设置</a>
           </Button>
         </div>
+
+        <div className="bg-card p-6 rounded-lg border">
+          <h3 className="text-lg font-semibold mb-2">AI 聊天记录</h3>
+          <p className="text-muted-foreground mb-4">查看用户与 AI 助手的对话历史</p>
+          <Button asChild className="w-full" variant="outline">
+            <a href="/admin/ai-chats">查看聊天记录</a>
+          </Button>
+        </div>
       </div>
     </div>
   )

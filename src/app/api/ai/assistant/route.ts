@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAgentForType } from "@/lib/ai/agents";
 import { assistantRequestSchema, patchEnvelopeSchema, type AgentType } from "@/lib/ai/schema";
+import { prisma } from "@/lib/prisma";
 import {
   isAIMessage,
   isAIMessageChunk,
@@ -68,6 +69,8 @@ export async function POST(request: NextRequest) {
   const agentType = selectAgentType(context.page);
   const session = await getServerSession(authOptions);
 
+  const clientConversationId = context.conversationId || crypto.randomUUID();
+
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -86,6 +89,41 @@ export async function POST(request: NextRequest) {
       email: session.user.email ?? undefined,
     },
   };
+
+  // Persist conversation + latest user message (v1)
+  const conversation = await prisma.agentConversation.upsert({
+    where: { clientConversationId },
+    update: {
+      userId: session.user.id,
+      agentType,
+      page: context.page,
+      origin: context.origin ?? null,
+      matchId: context.matchId ?? null,
+    },
+    create: {
+      clientConversationId,
+      userId: session.user.id,
+      agentType,
+      page: context.page,
+      origin: context.origin ?? null,
+      matchId: context.matchId ?? null,
+    },
+  });
+
+  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  if (lastUserMessage?.content) {
+    await prisma.agentChatMessage.create({
+      data: {
+        conversationId: conversation.id,
+        role: "USER",
+        content: lastUserMessage.content,
+        metadata: {
+          page: context.page,
+          matchId: context.matchId ?? null,
+        },
+      },
+    });
+  }
   const cookieHeader = request.headers.get("cookie") ?? "";
   const agent = getAgentForType(agentType, contextWithUser, {
     headers: cookieHeader ? { cookie: cookieHeader } : undefined,
@@ -97,6 +135,7 @@ export async function POST(request: NextRequest) {
   const streamedFullMessageIds = new Set<string>();
   const streamedToolMessageIds = new Set<string>();
   let emittedAny = false;
+  let assistantTextBuffer = "";
 
   const getMessageId = (message: unknown) => {
     if (!message || typeof message !== "object") return "";
@@ -112,6 +151,7 @@ export async function POST(request: NextRequest) {
       const emitMessageText = async (text: string, chunked = false) => {
         if (!text) return;
         emittedAny = true;
+        assistantTextBuffer += text;
 
         if (!chunked) {
           controller.enqueue(encoder.encode(toSse("message", { content: text })));
@@ -224,6 +264,23 @@ export async function POST(request: NextRequest) {
               toSse("message", { content: "抱歉，模型没有返回有效内容，请再试一次。" })
             )
           );
+        }
+
+        const finalAssistantText = assistantTextBuffer.trim();
+        if (finalAssistantText) {
+          await prisma.agentChatMessage.create({
+            data: {
+              conversationId: conversation.id,
+              role: "ASSISTANT",
+              content: finalAssistantText,
+              metadata: {
+                provider,
+                agentType,
+                page: context.page,
+                matchId: context.matchId ?? null,
+              },
+            },
+          });
         }
 
         controller.enqueue(encoder.encode(toSse("done", { status: "ok" })));
