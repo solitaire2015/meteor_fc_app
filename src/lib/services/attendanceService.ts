@@ -11,6 +11,7 @@
 import { prisma } from '@/lib/prisma'
 import { type AttendanceData, calculatePlayerFees } from '@/lib/feeCalculation'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
+import { EventType } from '@prisma/client'
 
 export interface AttendanceUpdate {
   attendance: {
@@ -49,8 +50,8 @@ export interface ValidationResult {
 
 export interface AttendanceEvent {
   playerId: string
-  eventType: 'GOAL' | 'ASSIST'
-  count: number
+  eventType: EventType
+  minute?: number
 }
 
 export interface AttendanceUpdateRequest {
@@ -280,24 +281,22 @@ export class AttendanceService {
     const events: {
       matchId: string
       playerId: string
-      eventType: 'GOAL' | 'ASSIST'
-      minute: null
+      eventType: EventType
+      minute: number | null
       description: string
       createdBy: string
     }[] = []
     const defaultCreatorId = Object.keys(finalAttendanceData)[0] || 'system'
     
     for (const event of updateRequest.events) {
-      for (let i = 0; i < event.count; i++) {
-        events.push({
-          matchId,
-          playerId: event.playerId,
-          eventType: event.eventType,
-          minute: null,
-          description: `${event.eventType.toLowerCase()} by player`,
-          createdBy: defaultCreatorId
-        })
-      }
+      events.push({
+        matchId,
+        playerId: event.playerId,
+        eventType: event.eventType,
+        minute: event.minute || null,
+        description: `${event.eventType.toLowerCase()} by player`,
+        createdBy: defaultCreatorId
+      })
     }
 
     // 5. Execute ONLY data persistence in transaction (should be fast)
@@ -346,6 +345,7 @@ export class AttendanceService {
   async getAttendanceData(matchId: string): Promise<{
     attendanceData: Record<string, any>
     eventsSummary: Record<string, { goals: number; assists: number }>
+    events: any[]
     totalParticipants: number
     totalEvents: number
     selectedPlayers: string[]
@@ -383,6 +383,9 @@ export class AttendanceService {
             name: true
           }
         }
+      },
+      orderBy: {
+        minute: 'asc' // Sort by minute for display
       }
     })
 
@@ -397,7 +400,7 @@ export class AttendanceService {
       }
     }
 
-    // Count events by player and type
+    // Count events by player and type (for summary compatibility)
     const eventsSummary = events.reduce((acc, event) => {
       if (!acc[event.playerId]) {
         acc[event.playerId] = { goals: 0, assists: 0 }
@@ -415,6 +418,7 @@ export class AttendanceService {
     return {
       attendanceData,
       eventsSummary,
+      events, // Return raw events for detailed logger
       totalParticipants: participations.length,
       totalEvents: events.length,
       selectedPlayers

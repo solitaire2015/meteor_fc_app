@@ -21,7 +21,8 @@ import {
   Crown,
   Calendar,
   Clock,
-  Eye
+  Eye,
+  XCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
@@ -32,6 +33,12 @@ interface Player {
   name: string;
   goals: number;
   assists: number;
+  yellowCards: number;
+  redCards: number;
+  penaltyGoals: number;
+  penaltyMisses: number;
+  ownGoals: number;
+  saves: number;
   appearances?: number;
   matchesPlayed?: number;
   position?: Position;
@@ -69,7 +76,7 @@ export default function Leaderboard() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
-    fetchLeaderboard(activeTab as 'goals' | 'assists');
+    fetchLeaderboard(activeTab as 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves');
   }, [activeTab, selectedYear]);
 
   useEffect(() => {
@@ -78,7 +85,7 @@ export default function Leaderboard() {
     }
   }, [showAllTime]);
 
-  const fetchLeaderboard = async (type: 'goals' | 'assists') => {
+  const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves') => {
     try {
       setLoading(true);
       const response = await fetch(`/api/leaderboard?type=${type}&year=${selectedYear}`);
@@ -116,10 +123,16 @@ export default function Leaderboard() {
             rank: index + 1
           }))
           .sort((a: any, b: any) => {
-            if (activeTab === 'goals') {
-              return (b.goals || 0) - (a.goals || 0);
-            } else {
-              return (b.assists || 0) - (a.assists || 0);
+            switch(activeTab) {
+              case 'goals': return (b.goals || 0) - (a.goals || 0);
+              case 'assists': return (b.assists || 0) - (a.assists || 0);
+              case 'yellow_cards': return (b.yellowCards || 0) - (a.yellowCards || 0);
+              case 'red_cards': return (b.redCards || 0) - (a.redCards || 0);
+              case 'penalty_goals': return (b.penaltyGoals || 0) - (a.penaltyGoals || 0);
+              case 'penalty_misses': return (b.penaltyMisses || 0) - (a.penaltyMisses || 0);
+              case 'own_goals': return (b.ownGoals || 0) - (a.ownGoals || 0);
+              case 'saves': return (b.saves || 0) - (a.saves || 0);
+              default: return 0;
             }
           })
           .map((player: any, index: number) => ({
@@ -188,11 +201,31 @@ export default function Leaderboard() {
     : listPlayers;
 
   const getCurrentStat = (player: Player) => {
-    return activeTab === 'goals' ? player.goals : player.assists;
+    switch(activeTab) {
+      case 'goals': return player.goals;
+      case 'assists': return player.assists;
+      case 'yellow_cards': return player.yellowCards;
+      case 'red_cards': return player.redCards;
+      case 'penalty_goals': return player.penaltyGoals;
+      case 'penalty_misses': return player.penaltyMisses;
+      case 'own_goals': return player.ownGoals;
+      case 'saves': return player.saves;
+      default: return 0;
+    }
   };
 
   const getStatLabel = () => {
-    return activeTab === 'goals' ? '进球' : '助攻';
+    switch(activeTab) {
+      case 'goals': return '进球';
+      case 'assists': return '助攻';
+      case 'yellow_cards': return '黄牌';
+      case 'red_cards': return '红牌';
+      case 'penalty_goals': return '点球进球';
+      case 'penalty_misses': return '点球罚失';
+      case 'own_goals': return '乌龙球';
+      case 'saves': return '扑救';
+      default: return '';
+    }
   };
 
   const getAppearances = (player: Player) => {
@@ -253,7 +286,7 @@ export default function Leaderboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
-          <TabsList className="grid w-fit grid-cols-2">
+          <TabsList className="grid w-fit grid-cols-8 gap-1">
             <TabsTrigger value="goals" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               射手榜
@@ -261,6 +294,30 @@ export default function Leaderboard() {
             <TabsTrigger value="assists" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
               助攻榜
+            </TabsTrigger>
+            <TabsTrigger value="yellow_cards" className="flex items-center gap-2">
+              <div className="h-3 w-3 bg-yellow-500 rounded-sm"></div>
+              黄牌榜
+            </TabsTrigger>
+            <TabsTrigger value="red_cards" className="flex items-center gap-2">
+              <div className="h-3 w-3 bg-red-600 rounded-sm"></div>
+              红牌榜
+            </TabsTrigger>
+            <TabsTrigger value="penalty_goals" className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-green-600" />
+              点球进
+            </TabsTrigger>
+            <TabsTrigger value="penalty_misses" className="flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-red-500" />
+              点球失
+            </TabsTrigger>
+            <TabsTrigger value="own_goals" className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-red-400" />
+              乌龙榜
+            </TabsTrigger>
+            <TabsTrigger value="saves" className="flex items-center gap-2">
+              <div className="h-3 w-3 bg-purple-500 rounded-full"></div>
+              扑救榜
             </TabsTrigger>
           </TabsList>
         </div>
@@ -368,12 +425,18 @@ export default function Leaderboard() {
                           <TableHead className="text-center">出场</TableHead>
                           <TableHead className="text-center">进球</TableHead>
                           <TableHead className="text-center">助攻</TableHead>
+                          <TableHead className="text-center">黄牌</TableHead>
+                          <TableHead className="text-center">红牌</TableHead>
+                          <TableHead className="text-center">点球进</TableHead>
+                          <TableHead className="text-center">点球失</TableHead>
+                          <TableHead className="text-center">乌龙</TableHead>
+                          <TableHead className="text-center">扑救</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {paginatedPlayers.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                               暂无数据
                             </TableCell>
                           </TableRow>
@@ -416,7 +479,7 @@ export default function Leaderboard() {
                               </TableCell>
                               <TableCell className="text-center">
                                 <div className="text-lg font-bold text-primary">
-                                  {getCurrentStat(player)}
+                                  {getCurrentStat(player) || 0}
                                 </div>
                               </TableCell>
                               <TableCell className="text-center">
@@ -427,6 +490,24 @@ export default function Leaderboard() {
                               </TableCell>
                               <TableCell className="text-center">
                                 {player.assists || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.yellowCards || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.redCards || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.penaltyGoals || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.penaltyMisses || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.ownGoals || 0}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {player.saves || 0}
                               </TableCell>
                             </TableRow>
                           ))

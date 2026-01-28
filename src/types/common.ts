@@ -106,12 +106,19 @@ export interface ParticipationWithFees {
 export interface LeaderboardPlayerStats {
   id: string;
   name: string;
-  email?: string;
-  avatarUrl?: string;
-  position?: string;
-  jerseyNumber?: number;
+  email?: string | null;
+  avatarUrl?: string | null;
+  position?: string | null;
+  jerseyNumber?: number | null;
+  playerStatus?: string;
   goals: number;
   assists: number;
+  yellowCards: number;
+  redCards: number;
+  penaltyGoals: number;
+  penaltyMisses: number;
+  ownGoals: number;
+  saves: number;
   matches: Set<string>;
   lastMatchDate: Date | null;
   matchesPlayed?: number;
@@ -124,11 +131,17 @@ export interface LeaderboardPlayer {
   id: string;
   name: string;
   abbreviation: string;
-  avatarUrl?: string;
-  position?: string;
-  jerseyNumber?: number;
+  avatarUrl?: string | null;
+  position?: string | null;
+  jerseyNumber?: number | null;
   goals: number;
   assists: number;
+  yellowCards: number;
+  redCards: number;
+  penaltyGoals: number;
+  penaltyMisses: number;
+  ownGoals: number;
+  saves: number;
   matchesPlayed: number;
   lastMatchDate: Date | null;
 }

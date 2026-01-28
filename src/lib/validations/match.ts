@@ -57,6 +57,26 @@ export const attendanceGridSchema = z.array(attendanceDataSchema)
 
 export type AttendanceGrid = z.infer<typeof attendanceGridSchema>
 
+// Match Event Schema (Detailed)
+export const matchEventSchema = z.object({
+  id: z.string().optional(), // Optional for new events
+  playerId: z.string(),
+  eventType: z.enum([
+    'GOAL', 
+    'ASSIST', 
+    'YELLOW_CARD', 
+    'RED_CARD', 
+    'PENALTY_GOAL', 
+    'PENALTY_MISS',
+    'OWN_GOAL',
+    'SAVE'
+  ]),
+  minute: z.number().int().min(0).max(120).optional(),
+  description: z.string().optional(),
+})
+
+export type MatchEvent = z.infer<typeof matchEventSchema>
+
 // Fee Calculation Schema
 export const feeCalculationSchema = z.object({
   userId: z.string(),
@@ -128,8 +148,17 @@ export const updateAttendanceRequestSchema = z.object({
   attendanceData: attendanceGridSchema,
   events: z.array(z.object({
     playerId: z.string(),
-    eventType: z.enum(['GOAL', 'ASSIST']),
-    count: z.number(),
+    eventType: z.enum([
+      'GOAL', 
+      'ASSIST', 
+      'YELLOW_CARD', 
+      'RED_CARD', 
+      'PENALTY_GOAL', 
+      'PENALTY_MISS',
+      'OWN_GOAL',
+      'SAVE'
+    ]),
+    minute: z.number().int().min(0).max(120).optional()
   })).optional(),
 })
 

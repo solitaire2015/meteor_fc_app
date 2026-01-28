@@ -97,7 +97,7 @@ export const proposeEventsPatch = tool(
     }),
   {
     name: "propose_events_patch",
-    description: "为进球和助攻生成补丁。",
+    description: "为比赛事件（进球、助攻、红黄牌、点球等）生成补丁。",
     schema: baseArgsSchema.extend({
       data: eventsPatchSchema,
     }),
@@ -295,9 +295,9 @@ export const createReadOnlyTools = (baseUrl: string, headers?: HeadersInit) => {
     },
     {
       name: "get_leaderboard",
-      description: "获取排行榜数据（进球/助攻）。",
+      description: "获取排行榜数据（进球/助攻/红黄牌/点球/乌龙/扑救）。",
       schema: z.object({
-        type: z.enum(["goals", "assists"]).optional(),
+        type: z.enum(["goals", "assists", "yellow_cards", "red_cards", "penalty_goals", "penalty_misses", "own_goals", "saves"]).optional(),
         year: z.number().optional(),
         month: z.number().optional(),
         limit: z.number().optional(),

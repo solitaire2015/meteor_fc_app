@@ -29,7 +29,8 @@ import {
   useUpdateMatchInfo,
   useSetSelectedPlayers,
   useUpdateAttendance,
-  useSetFeeOverride
+  useSetFeeOverride,
+  useAddEvent
 } from '@/stores/useMatchStore'
 import AssistantWidget from '@/components/ai/AssistantWidget'
 import { type PatchEnvelope } from '@/lib/ai/schema'
@@ -106,6 +107,7 @@ export default function MatchDetailPage() {
   const setSelectedPlayers = useSetSelectedPlayers()
   const updateAttendance = useUpdateAttendance()
   const setFeeOverride = useSetFeeOverride()
+  const addEvent = useAddEvent()
 
   // Load data on mount
   useEffect(() => {
@@ -352,26 +354,15 @@ export default function MatchDetailPage() {
       }
 
       if (change.type === 'events') {
-        const nextAttendance = attendanceData.map(item => ({ ...item }))
-
         change.data.updates.forEach(update => {
-          const indices = nextAttendance
-            .map((item, index) => (item.userId === update.playerId ? index : -1))
-            .filter(index => index >= 0)
-
-          if (indices.length === 0) return
-
-          indices.forEach(index => {
-            nextAttendance[index].goals = 0
-            nextAttendance[index].assists = 0
-          })
-
-          const firstIndex = indices[0]
-          if (update.goals !== undefined) nextAttendance[firstIndex].goals = update.goals
-          if (update.assists !== undefined) nextAttendance[firstIndex].assists = update.assists
+          if (update.eventType) {
+            addEvent({
+              playerId: update.playerId,
+              eventType: update.eventType,
+              minute: update.minute,
+            })
+          }
         })
-
-        updateAttendance(nextAttendance)
         return
       }
 
