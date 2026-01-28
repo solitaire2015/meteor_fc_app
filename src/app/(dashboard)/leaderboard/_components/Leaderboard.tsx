@@ -19,10 +19,11 @@ import {
   Medal,
   Award,
   Crown,
-  Calendar,
   Clock,
   Eye,
-  XCircle
+  XCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
 import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
@@ -70,6 +71,7 @@ export default function Leaderboard() {
   const [showAllTime, setShowAllTime] = useState(false);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
 
   // Year selector state
   const currentYear = new Date().getFullYear();
@@ -420,91 +422,127 @@ export default function Leaderboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Mobile list (phone-first) */}
-                  <div className="sm:hidden space-y-3">
+                  {/* Mobile list (phone-first): compact + icon-based */}
+                  <div className="sm:hidden space-y-2">
                     {paginatedPlayers.length === 0 ? (
                       <div className="text-center text-muted-foreground py-8">暂无数据</div>
                     ) : (
-                      paginatedPlayers.map((player) => (
-                        <div
-                          key={player.id}
-                          role="button"
-                          tabIndex={0}
-                          className="rounded-lg border bg-background p-3 shadow-sm active:scale-[0.99] transition-transform"
-                          onClick={() => handlePlayerClick(player)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') handlePlayerClick(player)
-                          }}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <Badge variant="outline" className={getRankBadgeColor(player.rank)}>
-                                {player.rank}
-                              </Badge>
-                              <Avatar className="h-9 w-9 shrink-0">
-                                <AvatarImage src={player.avatarUrl || ""} />
-                                <AvatarFallback>{player.abbreviation}</AvatarFallback>
-                              </Avatar>
-                              <div className="min-w-0">
-                                <div className="font-medium truncate">{player.name}</div>
-                                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                  <span>{getAppearances(player)} 场</span>
-                                  {player.position ? (
-                                    <span className="inline-flex items-center">
-                                      <Badge className={getPositionColor(player.position)}>{player.position}</Badge>
-                                    </span>
-                                  ) : null}
+                      paginatedPlayers.map((player) => {
+                        const isExpanded = expandedPlayerId === player.id;
+
+                        return (
+                          <div
+                            key={player.id}
+                            className="rounded-lg border bg-background p-2.5 shadow-sm"
+                          >
+                            {/* Header row (tap to open player) */}
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              className="flex items-center justify-between gap-3"
+                              onClick={() => handlePlayerClick(player)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') handlePlayerClick(player)
+                              }}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge variant="outline" className={getRankBadgeColor(player.rank)}>
+                                  {player.rank}
+                                </Badge>
+                                <Avatar className="h-8 w-8 shrink-0">
+                                  <AvatarImage src={player.avatarUrl || ""} />
+                                  <AvatarFallback>{player.abbreviation}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <div className="font-medium truncate leading-tight">{player.name}</div>
+                                  <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                                    <span>{getAppearances(player)} 场</span>
+                                    {player.position ? (
+                                      <span className="inline-flex items-center">
+                                        <Badge className={getPositionColor(player.position)}>{player.position}</Badge>
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-[11px] text-muted-foreground">{getStatLabel()}</div>
+                                <div className="text-lg font-bold text-primary leading-tight">
+                                  {getCurrentStat(player) || 0}
                                 </div>
                               </div>
                             </div>
 
-                            <div className="text-right">
-                              <div className="text-xs text-muted-foreground">{getStatLabel()}</div>
-                              <div className="text-xl font-bold text-primary leading-tight">
-                                {getCurrentStat(player) || 0}
+                            {/* Compact icon stats row */}
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="进球">
+                                  <Target className="h-3.5 w-3.5 text-primary" />
+                                  <span className="font-semibold text-foreground">{player.goals || 0}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="助攻">
+                                  <Trophy className="h-3.5 w-3.5 text-primary" />
+                                  <span className="font-semibold text-foreground">{player.assists || 0}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="黄牌">
+                                  <span className="h-2.5 w-2.5 rounded-sm bg-yellow-500" />
+                                  <span className="font-semibold text-foreground">{player.yellowCards || 0}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="红牌">
+                                  <span className="h-2.5 w-2.5 rounded-sm bg-red-600" />
+                                  <span className="font-semibold text-foreground">{player.redCards || 0}</span>
+                                </span>
                               </div>
-                            </div>
-                          </div>
 
-                          <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-                            <div className="rounded-md bg-muted/40 py-2">
-                              <div className="text-[10px] text-muted-foreground">进球</div>
-                              <div className="text-sm font-semibold">{player.goals || 0}</div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedPlayerId(isExpanded ? null : player.id);
+                                }}
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    收起
+                                    <ChevronUp className="ml-1 h-4 w-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    更多
+                                    <ChevronDown className="ml-1 h-4 w-4" />
+                                  </>
+                                )}
+                              </Button>
                             </div>
-                            <div className="rounded-md bg-muted/40 py-2">
-                              <div className="text-[10px] text-muted-foreground">助攻</div>
-                              <div className="text-sm font-semibold">{player.assists || 0}</div>
-                            </div>
-                            <div className="rounded-md bg-muted/40 py-2">
-                              <div className="text-[10px] text-muted-foreground">黄牌</div>
-                              <div className="text-sm font-semibold">{player.yellowCards || 0}</div>
-                            </div>
-                            <div className="rounded-md bg-muted/40 py-2">
-                              <div className="text-[10px] text-muted-foreground">红牌</div>
-                              <div className="text-sm font-semibold">{player.redCards || 0}</div>
-                            </div>
-                          </div>
 
-                          <div className="mt-2 grid grid-cols-4 gap-2 text-center">
-                            <div className="rounded-md bg-muted/20 py-2">
-                              <div className="text-[10px] text-muted-foreground">点球进</div>
-                              <div className="text-sm font-semibold">{player.penaltyGoals || 0}</div>
-                            </div>
-                            <div className="rounded-md bg-muted/20 py-2">
-                              <div className="text-[10px] text-muted-foreground">点球失</div>
-                              <div className="text-sm font-semibold">{player.penaltyMisses || 0}</div>
-                            </div>
-                            <div className="rounded-md bg-muted/20 py-2">
-                              <div className="text-[10px] text-muted-foreground">乌龙</div>
-                              <div className="text-sm font-semibold">{player.ownGoals || 0}</div>
-                            </div>
-                            <div className="rounded-md bg-muted/20 py-2">
-                              <div className="text-[10px] text-muted-foreground">扑救</div>
-                              <div className="text-sm font-semibold">{player.saves || 0}</div>
-                            </div>
+                            {/* Expanded stats */}
+                            {isExpanded && (
+                              <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">点球进</div>
+                                  <div className="text-sm font-semibold">{player.penaltyGoals || 0}</div>
+                                </div>
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">点球失</div>
+                                  <div className="text-sm font-semibold">{player.penaltyMisses || 0}</div>
+                                </div>
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">乌龙</div>
+                                  <div className="text-sm font-semibold">{player.ownGoals || 0}</div>
+                                </div>
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">扑救</div>
+                                  <div className="text-sm font-semibold">{player.saves || 0}</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
 
