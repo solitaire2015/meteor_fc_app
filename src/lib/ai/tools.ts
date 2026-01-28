@@ -97,7 +97,7 @@ export const proposeEventsPatch = tool(
     }),
   {
     name: "propose_events_patch",
-    description: "为进球和助攻生成补丁。",
+    description: "为比赛事件（进球、助攻、红黄牌、点球等）生成补丁。",
     schema: baseArgsSchema.extend({
       data: eventsPatchSchema,
     }),

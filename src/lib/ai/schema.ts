@@ -198,8 +198,17 @@ export const eventsPatchSchema = z.object({
     .array(
       z.object({
         playerId: z.string(),
-        goals: z.number().min(0).optional(),
-        assists: z.number().min(0).optional(),
+        eventType: z.enum([
+          "GOAL",
+          "ASSIST",
+          "YELLOW_CARD",
+          "RED_CARD",
+          "PENALTY_GOAL",
+          "PENALTY_MISS",
+          "OWN_GOAL",
+          "SAVE",
+        ]),
+        minute: z.number().int().min(0).max(120).optional(),
       })
     )
     .min(1),
