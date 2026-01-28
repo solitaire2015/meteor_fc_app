@@ -43,33 +43,34 @@ model User {
   createdVideos       Video[]              @relation("VideoCreatedBy")
   matchPlayers        MatchPlayer[]        @relation("MatchPlayerParticipant")
   feeOverrides        FeeOverride[]        @relation("FeeOverridePlayer")
+  agentConversations  AgentConversation[]
 
   @@map("users")
 }
 
 model Match {
-  id                String               @id @default(cuid())
-  matchDate         DateTime
-  matchTime         DateTime?
-  opponentTeam      String
-  ourScore          Int?
-  opponentScore     Int?
-  matchResult       MatchResult?
-  fieldFeeTotal     Decimal              @default(0)
-  waterFeeTotal     Decimal              @default(0)
-  lateFeeRate       Decimal              @default(10)
-  videoFeePerUnit   Decimal              @default(2)
-  notes             String?
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  createdBy         String
-  comments       Comment[]
-  events         MatchEvent[]
-  participations MatchParticipation[]
-  createdByUser  User                 @relation("MatchCreatedBy", fields: [createdBy], references: [id])
-  videos         Video[]
-  matchPlayers   MatchPlayer[]
-  feeOverrides   FeeOverride[]
+  id              String               @id @default(cuid())
+  matchDate       DateTime
+  matchTime       DateTime?
+  opponentTeam    String
+  ourScore        Int?
+  opponentScore   Int?
+  matchResult     MatchResult?
+  fieldFeeTotal   Decimal              @default(0)
+  waterFeeTotal   Decimal              @default(0)
+  lateFeeRate     Decimal              @default(10)
+  videoFeePerUnit Decimal              @default(2)
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  createdBy       String
+  comments        Comment[]
+  events          MatchEvent[]
+  participations  MatchParticipation[]
+  createdByUser   User                 @relation("MatchCreatedBy", fields: [createdBy], references: [id])
+  videos          Video[]
+  matchPlayers    MatchPlayer[]
+  feeOverrides    FeeOverride[]
 
   @@map("matches")
 }
@@ -203,17 +204,17 @@ model MatchPlayer {
 }
 
 model FeeOverride {
-  id                String    @id @default(cuid())
-  matchId           String
-  playerId          String
-  fieldFeeOverride  Decimal?
-  videoFeeOverride  Decimal?
-  lateFeeOverride   Decimal?
-  notes             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  match             Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  player            User      @relation("FeeOverridePlayer", fields: [playerId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  matchId          String
+  playerId         String
+  fieldFeeOverride Decimal?
+  videoFeeOverride Decimal?
+  lateFeeOverride  Decimal?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  match            Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player           User     @relation("FeeOverridePlayer", fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, playerId])
   @@map("fee_overrides")
@@ -304,4 +305,44 @@ enum PlayerStatus {
   VACATION
 
   @@map("player_status")
+}
+
+enum AgentChatRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+
+  @@map("agent_chat_role")
+}
+
+model AgentConversation {
+  id                   String   @id @default(cuid())
+  clientConversationId String   @unique
+  userId               String?
+  agentType            String?
+  page                 String?
+  origin               String?
+  matchId              String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user     User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages AgentChatMessage[]
+
+  @@map("agent_conversations")
+}
+
+model AgentChatMessage {
+  id             String        @id @default(cuid())
+  conversationId String
+  role           AgentChatRole
+  content        String
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+
+  conversation AgentConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("agent_chat_messages")
 }
