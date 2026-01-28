@@ -19,10 +19,11 @@ import {
   Medal,
   Award,
   Crown,
-  Calendar,
   Clock,
   Eye,
-  XCircle
+  XCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
 import GuestSignupBanner from "@/components/custom/GuestSignupBanner";
@@ -70,6 +71,7 @@ export default function Leaderboard() {
   const [showAllTime, setShowAllTime] = useState(false);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
 
   // Year selector state
   const currentYear = new Date().getFullYear();
@@ -286,40 +288,46 @@ export default function Leaderboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
-          <TabsList className="grid w-fit grid-cols-8 gap-1">
-            <TabsTrigger value="goals" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              射手榜
-            </TabsTrigger>
-            <TabsTrigger value="assists" className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              助攻榜
-            </TabsTrigger>
-            <TabsTrigger value="yellow_cards" className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-yellow-500 rounded-sm"></div>
-              黄牌榜
-            </TabsTrigger>
-            <TabsTrigger value="red_cards" className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-red-600 rounded-sm"></div>
-              红牌榜
-            </TabsTrigger>
-            <TabsTrigger value="penalty_goals" className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-green-600" />
-              点球进
-            </TabsTrigger>
-            <TabsTrigger value="penalty_misses" className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-red-500" />
-              点球失
-            </TabsTrigger>
-            <TabsTrigger value="own_goals" className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-red-400" />
-              乌龙榜
-            </TabsTrigger>
-            <TabsTrigger value="saves" className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-purple-500 rounded-full"></div>
-              扑救榜
-            </TabsTrigger>
-          </TabsList>
+          {/* Mobile-friendly: horizontally scrollable tab bar (no overlap) */}
+          <div className="w-full max-w-full overflow-x-auto">
+            <TabsList className="inline-flex w-max max-w-none gap-1">
+              <TabsTrigger value="goals" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Target className="h-4 w-4" />
+                射手榜
+              </TabsTrigger>
+              <TabsTrigger value="assists" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Trophy className="h-4 w-4" />
+                助攻榜
+              </TabsTrigger>
+              <TabsTrigger value="yellow_cards" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <div className="h-3 w-3 bg-yellow-500 rounded-sm" />
+                黄牌榜
+              </TabsTrigger>
+              <TabsTrigger value="red_cards" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <div className="h-3 w-3 bg-red-600 rounded-sm" />
+                红牌榜
+              </TabsTrigger>
+              <TabsTrigger value="penalty_goals" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Target className="h-4 w-4 text-green-600" />
+                点球进
+              </TabsTrigger>
+              <TabsTrigger value="penalty_misses" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <XCircle className="h-4 w-4 text-red-500" />
+                点球失
+              </TabsTrigger>
+              <TabsTrigger value="own_goals" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Target className="h-4 w-4 text-red-400" />
+                乌龙榜
+              </TabsTrigger>
+              <TabsTrigger value="saves" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <div className="h-3 w-3 bg-purple-500 rounded-full" />
+                扑救榜
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
+        <div className="mt-2 text-center text-xs text-muted-foreground sm:hidden">
+          左右滑动查看更多
         </div>
 
         <TabsContent value={activeTab} className="space-y-8 mt-8">
@@ -414,7 +422,132 @@ export default function Leaderboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-md border">
+                  {/* Mobile list (phone-first): compact + icon-based */}
+                  <div className="sm:hidden space-y-2">
+                    {paginatedPlayers.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">暂无数据</div>
+                    ) : (
+                      paginatedPlayers.map((player) => {
+                        const isExpanded = expandedPlayerId === player.id;
+
+                        return (
+                          <div
+                            key={player.id}
+                            className="rounded-lg border bg-background p-2.5 shadow-sm"
+                          >
+                            {/* Header row (tap to open player) */}
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              className="flex items-center justify-between gap-3"
+                              onClick={() => handlePlayerClick(player)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') handlePlayerClick(player)
+                              }}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge variant="outline" className={getRankBadgeColor(player.rank)}>
+                                  {player.rank}
+                                </Badge>
+                                <Avatar className="h-8 w-8 shrink-0">
+                                  <AvatarImage src={player.avatarUrl || ""} />
+                                  <AvatarFallback>{player.abbreviation}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <div className="font-medium truncate leading-tight">{player.name}</div>
+                                  <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                                    <span>{getAppearances(player)} 场</span>
+                                    {player.position ? (
+                                      <span className="inline-flex items-center">
+                                        <Badge className={getPositionColor(player.position)}>{player.position}</Badge>
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-[11px] text-muted-foreground">{getStatLabel()}</div>
+                                <div className="text-lg font-bold text-primary leading-tight">
+                                  {getCurrentStat(player) || 0}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Compact icon stats row */}
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="进球">
+                                  <Target className="h-3.5 w-3.5 text-primary" />
+                                  <span className="font-semibold text-foreground">{player.goals || 0}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="助攻">
+                                  <Trophy className="h-3.5 w-3.5 text-primary" />
+                                  <span className="font-semibold text-foreground">{player.assists || 0}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="黄牌">
+                                  <span className="h-2.5 w-2.5 rounded-sm bg-yellow-500" />
+                                  <span className="font-semibold text-foreground">{player.yellowCards || 0}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-muted/35 px-2 py-1" title="红牌">
+                                  <span className="h-2.5 w-2.5 rounded-sm bg-red-600" />
+                                  <span className="font-semibold text-foreground">{player.redCards || 0}</span>
+                                </span>
+                              </div>
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedPlayerId(isExpanded ? null : player.id);
+                                }}
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    收起
+                                    <ChevronUp className="ml-1 h-4 w-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    更多
+                                    <ChevronDown className="ml-1 h-4 w-4" />
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+
+                            {/* Expanded stats */}
+                            {isExpanded && (
+                              <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">点球进</div>
+                                  <div className="text-sm font-semibold">{player.penaltyGoals || 0}</div>
+                                </div>
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">点球失</div>
+                                  <div className="text-sm font-semibold">{player.penaltyMisses || 0}</div>
+                                </div>
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">乌龙</div>
+                                  <div className="text-sm font-semibold">{player.ownGoals || 0}</div>
+                                </div>
+                                <div className="rounded-md bg-muted/20 py-2">
+                                  <div className="text-[10px] text-muted-foreground">扑救</div>
+                                  <div className="text-sm font-semibold">{player.saves || 0}</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Desktop/tablet: keep table, but allow horizontal scroll on narrower screens */}
+                  <div className="hidden sm:block rounded-md border overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -436,7 +569,7 @@ export default function Leaderboard() {
                       <TableBody>
                         {paginatedPlayers.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                               暂无数据
                             </TableCell>
                           </TableRow>
@@ -518,12 +651,12 @@ export default function Leaderboard() {
 
                   {/* Pagination */}
                   {showAllPlayers && totalPages > 1 && (
-                    <div className="flex items-center justify-between pt-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
                       <div className="text-sm text-muted-foreground">
                         第 {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, currentPlayers.length - PODIUM_COUNT)} 条，
                         共 {currentPlayers.length - PODIUM_COUNT} 条记录
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-end">
                         <Button
                           variant="outline"
                           size="sm"
