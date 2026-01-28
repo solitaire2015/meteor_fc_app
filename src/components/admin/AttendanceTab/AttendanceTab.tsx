@@ -138,6 +138,7 @@ export default function AttendanceTab({
           players={selectedPlayers}
           attendanceData={attendanceData}
           onChange={handleAttendanceChange}
+          sectionCount={match.sectionCount ?? 3}
           isDirty={isDirty.attendance}
           className="mb-6"
         />

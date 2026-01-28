@@ -66,7 +66,8 @@ export class AttendanceService {
   async validateAttendanceData(
     matchId: string,
     attendanceData: AttendancePlayerData,
-    selectedPlayerIds: string[] = []
+    selectedPlayerIds: string[] = [],
+    sectionCount = 3
   ): Promise<ValidationResult> {
     const errors: string[] = []
     const warnings: string[] = []
@@ -92,7 +93,7 @@ export class AttendanceService {
 
     // 2. Validate attendance data structure
     for (const [playerId, data] of Object.entries(filteredAttendanceData)) {
-      if (!this.validateAttendanceStructure(data)) {
+      if (!this.validateAttendanceStructure(data, sectionCount)) {
         errors.push(`Invalid attendance data structure for player ${playerId}`)
       }
     }
@@ -101,7 +102,7 @@ export class AttendanceService {
     const goalkeeperMap = new Map<string, string>() // key: "section-part", value: playerId
 
     for (const [playerId, data] of Object.entries(filteredAttendanceData)) {
-      for (let section = 1; section <= 3; section++) {
+      for (let section = 1; section <= sectionCount; section++) {
         for (let part = 1; part <= 3; part++) {
           const sectionStr = section.toString()
           const partStr = part.toString()
@@ -143,8 +144,8 @@ export class AttendanceService {
       errors,
       warnings,
       conflicts,
-      resolvedData: conflicts.length > 0 ? 
-        this.autoResolveGoalkeeperConflicts(filteredAttendanceData, conflicts) : 
+      resolvedData: conflicts.length > 0 ?
+        this.autoResolveGoalkeeperConflicts(filteredAttendanceData, conflicts) :
         filteredAttendanceData
     }
   }
@@ -181,7 +182,7 @@ export class AttendanceService {
   async updateAttendance(
     matchId: string,
     updateRequest: AttendanceUpdateRequest,
-    matchInfo: { fieldFeeTotal: number; waterFeeTotal: number; lateFeeRate?: number; videoFeePerUnit?: number },
+    matchInfo: { fieldFeeTotal: number; waterFeeTotal: number; sectionCount?: number; lateFeeRate?: number; videoFeePerUnit?: number },
     selectedPlayerIds: string[] = []
   ): Promise<{
     success: boolean
@@ -194,7 +195,12 @@ export class AttendanceService {
     }
   }> {
     // 1. Validate attendance data OUTSIDE the transaction (using provided selected player IDs to avoid DB query)
-    const validation = await this.validateAttendanceData(matchId, updateRequest.attendanceData, selectedPlayerIds)
+    const validation = await this.validateAttendanceData(
+      matchId,
+      updateRequest.attendanceData,
+      selectedPlayerIds,
+      matchInfo.sectionCount ?? 3
+    )
     
     if (!validation.isValid) {
       throw new Error(`Attendance validation failed: ${validation.errors.join(', ')}`)
@@ -261,6 +267,7 @@ export class AttendanceService {
         attendanceData: player.attendanceData as AttendanceData,
         isLateArrival: player.attendanceData.isLateArrival,
         feeCoefficient,
+        sectionCount: matchInfo.sectionCount ?? 3,
         lateFeeRate: matchInfo.lateFeeRate || 10,
         videoFeeRate: matchInfo.videoFeePerUnit || 2
       })
@@ -428,7 +435,7 @@ export class AttendanceService {
   /**
    * Validate attendance data structure
    */
-  private validateAttendanceStructure(data: AttendanceUpdate): boolean {
+  private validateAttendanceStructure(data: AttendanceUpdate, sectionCount = 3): boolean {
     if (!data.attendance || !data.goalkeeper) {
       return false
     }
@@ -437,8 +444,8 @@ export class AttendanceService {
       return false
     }
 
-    // Check structure for sections 1-3 and parts 1-3
-    for (let section = 1; section <= 3; section++) {
+    // Check structure for sections 1..sectionCount and parts 1-3
+    for (let section = 1; section <= sectionCount; section++) {
       const sectionStr = section.toString()
       
       if (!data.attendance[sectionStr] || !data.goalkeeper[sectionStr]) {

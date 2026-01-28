@@ -237,6 +237,8 @@ export const useMatchStore = create<MatchStore>()(
           // Get selected players for filtering
           const selectedPlayerIds = new Set(data.data.selectedPlayers || [])
           
+          const sectionCount = data.data.sectionCount || get().matchInfo?.sectionCount || 3
+
           // Check if we have attendance data
           if (data.data.attendanceData && Object.keys(data.data.attendanceData).length > 0) {
             Object.entries(data.data.attendanceData).forEach(([userId, userData]: [string, any]) => {
@@ -245,7 +247,7 @@ export const useMatchStore = create<MatchStore>()(
               const { attendance, goalkeeper, isLateArrival } = userData
               
               // Convert back to grid format
-              for (let section = 1; section <= 3; section++) {
+              for (let section = 1; section <= sectionCount; section++) {
                 for (let part = 1; part <= 3; part++) {
                   const sectionStr = section.toString()
                   const partStr = part.toString()
@@ -509,8 +511,9 @@ export const useMatchStore = create<MatchStore>()(
         // Transform data to ensure proper types before sending
         const transformedMatchInfo = {
           opponentTeam: matchInfo.opponentTeam,
-          matchDate: matchInfo.matchDate, 
+          matchDate: matchInfo.matchDate,
           matchTime: matchInfo.matchTime || null,
+          sectionCount: matchInfo.sectionCount ?? 3,
           ourScore: matchInfo.ourScore === '' || matchInfo.ourScore === undefined || matchInfo.ourScore === null ? null : Number(matchInfo.ourScore),
           opponentScore: matchInfo.opponentScore === '' || matchInfo.opponentScore === undefined || matchInfo.opponentScore === null ? null : Number(matchInfo.opponentScore),
           fieldFeeTotal: Number(matchInfo.fieldFeeTotal),
@@ -626,22 +629,32 @@ export const useMatchStore = create<MatchStore>()(
         const transformedData: Record<string, any> = {}
         const selectedPlayerIds = new Set(selectedPlayers.map(p => p.id))
         const userAttendanceMap = new Map<string, any>()
+        const sectionCount = matchInfo.sectionCount ?? 3
+
+        const createEmptyMatrix = (fill: number | boolean) => ({
+          "1": fill,
+          "2": fill,
+          "3": fill
+        })
+
+        const createEmptyAttendance = () => {
+          const attendance: Record<string, Record<string, number>> = {}
+          const goalkeeper: Record<string, Record<string, boolean>> = {}
+          for (let section = 1; section <= sectionCount; section++) {
+            attendance[section.toString()] = createEmptyMatrix(0) as Record<string, number>
+            goalkeeper[section.toString()] = createEmptyMatrix(false) as Record<string, boolean>
+          }
+          return { attendance, goalkeeper }
+        }
 
         attendanceData.forEach(item => {
           if (!selectedPlayerIds.has(item.userId)) return
           
           if (!userAttendanceMap.has(item.userId)) {
+            const empty = createEmptyAttendance()
             userAttendanceMap.set(item.userId, {
-              attendance: {
-                "1": {"1": 0, "2": 0, "3": 0},
-                "2": {"1": 0, "2": 0, "3": 0},
-                "3": {"1": 0, "2": 0, "3": 0}
-              },
-              goalkeeper: {
-                "1": {"1": false, "2": false, "3": false},
-                "2": {"1": false, "2": false, "3": false},
-                "3": {"1": false, "2": false, "3": false}
-              },
+              attendance: empty.attendance,
+              goalkeeper: empty.goalkeeper,
               isLateArrival: false
             })
           }

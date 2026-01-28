@@ -55,22 +55,68 @@ export async function PUT(
       }
     }
 
-    // Check if field or water fees are being updated (requires fee recalculation)
-    const needsFeeRecalculation = 
-      roundedData.fieldFeeTotal !== undefined || 
-      roundedData.waterFeeTotal !== undefined
+    const previousSectionCount = existingMatch.sectionCount ?? 3
+    const nextSectionCount = roundedData.sectionCount ?? previousSectionCount
 
-    // Update match basic information
-    const updatedMatch = await prisma.match.update({
-      where: { id: matchId },
-      data: {
-        ...roundedData,
-        matchResult,
-        updatedAt: new Date()
+    const needsFeeRecalculation =
+      roundedData.fieldFeeTotal !== undefined ||
+      roundedData.waterFeeTotal !== undefined ||
+      (roundedData.sectionCount !== undefined && roundedData.sectionCount !== previousSectionCount)
+
+    const pruneAttendancePayload = (payload: any, sectionCount: number) => {
+      if (!payload || typeof payload !== 'object') return payload
+
+      const ensureParts = (fill: number | boolean) => ({ '1': fill, '2': fill, '3': fill })
+
+      const attendance = (payload as any).attendance
+      const goalkeeper = (payload as any).goalkeeper
+
+      const nextAttendance: Record<string, Record<string, number>> = {}
+      const nextGoalkeeper: Record<string, Record<string, boolean>> = {}
+
+      for (let section = 1; section <= sectionCount; section++) {
+        const key = section.toString()
+        nextAttendance[key] = { ...(attendance?.[key] ?? ensureParts(0)) }
+        nextGoalkeeper[key] = { ...(goalkeeper?.[key] ?? ensureParts(false)) }
       }
+
+      return {
+        ...payload,
+        attendance: nextAttendance,
+        goalkeeper: nextGoalkeeper
+      }
+    }
+
+    // Update match (and prune attendance data if sectionCount decreased)
+    const updatedMatch = await prisma.$transaction(async (tx) => {
+      const matchUpdated = await tx.match.update({
+        where: { id: matchId },
+        data: {
+          ...roundedData,
+          matchResult,
+          updatedAt: new Date()
+        }
+      })
+
+      if (roundedData.sectionCount !== undefined && nextSectionCount < previousSectionCount) {
+        const participations = await tx.matchParticipation.findMany({
+          where: { matchId },
+          select: { userId: true, matchId: true, attendanceData: true }
+        })
+
+        for (const p of participations) {
+          const pruned = pruneAttendancePayload(p.attendanceData, nextSectionCount)
+          await tx.matchParticipation.update({
+            where: { userId_matchId: { userId: p.userId, matchId: p.matchId } },
+            data: { attendanceData: pruned }
+          })
+        }
+      }
+
+      return matchUpdated
     })
 
-    // Auto-recalculate fees if field or water fees changed
+    // Auto-recalculate fees if fee-related fields or sectionCount changed
     let feeRecalculationResult = null
     if (needsFeeRecalculation) {
       try {
@@ -78,7 +124,6 @@ export async function PUT(
       } catch (feeError) {
         console.error('Fee recalculation failed:', feeError)
         // Don't fail the entire request if fee recalculation fails
-        // The match info update succeeded, but fees may be inconsistent
       }
     }
 
@@ -153,6 +198,7 @@ export async function GET(
         ourScore: true,
         opponentScore: true,
         matchResult: true,
+        sectionCount: true,
         fieldFeeTotal: true,
         waterFeeTotal: true,
         notes: true,
