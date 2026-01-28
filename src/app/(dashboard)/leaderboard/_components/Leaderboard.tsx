@@ -286,40 +286,46 @@ export default function Leaderboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center">
-          <TabsList className="grid w-fit grid-cols-8 gap-1">
-            <TabsTrigger value="goals" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              射手榜
-            </TabsTrigger>
-            <TabsTrigger value="assists" className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              助攻榜
-            </TabsTrigger>
-            <TabsTrigger value="yellow_cards" className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-yellow-500 rounded-sm"></div>
-              黄牌榜
-            </TabsTrigger>
-            <TabsTrigger value="red_cards" className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-red-600 rounded-sm"></div>
-              红牌榜
-            </TabsTrigger>
-            <TabsTrigger value="penalty_goals" className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-green-600" />
-              点球进
-            </TabsTrigger>
-            <TabsTrigger value="penalty_misses" className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-red-500" />
-              点球失
-            </TabsTrigger>
-            <TabsTrigger value="own_goals" className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-red-400" />
-              乌龙榜
-            </TabsTrigger>
-            <TabsTrigger value="saves" className="flex items-center gap-2">
-              <div className="h-3 w-3 bg-purple-500 rounded-full"></div>
-              扑救榜
-            </TabsTrigger>
-          </TabsList>
+          {/* Mobile-friendly: horizontally scrollable tab bar (no overlap) */}
+          <div className="w-full max-w-full overflow-x-auto">
+            <TabsList className="inline-flex w-max max-w-none gap-1">
+              <TabsTrigger value="goals" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Target className="h-4 w-4" />
+                射手榜
+              </TabsTrigger>
+              <TabsTrigger value="assists" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Trophy className="h-4 w-4" />
+                助攻榜
+              </TabsTrigger>
+              <TabsTrigger value="yellow_cards" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <div className="h-3 w-3 bg-yellow-500 rounded-sm" />
+                黄牌榜
+              </TabsTrigger>
+              <TabsTrigger value="red_cards" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <div className="h-3 w-3 bg-red-600 rounded-sm" />
+                红牌榜
+              </TabsTrigger>
+              <TabsTrigger value="penalty_goals" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Target className="h-4 w-4 text-green-600" />
+                点球进
+              </TabsTrigger>
+              <TabsTrigger value="penalty_misses" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <XCircle className="h-4 w-4 text-red-500" />
+                点球失
+              </TabsTrigger>
+              <TabsTrigger value="own_goals" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Target className="h-4 w-4 text-red-400" />
+                乌龙榜
+              </TabsTrigger>
+              <TabsTrigger value="saves" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <div className="h-3 w-3 bg-purple-500 rounded-full" />
+                扑救榜
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
+        <div className="mt-2 text-center text-xs text-muted-foreground sm:hidden">
+          左右滑动查看更多
         </div>
 
         <TabsContent value={activeTab} className="space-y-8 mt-8">
