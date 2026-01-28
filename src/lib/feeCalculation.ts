@@ -40,6 +40,7 @@ export interface FeeCalculationInput {
   attendanceData: AttendanceData;
   isLateArrival: boolean;
   feeCoefficient: number;
+  sectionCount?: number;     // Optional, defaults to 3
   lateFeeRate?: number;      // Optional, defaults to 10
   videoFeeRate?: number;     // Optional, defaults to 2
 }
@@ -55,6 +56,7 @@ export function calculatePlayerFees(input: FeeCalculationInput): FeeCalculationR
     attendanceData,
     isLateArrival,
     feeCoefficient,
+    sectionCount = 3,
     lateFeeRate = 10,      // Default fallback value
     videoFeeRate = 2       // Default fallback value
   } = input;
@@ -63,8 +65,8 @@ export function calculatePlayerFees(input: FeeCalculationInput): FeeCalculationR
   let normalPlayerParts = 0;
   const sectionsWithNormalPlay = new Set<number>();
 
-  // Process each section (1-3) and part (1-3)
-  for (let section = 1; section <= 3; section++) {
+  // Process each section (1..sectionCount) and part (1-3)
+  for (let section = 1; section <= sectionCount; section++) {
     let playedAsNormalInSection = false;
 
     for (let part = 1; part <= 3; part++) {
@@ -108,22 +110,23 @@ export function calculatePlayerFees(input: FeeCalculationInput): FeeCalculationR
  * Helper function to convert legacy participation data format to new AttendanceData format
  * Used for backward compatibility with existing data structures
  */
-export function convertLegacyParticipationToAttendanceData(participation: Record<string, unknown>): AttendanceData {
+export function convertLegacyParticipationToAttendanceData(
+  participation: Record<string, unknown>,
+  sectionCount = 3
+): AttendanceData {
   const attendanceData: AttendanceData = {
-    attendance: {
-      "1": { "1": 0, "2": 0, "3": 0 },
-      "2": { "1": 0, "2": 0, "3": 0 },
-      "3": { "1": 0, "2": 0, "3": 0 }
-    },
-    goalkeeper: {
-      "1": { "1": false, "2": false, "3": false },
-      "2": { "1": false, "2": false, "3": false },
-      "3": { "1": false, "2": false, "3": false }
-    }
+    attendance: {},
+    goalkeeper: {}
   };
 
+  for (let section = 1; section <= sectionCount; section++) {
+    const sectionKey = section.toString();
+    attendanceData.attendance[sectionKey] = { "1": 0, "2": 0, "3": 0 };
+    attendanceData.goalkeeper[sectionKey] = { "1": false, "2": false, "3": false };
+  }
+
   // Convert from old format: section1Part1, section1Part2, etc.
-  for (let section = 1; section <= 3; section++) {
+  for (let section = 1; section <= sectionCount; section++) {
     for (let part = 1; part <= 3; part++) {
       const fieldName = `section${section}Part${part}`;
       if (participation[fieldName] !== undefined) {
@@ -147,7 +150,10 @@ export function convertLegacyParticipationToAttendanceData(participation: Record
 /**
  * Validate attendance data structure
  */
-export function validateAttendanceData(attendanceData: unknown): attendanceData is AttendanceData {
+export function validateAttendanceData(
+  attendanceData: unknown,
+  sectionCount = 3
+): attendanceData is AttendanceData {
   if (!attendanceData || typeof attendanceData !== 'object') {
     return false;
   }
@@ -156,8 +162,8 @@ export function validateAttendanceData(attendanceData: unknown): attendanceData 
     return false;
   }
 
-  // Check structure for sections 1-3 and parts 1-3
-  for (let section = 1; section <= 3; section++) {
+  // Check structure for sections 1..sectionCount and parts 1-3
+  for (let section = 1; section <= sectionCount; section++) {
     const sectionStr = section.toString();
 
     if (!attendanceData.attendance[sectionStr] || !attendanceData.goalkeeper[sectionStr]) {

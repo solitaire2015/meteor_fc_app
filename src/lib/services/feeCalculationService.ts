@@ -99,6 +99,7 @@ export class FeeCalculationService {
       attendanceData,
       isLateArrival,
       feeCoefficient,
+      sectionCount: match.sectionCount ?? 3,
       lateFeeRate: normalizeRateValue(match.lateFeeRate),
       videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
     })
@@ -198,6 +199,7 @@ export class FeeCalculationService {
           attendanceData,
           isLateArrival: participation.isLateArrival,
           feeCoefficient,
+          sectionCount: match.sectionCount ?? 3,
           lateFeeRate: normalizeRateValue(match.lateFeeRate),
           videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
         })
@@ -313,6 +315,7 @@ export class FeeCalculationService {
         attendanceData,
         isLateArrival: participation.isLateArrival,
         feeCoefficient,
+        sectionCount: match.sectionCount ?? 3,
         lateFeeRate: normalizeRateValue(match.lateFeeRate),
         videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
       })
@@ -434,6 +437,7 @@ export class FeeCalculationService {
         attendanceData,
         isLateArrival: participation.isLateArrival,
         feeCoefficient,
+        sectionCount: match.sectionCount ?? 3,
         lateFeeRate: normalizeRateValue(match.lateFeeRate),
         videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
       })
@@ -523,6 +527,7 @@ export class FeeCalculationService {
         attendanceData,
         isLateArrival: participation.isLateArrival,
         feeCoefficient,
+        sectionCount: match.sectionCount ?? 3,
         lateFeeRate: normalizeRateValue(match.lateFeeRate),
         videoFeeRate: normalizeRateValue(match.videoFeePerUnit)
       })

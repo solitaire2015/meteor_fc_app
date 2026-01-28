@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Calendar, Clock, Trophy, DollarSign, Save } from 'lucide-react'
+import { Calendar, Clock, Trophy, DollarSign, Save, LayoutGrid } from 'lucide-react'
 import { useUpdateMatchInfo, useSaveMatchInfo, useIsDirty, useIsLoading } from '@/stores/useMatchStore'
 import { type MatchInfo } from '@/lib/validations/match'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ export default function MatchInfoTab({
     opponentTeam: source.opponentTeam,
     matchDate: source.matchDate.split('T')[0], // Convert to YYYY-MM-DD format
     matchTime: source.matchTime ? new Date(source.matchTime).toTimeString().slice(0, 5) : '',
+    sectionCount: source.sectionCount ?? 3,
     ourScore: source.ourScore ?? '',
     opponentScore: source.opponentScore ?? '',
     fieldFeeTotal: Math.round(Number(source.fieldFeeTotal)),
@@ -70,6 +71,14 @@ export default function MatchInfoTab({
         }
         processedValue = numValue
       }
+    }
+
+    // Handle section count
+    if (field === 'sectionCount') {
+      const numValue = Number(value)
+      if (!Number.isFinite(numValue) || numValue < 1 || numValue > 6) return
+      processedValue = Math.trunc(numValue)
+      displayValue = Math.trunc(numValue)
     }
 
     // Handle date/time fields - convert to proper datetime strings
@@ -170,6 +179,21 @@ export default function MatchInfoTab({
                 value={formData.opponentTeam}
                 onChange={(e) => handleInputChange('opponentTeam', e.target.value)}
                 placeholder="输入对手队伍名称"
+              />
+            </div>
+
+            <div className={styles.field}>
+              <Label className="flex items-center gap-2">
+                <LayoutGrid size={16} />
+                比赛节数
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                max="6"
+                step="1"
+                value={formData.sectionCount}
+                onChange={(e) => handleInputChange('sectionCount', e.target.value)}
               />
             </div>
           </div>

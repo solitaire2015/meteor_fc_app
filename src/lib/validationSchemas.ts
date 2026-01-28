@@ -86,6 +86,7 @@ export const MatchInfoUpdateSchema = z.object({
   matchTime: z.string().datetime().nullable().optional(), // Accept datetime string format like create match
   ourScore: z.number().int().min(0).nullable().optional(),
   opponentScore: z.number().int().min(0).nullable().optional(),
+  sectionCount: z.number().int().min(1).max(6).optional(),
   fieldFeeTotal: z.number().min(0).optional(),
   waterFeeTotal: z.number().min(0).optional(),
   notes: z.string().max(1000).nullable().optional()
