@@ -42,6 +42,7 @@ export async function PUT(
     const matchInfo = {
       fieldFeeTotal: Math.ceil(validatedData.matchInfo?.fieldFeeTotal ?? match.fieldFeeTotal ?? 0),
       waterFeeTotal: Math.ceil(validatedData.matchInfo?.waterFeeTotal ?? match.waterFeeTotal ?? 0),
+      sectionCount: match.sectionCount ?? 3,
       lateFeeRate: Math.ceil(validatedData.matchInfo?.lateFeeRate ?? match.lateFeeRate ?? 10),
       videoFeePerUnit: Math.ceil(validatedData.matchInfo?.videoFeePerUnit ?? match.videoFeePerUnit ?? 2)
     }
@@ -128,6 +129,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
+        sectionCount: match.sectionCount ?? 3,
         attendanceData: result.attendanceData,
         events: result.events, // Use the new events array
         totalParticipants: result.totalParticipants,

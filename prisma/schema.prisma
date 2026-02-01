@@ -48,28 +48,29 @@ model User {
 }
 
 model Match {
-  id                String               @id @default(cuid())
-  matchDate         DateTime
-  matchTime         DateTime?
-  opponentTeam      String
-  ourScore          Int?
-  opponentScore     Int?
-  matchResult       MatchResult?
-  fieldFeeTotal     Decimal              @default(0)
-  waterFeeTotal     Decimal              @default(0)
-  lateFeeRate       Decimal              @default(10)
-  videoFeePerUnit   Decimal              @default(2)
-  notes             String?
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  createdBy         String
-  comments       Comment[]
-  events         MatchEvent[]
-  participations MatchParticipation[]
-  createdByUser  User                 @relation("MatchCreatedBy", fields: [createdBy], references: [id])
-  videos         Video[]
-  matchPlayers   MatchPlayer[]
-  feeOverrides   FeeOverride[]
+  id              String               @id @default(cuid())
+  matchDate       DateTime
+  matchTime       DateTime?
+  opponentTeam    String
+  ourScore        Int?
+  opponentScore   Int?
+  matchResult     MatchResult?
+  sectionCount    Int                  @default(3)
+  fieldFeeTotal   Decimal              @default(0)
+  waterFeeTotal   Decimal              @default(0)
+  lateFeeRate     Decimal              @default(10)
+  videoFeePerUnit Decimal              @default(2)
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  createdBy       String
+  comments        Comment[]
+  events          MatchEvent[]
+  participations  MatchParticipation[]
+  createdByUser   User                 @relation("MatchCreatedBy", fields: [createdBy], references: [id])
+  videos          Video[]
+  matchPlayers    MatchPlayer[]
+  feeOverrides    FeeOverride[]
 
   @@map("matches")
 }

@@ -29,6 +29,7 @@ interface MatchData {
   id: string;
   matchDate: string;
   opponentTeam: string;
+  sectionCount?: number;
   ourScore?: number | null;
   opponentScore?: number | null;
   fieldFeeTotal: number;
@@ -71,9 +72,7 @@ interface MatchEvent {
 interface Player {
   id: string;
   name: string;
-  section1: (number | string)[];
-  section2: (number | string)[];
-  section3: (number | string)[];
+  sections: Record<string, (number | string)[]>; // key: section index as string
   total: number;
   fieldFee: number;
   isLate: boolean;
@@ -139,15 +138,17 @@ export default function GameDetailsPage() {
         
         // Transform participation data
         if (matchInfo.participations?.length > 0) {
+          const sectionCount = matchInfo.sectionCount ?? 3;
+
           const players: Player[] = matchInfo.participations.map((participation: MatchParticipation) => {
-            const { section1, section2, section3 } = parseAttendanceData(participation.attendanceData);
-            
+            const { sections } = parseAttendanceData(participation.attendanceData, sectionCount);
+
             // Check if player is goalkeeper in any section
-            const isGoalkeeper = section1.includes('守门') || section2.includes('守门') || section3.includes('守门');
-            
+            const isGoalkeeper = Object.values(sections).some((section) => section.includes('守门'));
+
             // Find fee override for this player
             const playerFeeOverride = feeOverrides.find((override: FeeOverride) => override.playerId === participation.userId);
-            
+
             // Calculate final fees - use override if available, otherwise use calculated
             let finalFieldFee = roundFee(Number(participation.fieldFeeCalculated));
             let finalVideoFee = roundFee(Number(participation.videoFee));
@@ -157,24 +158,22 @@ export default function GameDetailsPage() {
             let finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee;
             let playerNotes = '';
             let hasOverride = false;
-            
+
             if (playerFeeOverride) {
               hasOverride = true;
               playerNotes = playerFeeOverride.notes || '';
-              
+
               // Calculate override total from components
               finalFieldFee = roundFee(Number(playerFeeOverride.fieldFeeOverride || 0));
               finalVideoFee = roundFee(Number(playerFeeOverride.videoFeeOverride || 0));
               finalLateFee = roundFee(Number(playerFeeOverride.lateFeeOverride || 0));
               finalTotalFee = finalFieldFee + finalVideoFee + finalLateFee;
             }
-            
+
             return {
               id: participation.userId,
               name: participation.user.name,
-              section1,
-              section2,
-              section3,
+              sections,
               total: Number(participation.totalTime),
               fieldFee: finalFieldFee,
               isLate: participation.isLateArrival,
@@ -186,7 +185,7 @@ export default function GameDetailsPage() {
               hasOverride
             };
           });
-          
+
           setGameData(players);
         }
         
@@ -231,38 +230,26 @@ export default function GameDetailsPage() {
     }
   };
 
-  const parseAttendanceData = (attendanceData: AttendanceData) => {
+  const parseAttendanceData = (attendanceData: AttendanceData, sectionCount = 3) => {
     const attendance = attendanceData?.attendance || {};
     const goalkeeper = attendanceData?.goalkeeper || {};
-    
-    const section1 = [];
-    const section2 = [];
-    const section3 = [];
-    
-    for (let part = 1; part <= 3; part++) {
-      // Section 1
-      if (goalkeeper['1']?.[part.toString()]) {
-        section1.push('守门');
-      } else {
-        section1.push(attendance['1']?.[part.toString()] || 0);
-      }
-      
-      // Section 2
-      if (goalkeeper['2']?.[part.toString()]) {
-        section2.push('守门');
-      } else {
-        section2.push(attendance['2']?.[part.toString()] || 0);
-      }
-      
-      // Section 3
-      if (goalkeeper['3']?.[part.toString()]) {
-        section3.push('守门');
-      } else {
-        section3.push(attendance['3']?.[part.toString()] || 0);
+
+    const sections: Record<string, (number | string)[]> = {};
+
+    for (let section = 1; section <= sectionCount; section++) {
+      const sectionKey = section.toString();
+      sections[sectionKey] = [];
+      for (let part = 1; part <= 3; part++) {
+        const partKey = part.toString();
+        if (goalkeeper[sectionKey]?.[partKey]) {
+          sections[sectionKey].push('守门');
+        } else {
+          sections[sectionKey].push(attendance[sectionKey]?.[partKey] || 0);
+        }
       }
     }
-    
-    return { section1, section2, section3 };
+
+    return { sections };
   };
 
   const parseVideoData = (notes: string | null): VideoRecord | null => {
@@ -452,9 +439,9 @@ export default function GameDetailsPage() {
                     <TableRow>
                       <TableHead className="w-12 min-w-12 text-center">#</TableHead>
                       <TableHead className="min-w-20">姓名</TableHead>
-                      <TableHead className="min-w-24 text-center">第一节</TableHead>
-                      <TableHead className="min-w-24 text-center">第二节</TableHead>
-                      <TableHead className="min-w-24 text-center">第三节</TableHead>
+                      {Array.from({ length: match?.sectionCount ?? 3 }, (_, i) => i + 1).map((section) => (
+                        <TableHead key={section} className="min-w-24 text-center">第{section}节</TableHead>
+                      ))}
                       <TableHead className="min-w-16 text-center">状态</TableHead>
                       <TableHead className="min-w-20 text-center">费用</TableHead>
                       <TableHead className="w-8 min-w-8"></TableHead>
@@ -463,7 +450,7 @@ export default function GameDetailsPage() {
                   <TableBody>
                     {gameData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={(match?.sectionCount ?? 3) + 5} className="text-center text-muted-foreground py-8">
                           暂无出勤数据
                         </TableCell>
                       </TableRow>
@@ -471,24 +458,21 @@ export default function GameDetailsPage() {
                       gameData.map((player, index) => {
                         const status = getPlayerStatus(player);
                         const isExpanded = expandedRows.includes(player.id);
-                        
+                        const sectionCount = match?.sectionCount ?? 3;
+
                         return (
                           <React.Fragment key={player.id}>
-                            <TableRow 
+                            <TableRow
                               className="cursor-pointer hover:bg-muted/50"
                               onClick={() => toggleRow(player.id)}
                             >
                               <TableCell className="font-medium text-center">{index + 1}</TableCell>
                               <TableCell className="font-medium">{player.name}</TableCell>
-                              <TableCell className="text-center">
-                                {renderSection(player.section1)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {renderSection(player.section2)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {renderSection(player.section3)}
-                              </TableCell>
+                              {Array.from({ length: sectionCount }, (_, i) => i + 1).map((section) => (
+                                <TableCell key={section} className="text-center">
+                                  {renderSection(player.sections[String(section)] || [0, 0, 0])}
+                                </TableCell>
+                              ))}
                               <TableCell className="text-center">
                                 <Badge className={status.color}>
                                   {status.label}
@@ -503,7 +487,7 @@ export default function GameDetailsPage() {
                             </TableRow>
                             {isExpanded && (
                               <TableRow key={`${player.id}-details`} className="bg-muted/25">
-                                <TableCell colSpan={8}>
+                                <TableCell colSpan={sectionCount + 5}>
                                   <div className="py-4 space-y-3">
                                     <h4 className="font-medium text-sm">详细费用明细</h4>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

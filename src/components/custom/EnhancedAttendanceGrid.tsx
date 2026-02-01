@@ -20,6 +20,7 @@ interface EnhancedAttendanceGridProps {
   players: Player[]
   attendanceData: AttendanceGrid
   onChange: (data: AttendanceGrid) => void
+  sectionCount?: number
   isDirty?: boolean
   className?: string
 }
@@ -33,6 +34,7 @@ export default function EnhancedAttendanceGrid({
   players,
   attendanceData,
   onChange,
+  sectionCount = 3,
   isDirty = false,
   className
 }: EnhancedAttendanceGridProps) {
@@ -42,32 +44,37 @@ export default function EnhancedAttendanceGrid({
 
   // Ensure all selected players have complete attendance records
   const ensureCompleteAttendanceData = useCallback(() => {
-    const existingPlayerIds = new Set(attendanceData.map(item => item.userId))
     const newAttendanceData = [...attendanceData]
-    
-    // Add blank records for players without any attendance data
+
+    const ensurePlayerCell = (userId: string, section: number, part: number) => {
+      const exists = newAttendanceData.some(
+        item => item.userId === userId && item.section === section && item.part === part
+      )
+      if (exists) return
+
+      newAttendanceData.push({
+        userId,
+        section,
+        part,
+        value: 0,
+        isGoalkeeper: false,
+        isLateArrival: true, // Default to true (late) for new matches
+        goals: 0,
+        assists: 0,
+      })
+    }
+
+    // Ensure all selected players have complete attendance records for all sections/parts
     players.forEach(player => {
-      if (!existingPlayerIds.has(player.id)) {
-        // Create complete blank attendance structure for each section/part
-        for (let section = 1; section <= 3; section++) {
-          for (let part = 1; part <= 3; part++) {
-            newAttendanceData.push({
-              userId: player.id,
-              section,
-              part,
-              value: 0,
-              isGoalkeeper: false,
-              isLateArrival: true, // Default to true (late) for new matches
-              goals: 0,
-              assists: 0,
-            })
-          }
+      for (let section = 1; section <= sectionCount; section++) {
+        for (let part = 1; part <= 3; part++) {
+          ensurePlayerCell(player.id, section, part)
         }
       }
     })
-    
+
     return newAttendanceData
-  }, [players, attendanceData])
+  }, [players, attendanceData, sectionCount])
 
   // Initialize complete attendance data on component mount or when players change
   const completeAttendanceData = ensureCompleteAttendanceData()
@@ -313,9 +320,9 @@ export default function EnhancedAttendanceGrid({
         </div>
       </div>
 
-      {/* 3x3 Grid */}
+      {/* Grid (sectionCount x 3) */}
       <div className="space-y-6">
-        {[1, 2, 3].map((section) => (
+        {Array.from({ length: sectionCount }, (_, index) => index + 1).map((section) => (
           <div key={section} className="space-y-3">
             <h4 className="font-medium text-base">第{section}节</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

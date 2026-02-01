@@ -15,6 +15,7 @@ export const matchInfoSchema = z.object({
   videoFeePerUnit: z.union([z.number(), z.string().transform(Number)]).optional(),
   notes: z.string().nullable().optional(),
   status: z.string().optional(),
+  sectionCount: z.number().int().min(1).max(6).optional().default(3),
   createdAt: z.string(),
   updatedAt: z.string(),
 })

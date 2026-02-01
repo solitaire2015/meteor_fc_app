@@ -11,7 +11,7 @@ const baseInstructions = [
 
 const attendanceRules = [
   "出勤的节次和部分规则：",
-  "section=1/2/3 表示第一节/第二节/第三节。",
+  "section 表示比赛第几节（由 match.sectionCount 决定，默认 3，当前最大 6）。",
   "part=1/2/3 表示该节内第一部分/第二部分/第三部分。",
   "一般，用户说某一节，就是这一节的全部三个部分，比如第一节，就代表第一节的一整节。如果用户说某一节的半节，就是这一节的第一部分的全勤，第二部分半程，第三部分不参加",
   "isLateArrival 是球员级别的状态，应用时会同步到该球员所有单元格。",
@@ -20,9 +20,13 @@ const attendanceRules = [
   "支持的事件类型：GOAL(进球), ASSIST(助攻), YELLOW_CARD(黄牌), RED_CARD(红牌), PENALTY_GOAL(点球进), PENALTY_MISS(点球失), OWN_GOAL(乌龙), SAVE(扑救)。",
   "时间(minute)使用绝对分钟数（0-90+）。",
   "如果用户使用'第X节第Y分钟'描述，请按以下规则转换为绝对分钟数：",
-  "- 第一节(Section 1): 0 + Y",
-  "- 第二节(Section 2): 30 + Y (例如第二节5分钟 = 35分钟)",
-  "- 第三节(Section 3): 60 + Y (例如第三节10分钟 = 70分钟)",
+  "- 第1节: 0 + Y",
+  "- 第2节: 30 + Y",
+  "- 第3节: 60 + Y",
+  "- 第4节: 90 + Y",
+  "- 第5节: 120 + Y",
+  "- 第6节: 150 + Y",
+  "备注：分钟换算目前按每节 30 分钟估算，用于展示/记录；如果未来引入不同节时长再调整。",
 ].join("\n");
 
 const agentDescriptions: Record<AgentType, string> = {
