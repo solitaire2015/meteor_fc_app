@@ -65,6 +65,7 @@ const currentMatchSchema = z.object({
     matchDate: z.string(),
     matchTime: z.string().nullable().optional(),
     opponentTeam: z.string(),
+    sectionCount: z.number().int().min(1).max(6).optional(),
     ourScore: z.number().nullable().optional(),
     opponentScore: z.number().nullable().optional(),
     fieldFeeTotal: z.number().optional(),
@@ -83,7 +84,7 @@ const currentMatchSchema = z.object({
   attendance: z.array(
     z.object({
       userId: z.string(),
-      section: z.number().int().min(1).max(3),
+      section: z.number().int().min(1).max(6),
       part: z.number().int().min(1).max(3),
       value: z.number().min(0).max(1),
       isGoalkeeper: z.boolean(),
@@ -168,6 +169,7 @@ export const matchInfoPatchSchema = z.object({
   opponentTeam: z.string().optional(),
   matchDate: z.string().optional(),
   matchTime: z.string().optional(),
+  sectionCount: z.number().int().min(1).max(6).optional(),
   ourScore: z.number().nullable().optional(),
   opponentScore: z.number().nullable().optional(),
   fieldFeeTotal: z.number().optional(),
@@ -182,7 +184,7 @@ export const playerSelectionPatchSchema = z.object({
 
 export const attendanceUpdateSchema = z.object({
   playerId: z.string(),
-  section: z.number().int().min(1).max(3).optional(),
+  section: z.number().int().min(1).max(6).optional(),
   part: z.number().int().min(1).max(3).optional(),
   value: z.number().min(0).max(1).optional(),
   isGoalkeeper: z.boolean().optional(),
