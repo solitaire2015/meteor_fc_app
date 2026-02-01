@@ -74,6 +74,7 @@ export default function MatchesAdminPage() {
     matchDate: '',
     matchTime: '',
     opponentTeam: '',
+    sectionCount: '3',
     ourScore: '',
     opponentScore: '',
     fieldFeeTotal: '1100',
@@ -96,6 +97,10 @@ export default function MatchesAdminPage() {
         opponentTeam: change.data.opponentTeam ?? prev.opponentTeam,
         matchDate: change.data.matchDate ?? prev.matchDate,
         matchTime: change.data.matchTime ?? prev.matchTime,
+        sectionCount:
+          change.data.sectionCount !== undefined && change.data.sectionCount !== null
+            ? String(change.data.sectionCount)
+            : prev.sectionCount,
         ourScore:
           change.data.ourScore === null
             ? ''
@@ -201,6 +206,7 @@ export default function MatchesAdminPage() {
       matchDate: new Date(data.matchDate).toISOString(),
       matchTime: data.matchTime ? new Date(`${data.matchDate}T${data.matchTime}`).toISOString() : undefined,
       opponentTeam: data.opponentTeam,
+      sectionCount: data.sectionCount ? Math.trunc(Number(data.sectionCount)) : 3,
       ourScore: data.ourScore ? parseInt(data.ourScore) : undefined,
       opponentScore: data.opponentScore ? parseInt(data.opponentScore) : undefined,
       fieldFeeTotal: Math.round(parseFloat(data.fieldFeeTotal)),
@@ -232,6 +238,7 @@ export default function MatchesAdminPage() {
           matchDate: '',
           matchTime: '',
           opponentTeam: '',
+          sectionCount: '3',
           ourScore: '',
           opponentScore: '',
           fieldFeeTotal: fieldFee,
@@ -430,6 +437,26 @@ export default function MatchesAdminPage() {
                 placeholder="输入对手球队名称"
                 required
               />
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <Label>比赛节数</Label>
+                <Input
+                  type="number"
+                  value={formData.sectionCount}
+                  onChange={(e) => {
+                    const nextValue = e.target.value
+                    setFormData({
+                      ...formData,
+                      sectionCount: nextValue === '' ? '' : String(Math.trunc(Number(nextValue)))
+                    })
+                  }}
+                  min="1"
+                  max="6"
+                  step="1"
+                />
+              </div>
             </div>
 
             <div className={styles.formRow}>
