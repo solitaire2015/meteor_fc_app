@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import * as XLSX from 'xlsx'
 import { calculateCoefficient } from '@/lib/utils/coefficient'
+import { calculatePlayerFees, type AttendanceData } from '@/lib/feeCalculation'
 
 const prisma = new PrismaClient()
 const roundFee = (value: number) => Math.ceil(value)
@@ -133,16 +134,27 @@ export async function GET(
       
       // Find fee override for this player (same logic as match detail page)
       const playerOverride = match.feeOverrides.find((override: any) => override.playerId === participation.userId)
-      
-      // Calculate final fees - use override if available, otherwise use calculated
-      let finalFieldFee = roundFee(Number(participation.fieldFeeCalculated))
-      let finalVideoFee = roundFee(Number(participation.videoFee))
-      let finalLateFee = participation.isLateArrival && Number(participation.totalTime) > 0
-        ? roundFee(Number(participation.lateFee))
+
+      // Recalculate fees from attendanceData + current coefficient.
+      // This ensures exports stay correct even if stored participation.*Calculated fields are stale.
+      const recalculated = calculatePlayerFees({
+        attendanceData: attendanceData as AttendanceData,
+        isLateArrival: participation.isLateArrival,
+        feeCoefficient: realTimeCoefficient,
+        sectionCount,
+        lateFeeRate: Number(match.lateFeeRate ?? 10),
+        videoFeeRate: Number(match.videoFeePerUnit ?? 2)
+      })
+
+      // Calculate final fees - use override if available, otherwise use recalculated
+      let finalFieldFee = roundFee(Number(recalculated.fieldFee))
+      let finalVideoFee = roundFee(Number(recalculated.videoFee))
+      let finalLateFee = recalculated.normalPlayerParts > 0 && participation.isLateArrival
+        ? roundFee(Number(recalculated.lateFee))
         : 0
       let finalActualFee = finalFieldFee + finalVideoFee + finalLateFee
       let notes = ''
-      
+
       if (playerOverride) {
         // Use override fees and calculate total
         finalFieldFee = roundFee(Number(playerOverride.fieldFeeOverride || 0))
@@ -155,8 +167,9 @@ export async function GET(
       // Store processed data for totals calculation
       participationsWithFees.push({
         ...participation,
+        totalTimeRecalculated: recalculated.normalPlayerParts,
         finalFieldFee,
-        finalVideoFee, 
+        finalVideoFee,
         finalLateFee,
         finalActualFee,
         notes
@@ -173,7 +186,7 @@ export async function GET(
         goalsAssistsStr += `助攻${events.assists}`
       }
       
-      const lateLabel = participation.isLateArrival && Number(participation.totalTime) > 0 ? '迟到' : ''
+      const lateLabel = participation.isLateArrival && recalculated.normalPlayerParts > 0 ? '迟到' : ''
 
       excelData.push([
         index + 1,                          // 序号
@@ -182,7 +195,7 @@ export async function GET(
         ...sectionColumns,                  // 出勤 (dynamic sections)
         lateLabel,                          // 是否迟到
         finalActualFee,                     // 实收费用 (override logic)
-        Number(participation.totalTime),    // 合计时间单位
+        Number(recalculated.normalPlayerParts),    // 合计时间单位
         Number(realTimeCoefficient.toFixed(4)), // 费用系数
         finalFieldFee,                      // 场地费用 (override logic)
         finalLateFee,                       // 迟到罚款 (override logic)
@@ -195,7 +208,7 @@ export async function GET(
     // Totals row using actual fees (override or calculated)
     const totalFieldFee = roundFee(Number(match.fieldFeeTotal))
     const totalWaterFee = roundFee(Number(match.waterFeeTotal))
-    const totalTime = participationsWithFees.reduce((sum, p) => sum + Number(p.totalTime), 0)
+    const totalTime = participationsWithFees.reduce((sum, p: any) => sum + Number(p.totalTimeRecalculated ?? p.totalTime), 0)
     const totalActualFieldFee = participationsWithFees.reduce((sum, p) => sum + p.finalFieldFee, 0)
     const totalActualLateFee = participationsWithFees.reduce((sum, p) => sum + p.finalLateFee, 0)
     const totalActualVideoFee = participationsWithFees.reduce((sum, p) => sum + p.finalVideoFee, 0)
