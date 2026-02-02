@@ -3,28 +3,26 @@
  */
 
 /**
- * Calculate fee coefficient based on field fee, water fee, and fixed total time units
- * Formula: (fieldFeeTotal + waterFeeTotal) / FIXED_TOTAL_TIME_UNITS
- * 
- * Fixed total time units = 90 (represents the standard total time units for coefficient calculation)
- * This matches the Excel formula where coefficient is calculated using a fixed denominator
- * 
- * @param fieldFeeTotal - Total field fee
- * @param waterFeeTotal - Total water fee
- * @param actualPlayTime - Actual total play time in time units (not used in calculation, kept for backward compatibility)
- * @returns Calculated coefficient
+ * Calculate fee coefficient based on field fee, water fee, and match length.
+ *
+ * Why this denominator?
+ * - Each section is 30 minutes (3 parts × 10 minutes).
+ * - A match has 11 players on the field, but goalkeeper time is treated as 0 for field/video fees,
+ *   so we distribute fees over the 10 non-goalkeeper player-slots.
+ *
+ * Therefore total fee-bearing time units per match = (sectionCount × 30).
+ *
+ * Formula: (fieldFeeTotal + waterFeeTotal) / (sectionCount × 30)
  */
 export const calculateCoefficient = (
-  fieldFeeTotal: number, 
-  waterFeeTotal: number, 
-  actualPlayTime: number
+  fieldFeeTotal: number,
+  waterFeeTotal: number,
+  sectionCount: number = 3
 ): number => {
-  // Handle edge cases
   if (fieldFeeTotal < 0 || waterFeeTotal < 0) return 0
-  
-  // Use fixed 90 time units for coefficient calculation (matches Excel formula)
-  const FIXED_TOTAL_TIME_UNITS = 90
-  return (fieldFeeTotal + waterFeeTotal) / FIXED_TOTAL_TIME_UNITS
+
+  const denom = Math.max(1, Number(sectionCount) || 3) * 30
+  return (fieldFeeTotal + waterFeeTotal) / denom
 }
 
 /**

@@ -84,14 +84,11 @@ export class FeeCalculationService {
       throw new Error(`Player ${playerId} not found`)
     }
 
-    // Calculate total play time for coefficient
-    const totalPlayTime = await this.calculateTotalPlayTime(matchId)
-
-    // Calculate coefficient
+    // Calculate coefficient (depends on sectionCount)
     const feeCoefficient = calculateCoefficient(
       Number(match.fieldFeeTotal),
       Number(match.waterFeeTotal),
-      totalPlayTime
+      match.sectionCount ?? 3
     )
 
     // Calculate base fees using match-specific rates
@@ -167,14 +164,11 @@ export class FeeCalculationService {
         }
       })
 
-      // Calculate total play time for coefficient
-      const totalPlayTime = participations.reduce((sum, p) => sum + Number(p.totalTime), 0)
-
-      // Calculate coefficient
+      // Calculate coefficient (depends on sectionCount)
       const feeCoefficient = calculateCoefficient(
         Number(match.fieldFeeTotal),
         Number(match.waterFeeTotal),
-        totalPlayTime
+        match.sectionCount ?? 3
       )
 
       // Get all existing overrides
@@ -304,11 +298,10 @@ export class FeeCalculationService {
 
       // Calculate base fees
       const attendanceData = participation.attendanceData as unknown as AttendanceData
-      const totalPlayTime = await this.calculateTotalPlayTime(matchId)
       const feeCoefficient = calculateCoefficient(
         Number(match.fieldFeeTotal),
         Number(match.waterFeeTotal),
-        totalPlayTime
+        match.sectionCount ?? 3
       )
 
       const calculatedFees = calculatePlayerFees({
@@ -426,11 +419,10 @@ export class FeeCalculationService {
       }
 
       const attendanceData = participation.attendanceData as unknown as AttendanceData
-      const totalPlayTime = await this.calculateTotalPlayTime(matchId)
       const feeCoefficient = calculateCoefficient(
         Number(match.fieldFeeTotal),
         Number(match.waterFeeTotal),
-        totalPlayTime
+        match.sectionCount ?? 3
       )
 
       const calculatedFees = calculatePlayerFees({
@@ -507,12 +499,11 @@ export class FeeCalculationService {
       feeOverrides.map(o => [o.playerId, o])
     )
 
-    // Calculate coefficient
-    const totalPlayTime = participations.reduce((sum, p) => sum + Number(p.totalTime), 0)
+    // Calculate coefficient (depends on sectionCount)
     const feeCoefficient = calculateCoefficient(
       Number(match.fieldFeeTotal),
       Number(match.waterFeeTotal),
-      totalPlayTime
+      match.sectionCount ?? 3
     )
 
     // Build fee breakdown
