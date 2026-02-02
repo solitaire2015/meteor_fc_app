@@ -130,11 +130,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Calculate coefficient for fee calculations
+    // Calculate coefficient for fee calculations (depends on sectionCount)
     const coefficient = calculateCoefficient(
       Math.round(Number(excelData.fieldFeeTotal)),
       Math.round(Number(excelData.waterFeeTotal)),
-      90 // Fixed total time units
+      match.sectionCount ?? 3
     )
 
     // Create participation records and events using new attendance structure

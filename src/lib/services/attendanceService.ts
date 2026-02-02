@@ -238,11 +238,11 @@ export class AttendanceService {
       })
     }
 
-    // 3. Calculate fee coefficient using the correct fixed denominator of 90
+    // 3. Calculate fee coefficient (depends on sectionCount)
     const feeCoefficient = calculateCoefficient(
       matchInfo.fieldFeeTotal,
       matchInfo.waterFeeTotal,
-      totalPlayTime // This parameter is not used in the calculation, but kept for compatibility
+      matchInfo.sectionCount ?? 3
     )
 
     // 4. Prepare participation data structures OUTSIDE transaction

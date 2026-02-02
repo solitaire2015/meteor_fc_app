@@ -69,14 +69,11 @@ export async function GET(
     const assists = match.events.filter(e => e.eventType === 'ASSIST').length
     const participants = match.participations.length
 
-    // Calculate total play time from participations
-    const totalPlayTime = match.participations.reduce((sum, p) => sum + Number(p.totalTime), 0)
-
-    // Calculate coefficient and fees
+    // Calculate coefficient (depends on sectionCount)
     const coefficient = calculateCoefficient(
       Number(match.fieldFeeTotal),
       Number(match.waterFeeTotal),
-      totalPlayTime
+      match.sectionCount ?? 3
     )
 
     const totalCalculatedFees = roundFee(

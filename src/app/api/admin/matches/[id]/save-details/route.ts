@@ -119,14 +119,11 @@ export async function POST(
         where: { matchId }
       })
 
-      // 2. Calculate real-time coefficient based on total play time
-      const totalPlayTime = Array.from(playerMap.values())
-        .reduce((sum, player) => sum + player.totalTime, 0)
-      
+      // 2. Calculate coefficient (depends on sectionCount)
       const realTimeCoefficient = calculateCoefficient(
         Math.ceil(Number(match.fieldFeeTotal)),
         Math.ceil(Number(match.waterFeeTotal)),
-        totalPlayTime
+        match.sectionCount ?? 3
       )
 
       // 3. Save match participations
