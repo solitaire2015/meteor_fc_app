@@ -114,7 +114,7 @@ export const AttendanceUpdateSchema = z.object({
       'OWN_GOAL',
       'SAVE'
     ]),
-    minute: z.number().int().min(0).max(120).optional()
+    minute: z.number().int().min(0).max(120).nullable().optional()
   })).optional().default([]),
   matchInfo: z.object({
     fieldFeeTotal: z.number().min(0),

@@ -673,8 +673,10 @@ export const useMatchStore = create<MatchStore>()(
           }
         })
 
-        // Filter events for selected players only
-        const filteredEvents = events.filter(e => selectedPlayerIds.has(e.playerId))
+        // Filter events for selected players only and drop null minutes to avoid validation errors
+        const filteredEvents = events
+          .filter(e => selectedPlayerIds.has(e.playerId))
+          .map(e => (e.minute === null ? { ...e, minute: undefined } : e))
 
         const response = await fetch(`/api/admin/matches/${matchInfo.id}/attendance`, {
           method: 'PUT',
