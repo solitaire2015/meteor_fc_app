@@ -7,7 +7,7 @@ import { buildCacheKey, CACHE_TAGS, getCachedJson, setCachedJson } from '@/lib/c
 
 // Validation schema
 const leaderboardQuerySchema = z.object({
-  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards', 'penalty_goals', 'penalty_misses', 'own_goals', 'saves']).default('goals'),
+  type: z.enum(['goals', 'assists', 'yellow_cards', 'red_cards', 'penalty_goals', 'penalty_misses', 'own_goals', 'saves', 'appearances']).default('goals'),
   year: z.string().optional(),
   month: z.string().optional(),
   limit: z.string().optional()
@@ -156,8 +156,79 @@ export async function GET(request: Request) {
       }
     })
 
-    const playerIds = Object.keys(playerStats)
-    if (playerIds.length === 0) {
+    // Get participation data for appearances and last match date.
+    // Unlike events, this is NOT restricted to players already in playerStats:
+    // an appearances leaderboard must include attendees who never recorded an event.
+    const participations = await prisma.matchParticipation.findMany({
+      where: {
+        match: dateFilter,
+        user: {
+          deletedAt: null, // Only include active players
+          playerStatus: { not: 'TRIAL' } // Exclude trial players from rankings
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            position: true,
+            jerseyNumber: true,
+            playerStatus: true
+          }
+        },
+        match: {
+          select: {
+            id: true,
+            matchDate: true
+          }
+        }
+      },
+      orderBy: {
+        match: {
+          matchDate: 'desc'
+        }
+      }
+    })
+
+    participations.forEach(participation => {
+      const userId = participation.userId
+      let stats = playerStats[userId]
+
+      // Seed a zeroed entry for attendees with no recorded events
+      if (!stats) {
+        const user = (participation as any).user
+        if (!user) return
+        stats = playerStats[userId] = {
+          id: userId,
+          name: user.name,
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+          position: user.position,
+          jerseyNumber: user.jerseyNumber,
+          playerStatus: user.playerStatus,
+          goals: 0,
+          assists: 0,
+          yellowCards: 0,
+          redCards: 0,
+          penaltyGoals: 0,
+          penaltyMisses: 0,
+          ownGoals: 0,
+          saves: 0,
+          matches: new Set(),
+          lastMatchDate: null
+        }
+      }
+
+      stats.matches.add(participation.matchId)
+      if (!stats.lastMatchDate || participation.match.matchDate > stats.lastMatchDate) {
+        stats.lastMatchDate = participation.match.matchDate
+      }
+    })
+
+    if (Object.keys(playerStats).length === 0) {
       const payload: ApiResponse = {
         success: true,
         data: {
@@ -177,40 +248,6 @@ export async function GET(request: Request) {
       return NextResponse.json(payload)
     }
 
-    // Get participation data for appearances and last match date
-    const participations = await prisma.matchParticipation.findMany({
-      where: {
-        userId: { in: playerIds },
-        match: dateFilter,
-        user: {
-          deletedAt: null
-        }
-      },
-      include: {
-        match: {
-          select: {
-            id: true,
-            matchDate: true
-          }
-        }
-      },
-      orderBy: {
-        match: {
-          matchDate: 'desc'
-        }
-      }
-    })
-
-    participations.forEach(participation => {
-      const stats = playerStats[participation.userId]
-      if (!stats) return
-
-      stats.matches.add(participation.matchId)
-      if (!stats.lastMatchDate || participation.match.matchDate > stats.lastMatchDate) {
-        stats.lastMatchDate = participation.match.matchDate
-      }
-    })
-
     // Convert to array and sort
     const sortedPlayers = Object.values(playerStats)
       .filter(player => {
@@ -222,6 +259,7 @@ export async function GET(request: Request) {
         if (query.type === 'penalty_misses') return player.penaltyMisses > 0
         if (query.type === 'own_goals') return player.ownGoals > 0
         if (query.type === 'saves') return player.saves > 0
+        if (query.type === 'appearances') return player.matches.size > 0
         return false
       })
       .map((player: LeaderboardPlayerStats) => ({
@@ -249,6 +287,8 @@ export async function GET(request: Request) {
             aValue = a.ownGoals; bValue = b.ownGoals; break
           case 'saves':
             aValue = a.saves; bValue = b.saves; break
+          case 'appearances':
+            aValue = a.matchesPlayed; bValue = b.matchesPlayed; break
         }
 
         if (bValue === aValue) {
