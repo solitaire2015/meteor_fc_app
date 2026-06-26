@@ -78,7 +78,7 @@ export default function Leaderboard() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   useEffect(() => {
-    fetchLeaderboard(activeTab as 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves');
+    fetchLeaderboard(activeTab as 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves' | 'appearances');
   }, [activeTab, selectedYear]);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function Leaderboard() {
     }
   }, [showAllTime]);
 
-  const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves') => {
+  const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves' | 'appearances') => {
     try {
       setLoading(true);
       const response = await fetch(`/api/leaderboard?type=${type}&year=${selectedYear}`);
@@ -134,6 +134,7 @@ export default function Leaderboard() {
               case 'penalty_misses': return (b.penaltyMisses || 0) - (a.penaltyMisses || 0);
               case 'own_goals': return (b.ownGoals || 0) - (a.ownGoals || 0);
               case 'saves': return (b.saves || 0) - (a.saves || 0);
+              case 'appearances': return (b.matchesPlayed || 0) - (a.matchesPlayed || 0);
               default: return 0;
             }
           })
@@ -212,6 +213,7 @@ export default function Leaderboard() {
       case 'penalty_misses': return player.penaltyMisses;
       case 'own_goals': return player.ownGoals;
       case 'saves': return player.saves;
+      case 'appearances': return getAppearances(player);
       default: return 0;
     }
   };
@@ -226,6 +228,7 @@ export default function Leaderboard() {
       case 'penalty_misses': return '点球罚失';
       case 'own_goals': return '乌龙球';
       case 'saves': return '扑救';
+      case 'appearances': return '出场';
       default: return '';
     }
   };
@@ -322,6 +325,10 @@ export default function Leaderboard() {
               <TabsTrigger value="saves" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
                 <div className="h-3 w-3 bg-purple-500 rounded-full" />
                 扑救榜
+              </TabsTrigger>
+              <TabsTrigger value="appearances" className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm">
+                <Clock className="h-4 w-4" />
+                出场榜
               </TabsTrigger>
             </TabsList>
           </div>
