@@ -85,7 +85,7 @@ export default function Leaderboard() {
     if (showAllTime) {
       fetchAllTimeStats();
     }
-  }, [showAllTime]);
+  }, [showAllTime, activeTab]);
 
   const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves' | 'appearances') => {
     try {
@@ -134,7 +134,7 @@ export default function Leaderboard() {
               case 'penalty_misses': return (b.penaltyMisses || 0) - (a.penaltyMisses || 0);
               case 'own_goals': return (b.ownGoals || 0) - (a.ownGoals || 0);
               case 'saves': return (b.saves || 0) - (a.saves || 0);
-              case 'appearances': return (b.matchesPlayed || 0) - (a.matchesPlayed || 0);
+              case 'appearances': return (b.appearances ?? b.matchesPlayed ?? 0) - (a.appearances ?? a.matchesPlayed ?? 0);
               default: return 0;
             }
           })
