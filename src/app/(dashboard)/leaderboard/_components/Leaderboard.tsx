@@ -85,7 +85,7 @@ export default function Leaderboard() {
     if (showAllTime) {
       fetchAllTimeStats();
     }
-  }, [showAllTime]);
+  }, [showAllTime, activeTab]);
 
   const fetchLeaderboard = async (type: 'goals' | 'assists' | 'yellow_cards' | 'red_cards' | 'penalty_goals' | 'penalty_misses' | 'own_goals' | 'saves' | 'appearances') => {
     try {
